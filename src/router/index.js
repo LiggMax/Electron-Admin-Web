@@ -1,6 +1,5 @@
 import {createRouter, createWebHistory} from "vue-router";
 
-
 const router = createRouter({
     // history模式
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -24,7 +23,7 @@ const router = createRouter({
                 {
                     path: '',
                     name: 'publicBar',
-                    component: () => import('../views/Home.vue'),
+                    component: () => import('../views/Announcement.vue'),
                     meta: {
                         title: '公共栏管理'
                     }
@@ -32,7 +31,7 @@ const router = createRouter({
                 {
                     path: 'customer',
                     name: 'customer',
-                    component: () => import('../views/Home.vue'),
+                    component: () => import('../views/Announcement.vue'),
                     meta: {
                         title: '客户管理'
                     }
@@ -40,7 +39,7 @@ const router = createRouter({
                 {
                     path: 'merchant',
                     name: 'merchant',
-                    component: () => import('../views/Home.vue'),
+                    component: () => import('../views/Announcement.vue'),
                     meta: {
                         title: '卡商管理'
                     }
@@ -48,7 +47,7 @@ const router = createRouter({
                 {
                     path: 'phone',
                     name: 'phone',
-                    component: () => import('../views/Home.vue'),
+                    component: () => import('../views/Announcement.vue'),
                     meta: {
                         title: '号码管理'
                     }
@@ -56,7 +55,7 @@ const router = createRouter({
                 {
                     path: 'project',
                     name: 'project',
-                    component: () => import('../views/Home.vue'),
+                    component: () => import('../views/Announcement.vue'),
                     meta: {
                         title: '项目管理'
                     }
@@ -64,7 +63,7 @@ const router = createRouter({
                 {
                     path: 'material',
                     name: 'material',
-                    component: () => import('../views/Home.vue'),
+                    component: () => import('../views/Announcement.vue'),
                     meta: {
                         title: '资料管理'
                     }
