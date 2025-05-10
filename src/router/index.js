@@ -31,7 +31,7 @@ const router = createRouter({
                 {
                     path: 'customer',
                     name: 'customer',
-                    component: () => import('../views/Announcement.vue'),
+                    component: () => import('../views/Customer.vue'),
                     meta: {
                         title: '客户管理'
                     }
