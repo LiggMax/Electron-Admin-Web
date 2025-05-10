@@ -8,16 +8,15 @@ import {
 
 // 查询条件
 const queryForm = reactive({
-  customerId: '',
-  status: ''
+  userId: '',
+  userStatus: ''
 })
 
 // 客户状态选项
 const statusOptions = [
   {label: '请选择客户状态', value: ''},
-  {label: '正常', value: 'normal'},
-  {label: '停用', value: 'disabled'},
-  {label: '欠费', value: 'arrears'}
+  {label: '正常', value: 1},
+  {label: '停用', value: 0}
 ]
 
 // 表格数据
@@ -48,8 +47,8 @@ const handleSearch = () => {
 
 // 重置搜索条件
 const handleReset = () => {
-  queryForm.customerId = ''
-  queryForm.status = ''
+  queryForm.userId = ''
+  queryForm.userStatus = ''
   pagination.currentPage = 1
   fetchCustomers()
 }
@@ -62,7 +61,7 @@ const handleAddCustomer = () => {
 
 // 导出客户数据
 const handleExport = async () => {
-
+  // 导出逻辑
 }
 
 // 清除选中的行
@@ -98,7 +97,21 @@ const handleDelete = async (row) => {
 
 // 批量删除选中客户
 const handleBatchDelete = async () => {
+  // 批量删除逻辑
+}
 
+// 处理API响应数据
+const handleResponseData = (data) => {
+  return data.map(item => ({
+    id: item.userId,
+    avatar: item.userAvatar,
+    name: item.nickName || item.account,
+    account: item.account,
+    email: item.email || '未设置',
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+    status: item.userStatus === 1
+  }))
 }
 
 // 获取客户列表数据
@@ -106,11 +119,65 @@ const fetchCustomers = async () => {
   tableLoading.value = true
 
   try {
+    // 模拟API响应数据
+    const mockResponse = {
+      code: 200,
+      message: "操作成功",
+      data: [
+        {
+          userId: 8259543156,
+          account: "ligg",
+          nickName: "ligg",
+          email: "29544@qq.com",
+          userAvatar: "https://lain.bgm.tv/pic/user/l/000/91/64/916400.jpg?r=1726915584&hd=1",
+          createdAt: "2025-04-21T10:58:50",
+          updatedAt: "2025-04-21T10:58:46",
+          userStatus: 1
+        },
+        {
+          userId: 8259543157,
+          account: "123456",
+          nickName: null,
+          email: null,
+          userAvatar: null,
+          createdAt: "2025-04-26T16:25:56",
+          updatedAt: null,
+          userStatus: 1
+        },
+        {
+          userId: 8259543158,
+          account: "222222",
+          nickName: "qwe",
+          email: null,
+          userAvatar: null,
+          createdAt: "2025-04-26T16:29:54",
+          updatedAt: null,
+          userStatus: 1
+        },
+        {
+          userId: 8259543159,
+          account: "333333",
+          nickName: null,
+          email: null,
+          userAvatar: null,
+          createdAt: "2025-04-26T16:31:31",
+          updatedAt: null,
+          userStatus: 1
+        }
+      ]
+    };
 
-
-    const res = await getCustomerList()
-    tableData.value = res.data
-    pagination.total = res.total
+    // 实际项目中应该使用以下代码
+    // const res = await getCustomerList({
+    //  page: pagination.currentPage,
+    //  pageSize: pagination.pageSize,
+    //  userId: queryForm.userId,
+    //  userStatus: queryForm.userStatus
+    // })
+    
+    // 使用模拟数据
+    tableData.value = handleResponseData(mockResponse.data)
+    pagination.total = mockResponse.data.length
   } catch (error) {
     console.error('获取客户列表失败:', error)
     ElMessage.error('获取客户列表失败，请稍后重试')
@@ -132,13 +199,13 @@ onMounted(() => {
     <div class="search-container">
       <div class="search-form">
         <div class="form-item">
-          <label>客户ID:</label>
-          <el-input v-model="queryForm.customerId" placeholder="输入客户ID" clearable/>
+          <label>用户ID:</label>
+          <el-input v-model="queryForm.userId" placeholder="输入用户ID" clearable/>
         </div>
 
         <div class="form-item">
-          <label>客户状态:</label>
-          <el-select v-model="queryForm.status" placeholder="请选择客户状态" class="status-select">
+          <label>用户状态:</label>
+          <el-select v-model="queryForm.userStatus" placeholder="请选择用户状态" class="status-select">
             <el-option
                 v-for="item in statusOptions"
                 :key="item.value"
@@ -154,7 +221,7 @@ onMounted(() => {
       </div>
       
       <div class="operation-buttons">
-        <el-button type="primary" @click="handleAddCustomer" class="add-button">添加客户</el-button>
+        <el-button type="primary" @click="handleAddCustomer" class="add-button">添加用户</el-button>
         <el-button @click="handleExport" class="export-button">导出</el-button>
       </div>
     </div>
@@ -187,33 +254,29 @@ onMounted(() => {
       >
         <el-table-column type="selection" width="55"/>
 
-        <el-table-column label="客户姓名" width="120" align="center">
+        <el-table-column label="用户信息" width="150" align="center">
           <template #default="scope">
             <div class="customer-avatar-name">
-              <span class="customer-avatar">{{ scope.row.avatar || '👤' }}</span>
+              <span class="customer-avatar">
+                <img v-if="scope.row.avatar" :src="scope.row.avatar" class="avatar-img" alt="头像" />
+                <span v-else class="default-avatar">{{ scope.row.name?.charAt(0)?.toUpperCase() || 'U' }}</span>
+              </span>
               <span>{{ scope.row.name }}</span>
             </div>
           </template>
         </el-table-column>
 
-        <el-table-column prop="customerId" label="客户ID" width="120" align="center"/>
-        <el-table-column prop="phone" label="手机号码" width="120" align="center"/>
-        <el-table-column prop="balance" label="账户余额" width="120" align="center">
+        <el-table-column prop="id" label="用户ID" width="150" align="center"/>
+        <el-table-column prop="account" label="账号" width="120" align="center"/>
+        <el-table-column prop="email" label="邮箱" width="150" align="center"/>
+        <el-table-column prop="createdAt" label="注册时间" width="180" align="center"/>
+        <el-table-column prop="updatedAt" label="更新时间" width="180" align="center">
           <template #default="scope">
-            <span>￥{{ scope.row.balance?.toFixed(2) || '0.00' }}</span>
+            {{ scope.row.updatedAt || '暂无更新' }}
           </template>
         </el-table-column>
 
-        <el-table-column prop="totalAmount" label="消费总额" width="120" align="center">
-          <template #default="scope">
-            <span>￥{{ scope.row.totalAmount?.toFixed(2) || '0.00' }}</span>
-          </template>
-        </el-table-column>
-
-        <el-table-column prop="createTime" label="注册时间" width="120" align="center"/>
-        <el-table-column prop="expireTime" label="到期时间" width="120" align="center"/>
-
-        <el-table-column prop="status" label="状态" width="80" align="center">
+        <el-table-column prop="status" label="状态" width="100" align="center">
           <template #default="scope">
             <el-switch
                 v-model="scope.row.status"
@@ -263,6 +326,7 @@ onMounted(() => {
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
             background
+            small
         />
       </div>
     </div>
@@ -279,6 +343,7 @@ onMounted(() => {
 }
 
 .search-container {
+  display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
@@ -360,11 +425,35 @@ onMounted(() => {
 .customer-avatar-name {
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .customer-avatar {
-  font-size: 20px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
   margin-right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.default-avatar {
+  width: 100%;
+  height: 100%;
+  background-color: #409eff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
 }
 
 .pagination-container {
