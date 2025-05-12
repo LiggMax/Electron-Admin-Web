@@ -1,15 +1,12 @@
 <script setup>
-import {ref, reactive, onMounted, computed} from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import ElMessage from '../utils/message.js'
-import {ElMessageBox} from 'element-plus'
-import {
-  getCardList
-} from '../api/customer.js'
+import { ElMessageBox } from 'element-plus'
+import { getProjectList } from '../api/customer.js'
 
 // 查询条件
 const queryForm = reactive({
-  userId: '',
-  account: ''
+  projectName: '',
 })
 
 // 表格数据
@@ -19,14 +16,12 @@ const tableLoading = ref(false)
 
 // 处理本地搜索，根据查询条件过滤数据
 const filteredData = computed(() => {
-  if (!queryForm.userId && !queryForm.account) {
+  if (!queryForm.projectName) {
     return originalData.value
   }
   
   return originalData.value.filter(item => {
-    const idMatch = !queryForm.userId || String(item.id).includes(queryForm.userId)
-    const accountMatch = !queryForm.account || item.account.toLowerCase().includes(queryForm.account.toLowerCase())
-    return idMatch && accountMatch
+    return item.projectName.toLowerCase().includes(queryForm.projectName.toLowerCase())
   })
 })
 
@@ -40,24 +35,22 @@ const handleSelectionChange = (selection) => {
 
 // 搜索方法
 const handleSearch = () => {
-  // 本地搜索，不需要重新请求数据
   tableData.value = filteredData.value
 }
 
 // 重置搜索条件
 const handleReset = () => {
-  queryForm.userId = ''
-  queryForm.account = ''
+  queryForm.projectName = ''
   tableData.value = originalData.value
 }
 
-// 添加卡商
-const handleAddMerchant = () => {
-  console.log('添加卡商')
-  // TODO: 打开添加卡商对话框
+// 添加项目
+const handleAddProject = () => {
+  console.log('添加项目')
+  // TODO: 打开添加项目对话框
 }
 
-// 导出卡商数据
+// 导出项目数据
 const handleExport = async () => {
   // 导出逻辑
 }
@@ -67,46 +60,46 @@ const handleClearSelected = () => {
   selectedRows.value = []
 }
 
-// 修改卡商信息
+// 修改项目信息
 const handleEdit = (row) => {
-  console.log('修改卡商:', row)
+  console.log('修改项目:', row)
   // TODO: 打开编辑对话框
 }
 
-// 删除卡商
+// 删除项目
 const handleDelete = async (row) => {
   try {
-    await ElMessageBox.confirm('确定要删除该卡商吗？', '提示', {
+    await ElMessageBox.confirm('确定要删除该项目吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
     })
-    console.log('删除卡商:', row)
+    console.log('删除项目:', row)
     ElMessage.success('删除成功')
-    fetchMerchants() // 重新获取数据
+    fetchProjects() // 重新获取数据
   } catch (error) {
     // 用户取消删除
   }
 }
 
-// 批量删除选中卡商
+// 批量删除选中项目
 const handleBatchDelete = async () => {
   if (selectedRows.value.length === 0) {
-    ElMessage.warning('请先选择要删除的卡商')
+    ElMessage.warning('请先选择要删除的项目')
     return
   }
   
   try {
-    await ElMessageBox.confirm(`确定要删除选中的 ${selectedRows.value.length} 个卡商吗？`, '提示', {
+    await ElMessageBox.confirm(`确定要删除选中的 ${selectedRows.value.length} 个项目吗？`, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
     })
     
-    console.log('批量删除卡商:', selectedRows.value)
+    console.log('批量删除项目:', selectedRows.value)
     ElMessage.success('批量删除成功')
     selectedRows.value = []
-    fetchMerchants() // 重新获取数据
+    await fetchProjects() // 重新获取数据
   } catch (error) {
     // 用户取消删除
   }
@@ -115,48 +108,41 @@ const handleBatchDelete = async () => {
 // 处理API响应数据
 const handleResponseData = (data) => {
   return data.map(item => ({
-    id: item.userId,
-    avatar: item.userAvatar,
-    name: item.nickName || item.account,
-    account: item.account,
-    email: item.email || '未设置',
-    createdAt: item.createdAt,
-    updatedAt: item.updatedAt
+    id: item.projectId,
+    projectName: item.projectName,
+    price: item.projectPrice,
+    createdAt: item.projectCreatedAt
   }))
 }
 
-// 获取卡商列表数据
-const fetchMerchants = async () => {
+// 获取项目列表数据
+const fetchProjects = async () => {
   tableLoading.value = true
-
   try {
-    const response = await getCardList()
-      const processedData = handleResponseData(response.data)
-      originalData.value = processedData // 保存原始数据
-      tableData.value = processedData
+    const response = await getProjectList()
+    const processedData = handleResponseData(response.data)
+    originalData.value = processedData
+    tableData.value = processedData
+  } catch (error) {
+    console.error('获取项目列表失败:', error)
   } finally {
     tableLoading.value = false
   }
 }
 
 onMounted(() => {
-  fetchMerchants()
+  fetchProjects()
 })
 </script>
 
 <template>
-  <div class="merchant-container">
+  <div class="project-container">
     <!-- 搜索区域 -->
     <div class="search-container">
       <div class="search-form">
         <div class="form-item">
-          <label>卡商ID:</label>
-          <el-input v-model="queryForm.userId" placeholder="输入卡商ID" clearable/>
-        </div>
-
-        <div class="form-item">
-          <label>账号:</label>
-          <el-input v-model="queryForm.account" placeholder="请输入账号" class="account-input" clearable/>
+          <label>项目名称:</label>
+          <el-input v-model="queryForm.projectName" placeholder="输入项目名称" clearable/>
         </div>
         
         <div class="form-item">
@@ -166,7 +152,7 @@ onMounted(() => {
       </div>
       
       <div class="operation-buttons">
-        <el-button type="primary" @click="handleAddMerchant" class="add-button">添加卡商</el-button>
+        <el-button type="primary" @click="handleAddProject" class="add-button">添加项目</el-button>
         <el-button @click="handleExport" class="export-button">导出</el-button>
       </div>
     </div>
@@ -198,30 +184,16 @@ onMounted(() => {
           highlight-current-row
       >
         <el-table-column type="selection" width="55"/>
-
-        <el-table-column label="卡商信息" width="150" align="center">
+        <el-table-column prop="id" label="项目ID" width="100" align="center"/>
+        <el-table-column prop="projectName" label="项目名称" min-width="150" align="center"/>
+        <el-table-column prop="price" label="项目价格" width="120" align="center">
           <template #default="scope">
-            <div class="merchant-avatar-name">
-              <span class="merchant-avatar">
-                <img v-if="scope.row.avatar" :src="scope.row.avatar" class="avatar-img" alt="头像" />
-                <span v-else class="default-avatar">{{ scope.row.name?.charAt(0)?.toUpperCase() || 'M' }}</span>
-              </span>
-              <span>{{ scope.row.name }}</span>
-            </div>
+            ￥{{ scope.row.price.toFixed(2) }}
           </template>
         </el-table-column>
+        <el-table-column prop="createdAt" label="创建时间" width="180" align="center"/>
 
-        <el-table-column prop="id" label="卡商ID" width="150" align="center"/>
-        <el-table-column prop="account" label="账号" width="120" align="center"/>
-        <el-table-column prop="email" label="邮箱" width="180" align="center"/>
-        <el-table-column prop="createdAt" label="注册时间" width="180" align="center"/>
-        <el-table-column prop="updatedAt" label="更新时间" width="180" align="center">
-          <template #default="scope">
-            {{ scope.row.updatedAt || '暂无更新' }}
-          </template>
-        </el-table-column>
-
-        <el-table-column label="操作" fixed="right" width="220" align="center">
+        <el-table-column label="操作" fixed="right" width="200" align="center">
           <template #default="scope">
             <div class="operation-buttons-group">
               <el-button
@@ -229,7 +201,7 @@ onMounted(() => {
                   size="small"
                   @click="handleEdit(scope.row)"
                   class="table-op-button edit-button"
-              >配置</el-button>
+              >修改</el-button>
               
               <el-button
                   type="danger"
@@ -246,7 +218,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.merchant-container {
+.project-container {
   width: 100%;
   background-color: #fff;
   border-radius: 4px;
@@ -277,10 +249,6 @@ onMounted(() => {
 .form-item label {
   margin-right: 8px;
   white-space: nowrap;
-}
-
-.account-input {
-  width: 180px;
 }
 
 .operation-buttons {
@@ -334,40 +302,6 @@ onMounted(() => {
   line-height: 20px;
 }
 
-.merchant-avatar-name {
-  display: flex;
-  align-items: center;
-}
-
-.merchant-avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  margin-right: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  background-color: #f5f7fa;
-}
-
-.avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.default-avatar {
-  width: 100%;
-  height: 100%;
-  background-color: #409eff;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-}
-
 .operation-buttons-group {
   display: flex;
   flex-direction: row;
@@ -411,4 +345,4 @@ onMounted(() => {
 :deep(.el-table th) {
   font-weight: bold;
 }
-</style>
+</style> 

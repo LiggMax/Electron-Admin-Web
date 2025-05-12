@@ -39,7 +39,7 @@ const router = createRouter({
                 {
                     path: 'merchant',
                     name: 'merchant',
-                    component: () => import('../views/Announcement.vue'),
+                    component: () => import('../views/Merchant.vue'),
                     meta: {
                         title: '卡商管理'
                     }
@@ -55,7 +55,7 @@ const router = createRouter({
                 {
                     path: 'project',
                     name: 'project',
-                    component: () => import('../views/Announcement.vue'),
+                    component: () => import('../views/Project.vue'),
                     meta: {
                         title: '项目管理'
                     }
