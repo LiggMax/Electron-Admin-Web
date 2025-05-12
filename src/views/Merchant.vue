@@ -2,9 +2,6 @@
 import {ref, reactive, onMounted} from 'vue'
 import ElMessage from '../utils/message.js'
 import {ElMessageBox} from 'element-plus'
-import {
-  getCustomerList,
-} from '../api/customer.js'
 
 // 查询条件
 const queryForm = reactive({
@@ -119,41 +116,73 @@ const fetchCustomers = async () => {
   tableLoading.value = true
 
   try {
-    const params = {
-      page: pagination.currentPage,
-      pageSize: pagination.pageSize,
-      userId: queryForm.userId,
-      userStatus: queryForm.userStatus
-    }
-    
-    const response = await getCustomerList(params)
-    
-    if (response.code === 200) {
-      tableData.value = handleResponseData(response.data)
-      pagination.total = response.data.length // 注意：实际项目中可能需要从响应中获取总记录数
-    } else {
-      ElMessage.error(response.message || '获取用户列表失败')
-      tableData.value = []
-    }
+    // 模拟API响应数据
+    const mockResponse = {
+      code: 200,
+      message: "操作成功",
+      data: [
+        {
+          userId: 8259543156,
+          account: "ligg",
+          nickName: "ligg",
+          email: "29544@qq.com",
+          userAvatar: "https://lain.bgm.tv/pic/user/l/000/91/64/916400.jpg?r=1726915584&hd=1",
+          createdAt: "2025-04-21T10:58:50",
+          updatedAt: "2025-04-21T10:58:46",
+          userStatus: 1
+        },
+        {
+          userId: 8259543157,
+          account: "123456",
+          nickName: null,
+          email: null,
+          userAvatar: null,
+          createdAt: "2025-04-26T16:25:56",
+          updatedAt: null,
+          userStatus: 1
+        },
+        {
+          userId: 8259543158,
+          account: "222222",
+          nickName: "qwe",
+          email: null,
+          userAvatar: null,
+          createdAt: "2025-04-26T16:29:54",
+          updatedAt: null,
+          userStatus: 1
+        },
+        {
+          userId: 8259543159,
+          account: "333333",
+          nickName: null,
+          email: null,
+          userAvatar: null,
+          createdAt: "2025-04-26T16:31:31",
+          updatedAt: null,
+          userStatus: 1
+        }
+      ]
+    };
+
+    // 实际项目中应该使用以下代码
+    // const res = await getCustomerList({
+    //  page: pagination.currentPage,
+    //  pageSize: pagination.pageSize,
+    //  userId: queryForm.userId,
+    //  userStatus: queryForm.userStatus
+    // })
+
+    // 使用模拟数据
+    tableData.value = handleResponseData(mockResponse.data)
+    pagination.total = mockResponse.data.length
   } catch (error) {
-    console.error('获取用户列表失败:', error)
-    ElMessage.error('获取用户列表失败，请稍后重试')
+    console.error('获取客户列表失败:', error)
+    ElMessage.error('获取客户列表失败，请稍后重试')
     tableData.value = []
     pagination.total = 0
   } finally {
     tableLoading.value = false
   }
-}
-
-// 页码变化
-const handleCurrentChange = () => {
-  fetchCustomers()
-}
-
-// 每页条数变化
-const handleSizeChange = () => {
-  pagination.currentPage = 1
-  fetchCustomers()
 }
 
 onMounted(() => {
@@ -187,13 +216,13 @@ onMounted(() => {
           <el-button @click="handleReset" class="reset-button">重置</el-button>
         </div>
       </div>
-      
+
       <div class="operation-buttons">
         <el-button type="primary" @click="handleAddCustomer" class="add-button">添加用户</el-button>
         <el-button @click="handleExport" class="export-button">导出</el-button>
       </div>
     </div>
-    
+
     <!-- 表格区域 -->
     <div class="table-container">
       <div class="selected-info" v-if="selectedRows.length > 0">
@@ -264,14 +293,14 @@ onMounted(() => {
                   @click="handleEdit(scope.row)"
                   class="table-op-button edit-button"
               >配置</el-button>
-              
+
               <el-button
                   type="primary"
                   size="small"
                   @click="handleToggleStatus(scope.row)"
                   class="table-op-button status-button"
               >修改状态</el-button>
-              
+
               <el-button
                   type="danger"
                   size="small"
@@ -404,7 +433,6 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background-color: #f5f7fa;
 }
 
 .avatar-img {
@@ -472,4 +500,4 @@ onMounted(() => {
 :deep(.el-table--striped .el-table__body tr.el-table__row--striped td) {
   background-color: #fafafa;
 }
-</style> 
+</style>
