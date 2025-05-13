@@ -2,7 +2,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import ElMessage from '../utils/message.js'
 import { ElMessageBox } from 'element-plus'
-import { getProjectList } from '../api/customer.js'
+import {getProjectList} from "../api/project.js";
 
 // 查询条件
 const queryForm = reactive({

@@ -15,7 +15,7 @@ const router = createRouter({
         {
             path: '/',
             name: 'layout',
-            component: () => import('../views/Layout.vue'),
+            component: () => import('../views/layout/Layout.vue'),
             meta: {
                 title: '后台管理系统'
             },
@@ -47,7 +47,7 @@ const router = createRouter({
                 {
                     path: 'phone',
                     name: 'phone',
-                    component: () => import('../views/Announcement.vue'),
+                    component: () => import('../views/Phone.vue'),
                     meta: {
                         title: '号码管理'
                     }

@@ -2,8 +2,8 @@
 // 布局组件
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import HeaderBar from '../components/HeaderBar.vue'
-import SideMenu from '../components/SideMenu.vue'
+import HeaderBar from '../../components/HeaderBar.vue'
+import SideMenu from '../../components/SideMenu.vue'
 
 const route = useRoute()
 const currentMenu = ref('公共栏管理')

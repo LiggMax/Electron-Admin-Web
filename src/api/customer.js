@@ -10,23 +10,3 @@ export const getCustomerList = (params) => {
     params
   });
 };
-
-/**
- * 获取卡商列表
- */
-export const getCardList = () => {
-  return request({
-    url: "/customer/adminUser",
-    method: "get",
-  });
-};
-
-/**
- * 获取项目列表
- */
-export const getProjectList = () => {
-  return request({
-    url: "/customer/project",
-    method: "get",
-  });
-};

@@ -2,9 +2,7 @@
 import {ref, reactive, onMounted, computed} from 'vue'
 import ElMessage from '../utils/message.js'
 import {ElMessageBox} from 'element-plus'
-import {
-  getCardList
-} from '../api/customer.js'
+import {getCardList} from "../api/card.js";
 
 // 查询条件
 const queryForm = reactive({
@@ -106,7 +104,7 @@ const handleBatchDelete = async () => {
     console.log('批量删除卡商:', selectedRows.value)
     ElMessage.success('批量删除成功')
     selectedRows.value = []
-    fetchMerchants() // 重新获取数据
+    await fetchMerchants()
   } catch (error) {
     // 用户取消删除
   }
