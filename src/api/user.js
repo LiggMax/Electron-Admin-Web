@@ -9,3 +9,14 @@ export const getUserInfo = () => {
     method: "get",
   });
 };
+
+/**
+ * 修改资料
+ */
+export const updateUserInfo = (data) => {
+  return request({
+    url: "/adminUserWeb/edit",
+    method: "post",
+    data
+  });
+};

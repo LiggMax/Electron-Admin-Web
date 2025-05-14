@@ -1,9 +1,10 @@
 <script setup>
 import { ref, onMounted, reactive } from 'vue';
-import { getUserInfo } from '../api/user.js';
+import {getUserInfo, updateUserInfo} from '../api/user.js';
 import ElMessage from '../utils/message.js';
 import { User, Edit } from '@element-plus/icons-vue';
 
+import Message from "../utils/message.js";
 // 管理员信息
 const adminInfo = ref({
   adminId: '',
@@ -24,6 +25,8 @@ const editForm = reactive({
 
 // 页面加载状态
 const loading = ref(false);
+// 表单提交状态
+const submitting = ref(false);
 
 // 表单校验规则
 const rules = {
@@ -87,24 +90,37 @@ const handleEdit = () => {
 const submitForm = async () => {
   if (!formRef.value) return;
   
-  await formRef.value.validate((valid) => {
-    if (valid) {
-      // 这里应该调用API更新用户信息
-      // 模拟更新成功
-      ElMessage.success('信息修改成功');
-      
-      // 更新本地显示的信息
-      adminInfo.value.nickName = editForm.nickName;
-      adminInfo.value.phoneNumber = editForm.phoneNumber;
-      adminInfo.value.email = editForm.email;
-      
-      // 关闭对话框
-      dialogVisible.value = false;
-    } else {
-      ElMessage.error('表单验证失败，请检查输入');
-      return false;
-    }
-  });
+  try {
+    // 表单验证
+    await formRef.value.validate();
+    
+    // 设置提交状态
+    submitting.value = true;
+    
+    // 准备提交的数据
+    const updateData = {
+      nickName: editForm.nickName,
+      phoneNumber: editForm.phoneNumber,
+      email: editForm.email
+    };
+    
+    // 调用API更新用户信息
+    await updateUserInfo(updateData);
+    
+    // 提示成功
+    Message.success('修改成功');
+    
+    // 关闭对话框
+    dialogVisible.value = false;
+    
+    // 重新获取最新的用户信息
+    await fetchAdminInfo();
+  } catch (error) {
+    console.error('更新用户信息失败:', error);
+    Message.error('更新用户信息失败，请稍后重试');
+  } finally {
+    submitting.value = false;
+  }
 };
 
 // 取消编辑
@@ -202,8 +218,8 @@ onMounted(() => {
       
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="cancelEdit">取消</el-button>
-          <el-button type="primary" @click="submitForm">确认</el-button>
+          <el-button @click="cancelEdit" :disabled="submitting">取消</el-button>
+          <el-button type="primary" @click="submitForm" :loading="submitting">确认</el-button>
         </div>
       </template>
     </el-dialog>
