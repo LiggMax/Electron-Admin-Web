@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, reactive } from 'vue';
 import { getUserInfo } from '../api/user.js';
 import ElMessage from '../utils/message.js';
 import { User, Edit } from '@element-plus/icons-vue';
@@ -15,8 +15,37 @@ const adminInfo = ref({
   loginTime: ''
 });
 
+// 编辑表单
+const editForm = reactive({
+  nickName: '',
+  phoneNumber: '',
+  email: ''
+});
+
 // 页面加载状态
 const loading = ref(false);
+
+// 表单校验规则
+const rules = {
+  nickName: [
+    { required: true, message: '请输入姓名', trigger: 'blur' },
+    { min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur' }
+  ],
+  phoneNumber: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+  ],
+  email: [
+    { required: false, message: '请输入邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+  ]
+};
+
+// 编辑对话框可见性
+const dialogVisible = ref(false);
+
+// 表单引用，用于校验
+const formRef = ref(null);
 
 // 获取管理员信息
 const fetchAdminInfo = async () => {
@@ -31,8 +60,8 @@ const fetchAdminInfo = async () => {
       account: userData.account || '',
       nickName: userData.nickName || '',
       role: '超级管理员',
-      phoneNumber: userData.phoneNumber,
-      email: userData.email,
+      phoneNumber: userData.phoneNumber || '',
+      email: userData.email || '',
       loginTime: userData.loginTime || ''
     };
   } catch (error) {
@@ -43,9 +72,44 @@ const fetchAdminInfo = async () => {
   }
 };
 
-// 修改个人信息
+// 打开编辑对话框
 const handleEdit = () => {
-  ElMessage.info('功能开发中...');
+  // 填充表单数据
+  editForm.nickName = adminInfo.value.nickName;
+  editForm.phoneNumber = adminInfo.value.phoneNumber;
+  editForm.email = adminInfo.value.email;
+  
+  // 显示对话框
+  dialogVisible.value = true;
+};
+
+// 提交表单
+const submitForm = async () => {
+  if (!formRef.value) return;
+  
+  await formRef.value.validate((valid) => {
+    if (valid) {
+      // 这里应该调用API更新用户信息
+      // 模拟更新成功
+      ElMessage.success('信息修改成功');
+      
+      // 更新本地显示的信息
+      adminInfo.value.nickName = editForm.nickName;
+      adminInfo.value.phoneNumber = editForm.phoneNumber;
+      adminInfo.value.email = editForm.email;
+      
+      // 关闭对话框
+      dialogVisible.value = false;
+    } else {
+      ElMessage.error('表单验证失败，请检查输入');
+      return false;
+    }
+  });
+};
+
+// 取消编辑
+const cancelEdit = () => {
+  dialogVisible.value = false;
 };
 
 onMounted(() => {
@@ -107,6 +171,42 @@ onMounted(() => {
         </el-button>
       </div>
     </div>
+    
+    <!-- 编辑弹窗 -->
+    <el-dialog
+      v-model="dialogVisible"
+      title="修改个人信息"
+      width="500px"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+    >
+      <el-form
+        ref="formRef"
+        :model="editForm"
+        :rules="rules"
+        label-width="80px"
+        label-position="right"
+      >
+        <el-form-item label="姓名" prop="nickName">
+          <el-input v-model="editForm.nickName" placeholder="请输入姓名"></el-input>
+        </el-form-item>
+        
+        <el-form-item label="手机号" prop="phoneNumber">
+          <el-input v-model="editForm.phoneNumber" placeholder="请输入手机号"></el-input>
+        </el-form-item>
+        
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="editForm.email" placeholder="请输入邮箱"></el-input>
+        </el-form-item>
+      </el-form>
+      
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="cancelEdit">取消</el-button>
+          <el-button type="primary" @click="submitForm">确认</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -177,18 +277,29 @@ onMounted(() => {
   padding: 10px 20px 20px;
   justify-content: center;
   border-radius: 0 0 8px 8px;
+  text-align: center;
 }
 
 .edit-btn {
   width: 120px;
   background-color: #4080ff;
   border-color: #4080ff;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
 .edit-btn .el-icon {
   margin-right: 5px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+:deep(.el-form-item__label) {
+  font-weight: 500;
 }
 </style> 
