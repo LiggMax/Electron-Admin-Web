@@ -4,6 +4,7 @@ import ElMessage from '../utils/message.js'
 import {ElMessageBox} from 'element-plus'
 import {
   getCustomerList,
+  updateCustomerStatus
 } from '../api/customer.js'
 import DateFormatter from '../utils/DateFormatter.js'
 
@@ -78,7 +79,53 @@ const handleEdit = (row) => {
 
 // 修改状态
 const handleToggleStatus = async (row) => {
-  console.log('修改状态:', row)
+  try {
+    // 显示确认对话框
+    await ElMessageBox.confirm(
+      `确定要${row.status ? '启用' : '停用'}用户 "${row.name}" 吗？`, 
+      '提示', 
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: row.status ? 'success' : 'warning'
+      }
+    )
+    
+    // 设置加载状态
+    row.statusLoading = true
+    
+    // 准备请求数据
+    const data = {
+      userId: row.id,
+      userStatus: row.status ? 1 : 0  // 将布尔值转换为 1/0
+    }
+    
+    // 调用API
+    const response = await updateCustomerStatus(data)
+    
+    if (response.code === 200) {
+      ElMessage.success(`已${row.status ? '启用' : '停用'}用户: ${row.name}`)
+    } else {
+      // 如果API调用失败，恢复状态并显示错误消息
+      row.status = !row.status
+      ElMessage.error(response.message || `更新用户状态失败`)
+    }
+  } catch (error) {
+    // 判断是否是用户取消操作
+    if (error === 'cancel' || error.toString().includes('cancel')) {
+      // 用户取消操作，恢复开关状态
+      row.status = !row.status
+      return
+    }
+    
+    // 发生错误时恢复状态
+    row.status = !row.status
+    console.error('更新用户状态失败:', error)
+    ElMessage.error('更新用户状态失败，请稍后重试')
+  } finally {
+    // 无论成功失败，都关闭加载状态
+    row.statusLoading = false
+  }
 }
 
 // 删除客户
@@ -113,7 +160,8 @@ const handleResponseData = (data) => {
     rawLoginTime: item.loginTime, // 保存原始登录时间用于计算相对时间
     createdAt: DateFormatter.format(item.createdAt),
     updatedAt: item.updatedAt ? DateFormatter.format(item.updatedAt) : '暂无更新',
-    status: item.userStatus === 1
+    status: item.userStatus === 1,
+    statusLoading: false // 添加状态加载标识
   }))
 }
 
@@ -264,6 +312,10 @@ onMounted(() => {
                 @change="() => handleToggleStatus(scope.row)"
                 inactive-color="#dcdfe6"
                 active-color="#409eff"
+                :loading="scope.row.statusLoading"
+                :disabled="scope.row.statusLoading"
+                :active-value="true"
+                :inactive-value="false"
             />
           </template>
         </el-table-column>

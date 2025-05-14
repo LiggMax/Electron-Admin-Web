@@ -10,3 +10,14 @@ export const getCustomerList = (params) => {
     params
   });
 };
+
+/**
+ * 更新客户状态
+ */
+export const updateCustomerStatus = (data) => {
+  return request({
+    url: "/customer",
+    method: "put",
+    data
+  });
+};
