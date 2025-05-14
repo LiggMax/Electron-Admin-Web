@@ -5,6 +5,7 @@ import {ElMessageBox} from 'element-plus'
 import {
   getCustomerList,
 } from '../api/customer.js'
+import DateFormatter from '../utils/DateFormatter.js'
 
 // 查询条件
 const queryForm = reactive({
@@ -108,8 +109,10 @@ const handleResponseData = (data) => {
     name: item.nickName || item.account,
     account: item.account,
     email: item.email || '未设置',
-    createdAt: item.createdAt,
-    updatedAt: item.updatedAt,
+    loginTime: item.loginTime ? DateFormatter.format(item.loginTime) : '暂无登录',
+    rawLoginTime: item.loginTime, // 保存原始登录时间用于计算相对时间
+    createdAt: DateFormatter.format(item.createdAt),
+    updatedAt: item.updatedAt ? DateFormatter.format(item.updatedAt) : '暂无更新',
     status: item.userStatus === 1
   }))
 }
@@ -237,6 +240,16 @@ onMounted(() => {
         <el-table-column prop="id" label="用户ID" width="150" align="center"/>
         <el-table-column prop="account" label="账号" width="120" align="center"/>
         <el-table-column prop="email" label="邮箱" width="150" align="center"/>
+        <el-table-column prop="loginTime" label="登录时间" width="180" align="center">
+          <template #default="scope">
+            <span :class="{'no-login': scope.row.loginTime === '暂无登录'}">
+              {{ scope.row.loginTime }}
+              <span v-if="scope.row.loginTime !== '暂无登录'" class="relative-time">
+                ({{ DateFormatter.relativeTime(scope.row.rawLoginTime) }})
+              </span>
+            </span>
+          </template>
+        </el-table-column>
         <el-table-column prop="createdAt" label="注册时间" width="180" align="center"/>
         <el-table-column prop="updatedAt" label="更新时间" width="180" align="center">
           <template #default="scope">
@@ -422,6 +435,17 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   font-size: 16px;
+}
+
+.no-login {
+  color: #909399;
+  font-style: italic;
+}
+
+.relative-time {
+  color: #409EFF;
+  font-size: 12px;
+  margin-left: 5px;
 }
 
 .pagination-container {
