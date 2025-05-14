@@ -63,7 +63,7 @@ const router = createRouter({
                 {
                     path: 'material',
                     name: 'material',
-                    component: () => import('../views/Announcement.vue'),
+                    component: () => import('../views/Material.vue'),
                     meta: {
                         title: '资料管理'
                     }
