@@ -3,7 +3,7 @@ import {ref, reactive, onMounted, nextTick} from 'vue'
 import ElMessage from '../utils/message.js'
 import {ElMessageBox} from 'element-plus'
 import {
-  addCustomerService,
+  addCustomerService, deleteCustomerService,
   getCustomerList, resetPasswordService, updateCustomerInfo,
   updateCustomerStatus
 } from '../api/customer.js'
@@ -288,8 +288,10 @@ const handleDelete = async (row) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    console.log('删除客户:', row)
+    const userId = row.id
+    await deleteCustomerService(userId)
     ElMessage.success('删除成功')
+    await fetchCustomers()
   } catch (error) {
     // 用户取消删除
   }

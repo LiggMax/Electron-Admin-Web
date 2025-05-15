@@ -54,3 +54,14 @@ export const addCustomerService = (data) => {
     params: data
   });
 };
+
+/**
+ * 删除客户
+ */
+export const deleteCustomerService = (userId) => {
+  return request({
+    url: "/customer/deleteUser",
+    method: "delete",
+    params: {userId}
+  });
+};
