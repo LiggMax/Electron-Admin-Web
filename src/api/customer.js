@@ -32,3 +32,14 @@ export const updateCustomerInfo = (data) => {
     data
   });
 };
+
+/**
+ * 重置密码
+ */
+export const resetPasswordService = (data) => {
+  return request({
+    url: "/customer/reset",
+    method: "put",
+    params: data
+  });
+};
