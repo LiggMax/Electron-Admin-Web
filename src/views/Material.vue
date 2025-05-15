@@ -1,9 +1,9 @@
 <script setup>
 import { ref, onMounted, reactive } from 'vue';
 import {getUserInfo, updateUserInfo} from '../api/user.js';
-import ElMessage from '../utils/message.js';
 import { User, Edit } from '@element-plus/icons-vue';
 
+import DateFormatter from "../utils/DateFormatter.js";
 import Message from "../utils/message.js";
 // 管理员信息
 const adminInfo = ref({
@@ -33,10 +33,6 @@ const rules = {
   nickName: [
     { required: true, message: '请输入姓名', trigger: 'blur' },
     { min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur' }
-  ],
-  phoneNumber: [
-    { required: true, message: '请输入手机号', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
   ],
   email: [
     { required: false, message: '请输入邮箱', trigger: 'blur' },
@@ -174,7 +170,7 @@ onMounted(() => {
         
         <div class="info-item">
           <span class="label">最后登录</span>
-          <span class="value">{{ adminInfo.loginTime }} ({{ adminInfo.loginIp || '192.168.1.1' }})</span>
+          <span class="value">{{ DateFormatter.format(adminInfo.loginTime) }} ({{ adminInfo.loginIp || '192.168.1.1' }})</span>
         </div>
       </div>
       
