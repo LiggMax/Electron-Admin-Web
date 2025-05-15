@@ -1,9 +1,9 @@
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, nextTick } from 'vue'
 import ElMessage from '../utils/message.js'
 import { ElMessageBox } from 'element-plus'
-import {getProjectList} from "../api/project.js";
-
+import { getProjectListService, addProjectService } from "../api/project.js";
+import DateFormatter from "../utils/DateFormatter.js";
 // 查询条件
 const queryForm = reactive({
   projectName: '',
@@ -44,10 +44,67 @@ const handleReset = () => {
   tableData.value = originalData.value
 }
 
+// 添加项目弹窗相关
+const addProjectVisible = ref(false)
+const addProjectForm = reactive({
+  projectName: '',
+  projectPrice: ''
+})
+const addProjectLoading = ref(false)
+const addProjectFormRef = ref(null)
+
+// 添加项目验证规则
+const addProjectRules = {
+  projectName: [
+    { required: true, message: '请输入项目名称', trigger: 'blur' },
+    { min: 1, max: 50, message: '项目名称长度需在1到50个字符之间', trigger: 'blur' }
+  ],
+}
+
 // 添加项目
 const handleAddProject = () => {
-  console.log('添加项目')
-  // TODO: 打开添加项目对话框
+  // 重置表单数据
+  addProjectForm.projectName = ''
+  addProjectForm.projectPrice = ''
+  
+  // 显示添加项目弹窗
+  addProjectVisible.value = true
+  
+  // 下一帧后重置表单校验结果
+  nextTick(() => {
+    addProjectFormRef.value?.resetFields()
+  })
+}
+
+// 提交添加项目表单
+const submitAddProject = async () => {
+  if (!addProjectFormRef.value) return
+  
+  try {
+    // 表单校验
+    await addProjectFormRef.value.validate()
+    
+    addProjectLoading.value = true
+    
+    // 准备请求数据
+    const projectData = {
+      projectName: addProjectForm.projectName,
+    }
+    
+    // 调用API
+    await addProjectService(projectData)
+    
+    ElMessage.success('项目添加成功')
+    addProjectVisible.value = false
+    await fetchProjects() // 刷新数据
+  } catch (error) {
+    if (error.message && !error.message.includes('验证未通过')) {
+      console.error('添加项目失败:', error)
+      ElMessage.error('添加项目失败: ' + error.message)
+    }
+  } finally {
+    addProjectLoading.value = false
+  }
 }
 
 // 导出项目数据
@@ -76,7 +133,7 @@ const handleDelete = async (row) => {
     })
     console.log('删除项目:', row)
     ElMessage.success('删除成功')
-    fetchProjects() // 重新获取数据
+    await fetchProjects() // 重新获取数据
   } catch (error) {
     // 用户取消删除
   }
@@ -110,8 +167,9 @@ const handleResponseData = (data) => {
   return data.map(item => ({
     id: item.projectId,
     projectName: item.projectName,
-    price: item.projectPrice,
-    createdAt: item.projectCreatedAt
+    price: item.projectPrice !== null ? Number(item.projectPrice) : 0,
+    hasPrice: item.projectPrice !== null,
+    createdAt: item.projectCreatedAt ? DateFormatter.format(item.projectCreatedAt) : '未知时间'
   }))
 }
 
@@ -119,7 +177,7 @@ const handleResponseData = (data) => {
 const fetchProjects = async () => {
   tableLoading.value = true
   try {
-    const response = await getProjectList()
+    const response = await getProjectListService()
     const processedData = handleResponseData(response.data)
     originalData.value = processedData
     tableData.value = processedData
@@ -139,21 +197,8 @@ onMounted(() => {
   <div class="project-container">
     <!-- 搜索区域 -->
     <div class="search-container">
-      <div class="search-form">
-        <div class="form-item">
-          <label>项目名称:</label>
-          <el-input v-model="queryForm.projectName" placeholder="输入项目名称" clearable/>
-        </div>
-        
-        <div class="form-item">
-          <el-button type="primary" @click="handleSearch" class="search-button">查询</el-button>
-          <el-button @click="handleReset" class="reset-button">重置</el-button>
-        </div>
-      </div>
-      
       <div class="operation-buttons">
         <el-button type="primary" @click="handleAddProject" class="add-button">添加项目</el-button>
-        <el-button @click="handleExport" class="export-button">导出</el-button>
       </div>
     </div>
     
@@ -184,11 +229,12 @@ onMounted(() => {
           highlight-current-row
       >
         <el-table-column type="selection" width="55"/>
-        <el-table-column prop="id" label="项目ID" width="100" align="center"/>
+        <el-table-column prop="id" label="项目ID" width="190" align="center"/>
         <el-table-column prop="projectName" label="项目名称" min-width="150" align="center"/>
         <el-table-column prop="price" label="项目价格" width="120" align="center">
           <template #default="scope">
-            ￥{{ scope.row.price.toFixed(2) }}
+            <span v-if="scope.row.hasPrice" class="price">￥{{ scope.row.price.toFixed(2) }}</span>
+            <span v-else class="no-price">未设置</span>
           </template>
         </el-table-column>
         <el-table-column prop="createdAt" label="创建时间" width="180" align="center"/>
@@ -214,6 +260,37 @@ onMounted(() => {
         </el-table-column>
       </el-table>
     </div>
+
+    <!-- 添加项目弹窗 -->
+    <el-dialog
+        v-model="addProjectVisible"
+        title="添加项目"
+        width="500px"
+        :close-on-click-modal="false"
+        :close-on-press-escape="false"
+    >
+      <el-form 
+          ref="addProjectFormRef"
+          :model="addProjectForm" 
+          :rules="addProjectRules"
+          label-width="100px" 
+          label-position="right"
+          status-icon
+      >
+        <el-form-item label="项目名称" prop="projectName">
+          <el-input 
+              v-model="addProjectForm.projectName" 
+              placeholder="请输入项目名称"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="addProjectVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitAddProject" :loading="addProjectLoading">确定</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -257,7 +334,7 @@ onMounted(() => {
 }
 
 .add-button {
-  background-color: #8e8ff0;
+  background-color: #8f90ff;
   border-color: #8e8ff0;
   margin-right: 10px;
   font-size: 16px;
@@ -344,5 +421,19 @@ onMounted(() => {
 
 :deep(.el-table th) {
   font-weight: bold;
+}
+
+.dialog-footer {
+  text-align: right;
+}
+
+.price {
+  color: #f56c6c;
+  font-weight: bold;
+}
+
+.no-price {
+  color: #909399;
+  font-style: italic;
 }
 </style> 
