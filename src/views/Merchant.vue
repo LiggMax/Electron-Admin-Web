@@ -1,8 +1,8 @@
 <script setup>
-import {ref, reactive, onMounted, computed} from 'vue'
+import {ref, reactive, onMounted, computed, nextTick} from 'vue'
 import ElMessage from '../utils/message.js'
 import {ElMessageBox} from 'element-plus'
-import {getCardList, editCard, resetPassword} from "../api/card.js";
+import {getCardList, editCard, resetPassword, addCard} from "../api/card.js";
 
 // 查询条件
 const queryForm = reactive({
@@ -51,8 +51,20 @@ const handleReset = () => {
 
 // 添加卡商
 const handleAddMerchant = () => {
-  console.log('添加卡商')
-  // TODO: 打开添加卡商对话框
+  // 重置表单数据
+  addCardForm.account = ''
+  addCardForm.nickName = ''
+  addCardForm.email = ''
+  addCardForm.password = ''
+  addCardForm.confirmPassword = ''
+  
+  // 显示添加卡商弹窗
+  addCardVisible.value = true
+  
+  // 下一帧后重置表单校验结果
+  nextTick(() => {
+    addCardFormRef.value?.resetFields()
+  })
 }
 
 // 导出卡商数据
@@ -87,6 +99,18 @@ const resetPasswordForm = reactive({
 const resetPasswordLoading = ref(false)
 const resetPasswordFormRef = ref(null)
 
+// 添加卡商弹窗相关
+const addCardVisible = ref(false)
+const addCardForm = reactive({
+  account: '',
+  nickName: '',
+  email: '',
+  password: '',
+  confirmPassword: ''
+})
+const addCardLoading = ref(false)
+const addCardFormRef = ref(null)
+
 // 重置密码表单验证规则
 const resetPasswordRules = {
   password: [
@@ -117,6 +141,39 @@ const editRules = {
   email: [
     { required: false, message: '请输入邮箱地址', trigger: 'blur' },
     { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+  ]
+}
+
+// 添加卡商表单验证规则
+const addCardRules = {
+  account: [
+    { required: true, message: '请输入账号', trigger: 'blur' },
+    { min: 6, max: 16, message: '账号长度需在4到20个字符之间', trigger: 'blur' }
+  ],
+  nickName: [
+    { required: true, message: '请输入昵称', trigger: 'blur' },
+    { min: 1, max: 20, message: '昵称长度需在1到20个字符之间', trigger: 'blur' }
+  ],
+  email: [
+    { required: false, message: '请输入邮箱地址', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 16, message: '密码长度需在6到16个字符之间', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认密码', trigger: 'blur' },
+    {
+      validator: (rule, value, callback) => {
+        if (value !== addCardForm.password) {
+          callback(new Error('两次输入的密码不一致'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
   ]
 }
 
@@ -266,6 +323,40 @@ const submitResetPassword = async () => {
     }
   } finally {
     resetPasswordLoading.value = false
+  }
+}
+
+// 提交添加卡商表单
+const submitAddCard = async () => {
+  if (!addCardFormRef.value) return
+  
+  try {
+    // 表单校验
+    await addCardFormRef.value.validate()
+    
+    addCardLoading.value = true
+    
+    // 准备请求数据
+    const cardData = {
+      account: addCardForm.account,
+      nickName: addCardForm.nickName,
+      email: addCardForm.email,
+      password: addCardForm.password
+    }
+    
+    // 调用API
+    await addCard(cardData)
+    
+    ElMessage.success('卡商添加成功')
+    addCardVisible.value = false
+    await fetchMerchants() // 刷新数据
+  } catch (error) {
+    if (error.message && !error.message.includes('验证未通过')) {
+      console.error('添加卡商失败:', error)
+      ElMessage.error('添加卡商失败: ' + error.message)
+    }
+  } finally {
+    addCardLoading.value = false
   }
 }
 
@@ -469,6 +560,66 @@ onMounted(() => {
         <div class="dialog-footer">
           <el-button @click="resetPasswordVisible = false">取消</el-button>
           <el-button type="primary" @click="submitResetPassword" :loading="resetPasswordLoading">确定</el-button>
+        </div>
+      </template>
+    </el-dialog>
+    
+    <!-- 添加卡商弹窗 -->
+    <el-dialog
+        v-model="addCardVisible"
+        title="添加卡商"
+        width="500px"
+        :close-on-click-modal="false"
+        :close-on-press-escape="false"
+    >
+      <el-form 
+          ref="addCardFormRef"
+          :model="addCardForm" 
+          :rules="addCardRules"
+          label-width="100px" 
+          label-position="right"
+          status-icon
+      >
+        <el-form-item label="账号" prop="account">
+          <el-input 
+              v-model="addCardForm.account" 
+              placeholder="请输入账号，4-20个字符"
+              autocomplete="off"
+          />
+        </el-form-item>
+        <el-form-item label="昵称" prop="nickName">
+          <el-input 
+              v-model="addCardForm.nickName" 
+              placeholder="请输入昵称，1-20个字符"
+          />
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input 
+              v-model="addCardForm.email" 
+              placeholder="请输入邮箱，非必填"
+          />
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input 
+              v-model="addCardForm.password" 
+              placeholder="请输入密码，6-16个字符" 
+              show-password 
+              autocomplete="new-password"
+          />
+        </el-form-item>
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input 
+              v-model="addCardForm.confirmPassword" 
+              placeholder="请再次输入密码" 
+              show-password 
+              autocomplete="new-password"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="addCardVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitAddCard" :loading="addCardLoading">确定</el-button>
         </div>
       </template>
     </el-dialog>
