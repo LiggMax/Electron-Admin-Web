@@ -42,3 +42,14 @@ export const addCard = (data) => {
         params: data
     });
 };
+
+/**
+ * 删除卡商
+ */
+export const deleteCardService = (userId) => {
+    return request({
+        url: `/card/deleteCard`,
+        method: "delete",
+        params: {userId}
+    });
+};

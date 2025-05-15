@@ -2,7 +2,7 @@
 import {ref, reactive, onMounted, computed, nextTick} from 'vue'
 import ElMessage from '../utils/message.js'
 import {ElMessageBox} from 'element-plus'
-import {getCardList, editCard, resetPassword, addCard} from "../api/card.js";
+import {getCardList, editCard, resetPassword, addCard, deleteCardService} from "../api/card.js";
 import DateFormatter from "../utils/DateFormatter.js";
 
 // 查询条件
@@ -232,9 +232,10 @@ const handleDelete = async (row) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    console.log('删除卡商:', row)
+    const userId = row.id
+    await deleteCardService(userId)
     ElMessage.success('删除成功')
-    fetchMerchants() // 重新获取数据
+    await fetchMerchants() // 重新获取数据
   } catch (error) {
     // 用户取消删除
   }
@@ -319,9 +320,8 @@ const submitResetPassword = async () => {
     }
     
     // 调用API
-    const response = await resetPassword(data)
-    
-      ElMessage.success('密码重置成功')
+    await resetPassword(data);
+    ElMessage.success('密码重置成功')
       resetPasswordVisible.value = false
   } catch (error) {
     if (error.message && !error.message.includes('验证未通过')) {
