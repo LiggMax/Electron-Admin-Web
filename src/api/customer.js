@@ -18,6 +18,6 @@ export const updateCustomerStatus = (data) => {
   return request({
     url: "/customer",
     method: "put",
-    data
+    params: data
   });
 };

@@ -69,7 +69,6 @@ const fetchAdminInfo = async () => {
     };
   } catch (error) {
     console.error('获取管理员信息失败:', error);
-    ElMessage.error('获取管理员信息失败，请稍后重试');
   } finally {
     loading.value = false;
   }
@@ -117,7 +116,6 @@ const submitForm = async () => {
     await fetchAdminInfo();
   } catch (error) {
     console.error('更新用户信息失败:', error);
-    Message.error('更新用户信息失败，请稍后重试');
   } finally {
     submitting.value = false;
   }
@@ -293,7 +291,6 @@ onMounted(() => {
   padding: 10px 20px 20px;
   justify-content: center;
   border-radius: 0 0 8px 8px;
-  text-align: center;
 }
 
 .edit-btn {

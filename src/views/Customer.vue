@@ -97,7 +97,7 @@ const handleToggleStatus = async (row) => {
     // 准备请求数据
     const data = {
       userId: row.id,
-      userStatus: row.status ? 1 : 0  // 将布尔值转换为 1/0
+      status: row.status
     }
     
     // 调用API
@@ -188,7 +188,6 @@ const fetchCustomers = async () => {
     }
   } catch (error) {
     console.error('获取用户列表失败:', error)
-    ElMessage.error('获取用户列表失败，请稍后重试')
     tableData.value = []
     pagination.total = 0
   } finally {
@@ -288,6 +287,20 @@ onMounted(() => {
         <el-table-column prop="id" label="用户ID" width="150" align="center"/>
         <el-table-column prop="account" label="账号" width="120" align="center"/>
         <el-table-column prop="email" label="邮箱" width="150" align="center"/>
+        <el-table-column prop="status" label="状态" width="100" align="center">
+          <template #default="scope">
+            <el-switch
+                v-model="scope.row.status"
+                @change="() => handleToggleStatus(scope.row)"
+                inactive-color="#dcdfe6"
+                active-color="#409eff"
+                :loading="scope.row.statusLoading"
+                :disabled="scope.row.statusLoading"
+                :active-value="true"
+                :inactive-value="false"
+            />
+          </template>
+        </el-table-column>
         <el-table-column prop="loginTime" label="登录时间" width="180" align="center">
           <template #default="scope">
             <span :class="{'no-login': scope.row.loginTime === '暂无登录'}">
@@ -304,22 +317,6 @@ onMounted(() => {
             {{ scope.row.updatedAt || '暂无更新' }}
           </template>
         </el-table-column>
-
-        <el-table-column prop="status" label="状态" width="100" align="center">
-          <template #default="scope">
-            <el-switch
-                v-model="scope.row.status"
-                @change="() => handleToggleStatus(scope.row)"
-                inactive-color="#dcdfe6"
-                active-color="#409eff"
-                :loading="scope.row.statusLoading"
-                :disabled="scope.row.statusLoading"
-                :active-value="true"
-                :inactive-value="false"
-            />
-          </template>
-        </el-table-column>
-
         <el-table-column label="操作" fixed="right" width="220" align="center">
           <template #default="scope">
             <div class="operation-buttons-group">
@@ -328,14 +325,14 @@ onMounted(() => {
                   size="small"
                   @click="handleEdit(scope.row)"
                   class="table-op-button edit-button"
-              >配置</el-button>
+              >修改</el-button>
               
               <el-button
                   type="primary"
                   size="small"
-                  @click="handleToggleStatus(scope.row)"
+                  @click=""
                   class="table-op-button status-button"
-              >修改状态</el-button>
+              >重置密码</el-button>
               
               <el-button
                   type="danger"

@@ -219,22 +219,38 @@ onMounted(() => {
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" fixed="right" width="220" align="center">
+        <el-table-column label="操作" fixed="right" width="150" align="center">
           <template #default="scope">
             <div class="operation-buttons-group">
-              <el-button
-                  type="warning"
-                  size="small"
-                  @click="handleEdit(scope.row)"
-                  class="table-op-button edit-button"
-              >配置</el-button>
-              
-              <el-button
-                  type="danger"
-                  size="small"
-                  @click="handleDelete(scope.row)"
-                  class="table-op-button delete-button"
-              >删除</el-button>
+              <div class="button-row">
+                <el-button
+                    type="warning"
+                    size="small"
+                    @click="handleEdit(scope.row)"
+                    class="table-op-button edit-button"
+                >修改</el-button>
+                
+                <el-button
+                    type="primary"
+                    size="small"
+                    @click=""
+                    class="table-op-button reset-button"
+                >密码重置</el-button>
+              </div>
+              <div class="button-row">
+                <el-button
+                    type="success"
+                    size="small"
+                    @click=""
+                    class="table-op-button add-phone-button"
+                >添加号码</el-button>
+                <el-button
+                    type="danger"
+                    size="small"
+                    @click="handleDelete(scope.row)"
+                    class="table-op-button delete-button"
+                >删除</el-button>
+              </div>
             </div>
           </template>
         </el-table-column>
@@ -368,15 +384,21 @@ onMounted(() => {
 
 .operation-buttons-group {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: center;
-  gap: 10px;
+  gap: 5px;
+}
+
+.button-row {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
 }
 
 .table-op-button {
   margin: 0;
-  padding: 5px 0;
-  height: 26px;
+  padding: 2px 0;
+  height: 24px;
   line-height: 1;
   border-radius: 4px;
   font-size: 12px;
@@ -386,6 +408,16 @@ onMounted(() => {
 .edit-button {
   background-color: #ff9900;
   border-color: #ff9900;
+}
+
+.reset-button {
+  background-color: #409eff;
+  border-color: #409eff;
+}
+
+.add-phone-button {
+  background-color: #67c23a;
+  border-color: #67c23a;
 }
 
 .delete-button {
