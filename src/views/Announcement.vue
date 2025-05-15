@@ -1,10 +1,13 @@
 <script setup>
 // 公共栏管理组件
-import { ref, computed } from 'vue'
-import { publishAnnouncement } from "../api/announcement.js"
+import { ref, computed, onMounted } from 'vue'
+import { publishAnnouncement, getAnnouncementList } from "../api/announcement.js"
 import ElMessage from '../utils/message.js'
+import DateFormatter from '../utils/DateFormatter.js'
 
 const announcement = ref('')
+const announcementList = ref([])
+const loading = ref(false)
 
 // 计算剩余字符数
 const remainingChars = computed(() => {
@@ -17,23 +20,52 @@ const isValidLength = computed(() => {
   return length >= 5 && length <= 100
 })
 
+// 保存公告
 const saveAnnouncement = async () => {
-  const content = announcement.value.trim()
+  try {
+    const content = announcement.value.trim()
     await publishAnnouncement(content)
     ElMessage.success('公告发布成功')
     announcement.value = ''
+    await fetchAnnouncementList() // 发布成功后刷新列表
+  } catch (error) {
+    ElMessage.error('公告发布失败')
+  }
 }
+
+// 获取公告列表
+const fetchAnnouncementList = async () => {
+  try {
+    loading.value = true
+    const response = await getAnnouncementList()
+      // 处理数据，格式化日期
+      announcementList.value = response.data.map(item => ({
+        id: item.id,
+        content: item.content,
+        createTime: DateFormatter.format(item.createTime)
+      }))
+  } finally {
+    loading.value = false
+  }
+}
+
+// 组件挂载时获取公告列表
+onMounted(() => {
+  fetchAnnouncementList()
+})
 </script>
 
 <template>
   <div class="management-container">
+    <!-- 发布公告区域 -->
     <div class="content-area">
+      <h2 class="section-title">发布公告</h2>
       <div class="input-container">
         <el-input
           v-model="announcement"
           type="textarea"
           :rows="5"
-          placeholder="请输入内容输入框"
+          placeholder="请输入公告内容"
           class="rounded-textarea"
           maxlength="100"
           show-word-limit
@@ -49,7 +81,27 @@ const saveAnnouncement = async () => {
           class="save-button" 
           @click="saveAnnouncement"
           :disabled="!isValidLength"
-        >保存</el-button>
+        >发布公告</el-button>
+      </div>
+    </div>
+
+    <!-- 公告列表区域 -->
+    <div class="content-area announcement-list-area">
+      <h2 class="section-title">公告列表</h2>
+      <el-table
+        :data="announcementList"
+        v-loading="loading"
+        style="width: 100%"
+        border
+        stripe
+      >
+        <el-table-column prop="id" label="序号" width="80" align="center" />
+        <el-table-column prop="content" label="公告内容" min-width="300" show-overflow-tooltip />
+        <el-table-column prop="createTime" label="发布时间" width="180" align="center" />
+      </el-table>
+      
+      <div v-if="!loading && announcementList.length === 0" class="empty-data">
+        暂无公告
       </div>
     </div>
   </div>
@@ -58,20 +110,25 @@ const saveAnnouncement = async () => {
 <style scoped>
 .management-container {
   width: 100%;
-  height: 100%;
-  border-radius: 14px;
-  justify-content: center;
-  align-items: center;
-  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
 }
 
 .content-area {
   background-color: #fff;
   border-radius: 14px;
   padding: 20px;
-  width: 90%;
-  max-width: 800px;
+  width: 100%;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: #303133;
+  font-weight: 600;
 }
 
 .input-container {
@@ -107,6 +164,17 @@ const saveAnnouncement = async () => {
   border-radius: 5px;
 }
 
+.announcement-list-area {
+  margin-top: 20px;
+}
+
+.empty-data {
+  text-align: center;
+  color: #909399;
+  padding: 30px 0;
+  font-size: 14px;
+}
+
 :deep(.el-textarea__inner) {
   resize: none;
   border-radius: 14px;
@@ -131,5 +199,9 @@ const saveAnnouncement = async () => {
   background-color: #a0a0e3;
   border-color: #a0a0e3;
   cursor: not-allowed;
+}
+
+:deep(.el-table .cell) {
+  padding: 10px;
 }
 </style> 

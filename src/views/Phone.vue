@@ -2,7 +2,7 @@
   <div class="phone-container">
     <div class="search-bar">
       <el-form :inline="true" class="form-inline">
-        <el-form-item label="客户ID:">
+        <el-form-item label="卡商ID:">
           <el-input v-model="searchForm.merchantId" placeholder="请输入卡商ID"></el-input>
         </el-form-item>
         <el-form-item>
@@ -11,12 +11,6 @@
         </el-form-item>
       </el-form>
     </div>
-
-    <div class="button-group">
-      <el-button type="primary" @click="handleAdd">添加号码</el-button>
-      <el-button type="primary" @click="batchOperation">批量分配</el-button>
-    </div>
-
     <div class="table-container">
       <div class="selected-hint" v-if="selectedItems.length > 0">
         <el-icon><InfoFilled /></el-icon>
