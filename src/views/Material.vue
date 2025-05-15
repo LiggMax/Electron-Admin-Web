@@ -13,7 +13,8 @@ const adminInfo = ref({
   role: '超级管理员', // 角色信息，可根据实际情况调整
   phoneNumber: '',
   email: '',
-  loginTime: ''
+  loginTime: '',
+  loginIp: ''
 });
 
 // 编辑表单
@@ -61,7 +62,8 @@ const fetchAdminInfo = async () => {
       role: '超级管理员',
       phoneNumber: userData.phoneNumber || '',
       email: userData.email || '',
-      loginTime: userData.loginTime || ''
+      loginTime: userData.loginTime || '',
+      loginIp: userData.loginIp || ''
     };
   } catch (error) {
     console.error('获取管理员信息失败:', error);
@@ -170,7 +172,7 @@ onMounted(() => {
         
         <div class="info-item">
           <span class="label">最后登录</span>
-          <span class="value">{{ DateFormatter.format(adminInfo.loginTime) }} ({{ adminInfo.loginIp || '192.168.1.1' }})</span>
+          <span class="value">{{ DateFormatter.format(adminInfo.loginTime) }} <span v-if="adminInfo.loginIp">   (IP地址:{{ adminInfo.loginIp}}) </span></span>
         </div>
       </div>
       

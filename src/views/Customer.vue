@@ -406,7 +406,6 @@ const submitAddCustomer = async () => {
       password: addCustomerForm.password,
       email: addCustomerForm.email,
     }
-    // TODO: 调用API添加客户
     await addCustomerService(addCustomer)
 
     ElMessage.success('客户添加成功')

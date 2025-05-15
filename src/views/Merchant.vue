@@ -149,11 +149,13 @@ const editRules = {
 const addCardRules = {
   account: [
     { required: true, message: '请输入账号', trigger: 'blur' },
-    { min: 6, max: 16, message: '账号长度需在4到20个字符之间', trigger: 'blur' }
+    { min: 6, max: 20, message: '账号长度需在6到20个字符之间', trigger: 'blur' },
+    { pattern: /^[a-zA-Z\d]{6,20}$/, message: '账号只能包含字母和数字', trigger: 'blur' }
   ],
   nickName: [
     { required: true, message: '请输入昵称', trigger: 'blur' },
-    { min: 1, max: 20, message: '昵称长度需在1到20个字符之间', trigger: 'blur' }
+    { min: 1, max: 20, message: '昵称长度需在1到20个字符之间', trigger: 'blur' },
+    { pattern: /^[a-zA-Z\d]{1,20}$/, message: '昵称只能包含字母和数字', trigger: 'blur' }
   ],
   email: [
     { required: false, message: '请输入邮箱地址', trigger: 'blur' },
@@ -161,7 +163,8 @@ const addCardRules = {
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 16, message: '密码长度需在6到16个字符之间', trigger: 'blur' }
+    { min: 6, max: 20, message: '密码长度需在6到20个字符之间', trigger: 'blur' },
+    { pattern: /^[a-zA-Z\d]{6,20}$/, message: '密码只能包含字母和数字', trigger: 'blur' }
   ],
   confirmPassword: [
     { required: true, message: '请确认密码', trigger: 'blur' },
@@ -340,12 +343,12 @@ const submitAddCard = async () => {
     
     addCardLoading.value = true
     
-    // 准备请求数据
+    // 准备请求数据 - 确保参数名符合后端接口
     const cardData = {
       account: addCardForm.account,
+      password: addCardForm.password,
       nickName: addCardForm.nickName,
-      email: addCardForm.email,
-      password: addCardForm.password
+      email: addCardForm.email || '' // 确保即使email为空也传递空字符串
     }
     
     // 调用API
@@ -646,29 +649,24 @@ onMounted(() => {
           label-position="right"
           status-icon
       >
-        <el-form-item label="账号" prop="account">
-          <el-input 
-              v-model="addCardForm.account" 
-              placeholder="请输入账号，4-20个字符"
-              autocomplete="off"
-          />
-        </el-form-item>
         <el-form-item label="昵称" prop="nickName">
           <el-input 
               v-model="addCardForm.nickName" 
               placeholder="请输入昵称，1-20个字符"
           />
         </el-form-item>
-        <el-form-item label="邮箱" prop="email">
-          <el-input 
-              v-model="addCardForm.email" 
-              placeholder="请输入邮箱，非必填"
+
+        <el-form-item label="账号" prop="account">
+          <el-input
+              v-model="addCardForm.account"
+              placeholder="请输入账号，6-20个字符"
+              autocomplete="off"
           />
         </el-form-item>
         <el-form-item label="密码" prop="password">
           <el-input 
               v-model="addCardForm.password" 
-              placeholder="请输入密码，6-16个字符" 
+              placeholder="请输入密码，6-20个字符" 
               show-password 
               autocomplete="new-password"
           />
@@ -679,6 +677,12 @@ onMounted(() => {
               placeholder="请再次输入密码" 
               show-password 
               autocomplete="new-password"
+          />
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input
+              v-model="addCardForm.email"
+              placeholder="请输入邮箱，非必填"
           />
         </el-form-item>
       </el-form>

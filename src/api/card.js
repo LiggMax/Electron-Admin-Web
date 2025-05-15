@@ -39,6 +39,6 @@ export const addCard = (data) => {
     return request({
         url: "/card/add",
         method: "post",
-        data
+        params: data
     });
 };

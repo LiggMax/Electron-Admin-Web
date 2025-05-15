@@ -51,6 +51,6 @@ export const addCustomerService = (data) => {
   return request({
     url: "/customer/addUser",
     method: "post",
-    data
+    params: data
   });
 };
