@@ -100,7 +100,6 @@ onMounted(() => {
 const loadData = async () => {
   try {
     const res = await getPhoneList()
-    if (res.code === 200) {
       // 处理数据映射
       tableData.value = res.data.map(item => {
         return {
@@ -117,12 +116,8 @@ const loadData = async () => {
         }
       })
       total.value = res.data.length
-    } else {
-      ElMessage.error(res.message || '获取数据失败')
-    }
   } catch (error) {
     console.error('加载数据出错:', error)
-    ElMessage.error('获取数据失败')
   }
 }
 

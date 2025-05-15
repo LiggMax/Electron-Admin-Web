@@ -268,6 +268,7 @@ const handleResponseData = (data) => {
     name: item.nickName || item.account,
     account: item.account,
     email: item.email || '未设置',
+    phoneNumber: item.phoneNumber || '未设置',
     loginTime: item.loginTime ? DateFormatter.format(item.loginTime) : '暂无登录',
     rawLoginTime: item.loginTime, // 保存原始登录时间用于计算相对时间
     createdAt: DateFormatter.format(item.createdAt),
@@ -360,6 +361,58 @@ const submitAddCard = async () => {
     }
   } finally {
     addCardLoading.value = false
+  }
+}
+
+// 添加号码弹窗相关
+const addPhoneVisible = ref(false)
+const currentCard = reactive({
+  id: '',
+  name: '',
+  account: '',
+  phoneNumber: ''
+})
+const phoneFormLoading = ref(false)
+const phoneForm = reactive({
+  phoneNumber: '' // 单个号码输入
+})
+
+// 添加号码
+const handleAddPhone = (row) => {
+  // 保存当前卡商信息
+  currentCard.id = row.id
+  currentCard.name = row.name
+  currentCard.account = row.account
+  currentCard.phoneNumber = row.phoneNumber
+  
+  // 如果已有号码，则预填充到表单
+  phoneForm.phoneNumber = row.phoneNumber !== '未设置' ? row.phoneNumber : ''
+  
+  // 显示添加号码弹窗
+  addPhoneVisible.value = true
+}
+
+// 提交添加号码表单
+const submitPhoneForm = async () => {
+  try {
+    // 验证号码是否有效
+    if (!phoneForm.phoneNumber.trim()) {
+      ElMessage.warning('请输入有效的号码')
+      return
+    }
+    
+    phoneFormLoading.value = true
+    const cardInfo = {
+      userId: currentCard.id,
+      phoneNumber: phoneForm.phoneNumber
+    }
+    await editCard(cardInfo)
+    ElMessage.success('号码添加成功')
+    addPhoneVisible.value = false
+  } catch (error) {
+    console.error('添加号码失败:', error)
+  } finally {
+    phoneFormLoading.value = false
   }
 }
 
@@ -477,7 +530,7 @@ onMounted(() => {
                 <el-button
                     type="success"
                     size="small"
-                    @click=""
+                    @click="handleAddPhone(scope.row)"
                     class="table-op-button add-phone-button"
                 >添加号码</el-button>
                 <el-button
@@ -633,6 +686,55 @@ onMounted(() => {
         <div class="dialog-footer">
           <el-button @click="addCardVisible = false">取消</el-button>
           <el-button type="primary" @click="submitAddCard" :loading="addCardLoading">确定</el-button>
+        </div>
+      </template>
+    </el-dialog>
+    
+    <!-- 添加号码弹窗 -->
+    <el-dialog
+        v-model="addPhoneVisible"
+        title="号码管理"
+        width="500px"
+        :close-on-click-modal="false"
+        :close-on-press-escape="false"
+    >
+      <div class="card-info">
+        <div class="info-item">
+          <span class="label">卡商ID:</span>
+          <span class="value">{{ currentCard.id }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">卡商名称:</span>
+          <span class="value">{{ currentCard.name }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">账号:</span>
+          <span class="value">{{ currentCard.account }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">当前号码:</span>
+          <span class="value" :class="{'no-data': currentCard.phoneNumber === '未设置'}">
+            {{ currentCard.phoneNumber }}
+          </span>
+        </div>
+      </div>
+      
+      <div class="phone-form">
+        <el-form label-width="80px">
+          <el-form-item label="号码">
+            <el-input 
+                v-model="phoneForm.phoneNumber" 
+                placeholder="请输入号码" 
+                maxlength="11"
+            />
+          </el-form-item>
+        </el-form>
+      </div>
+      
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="addPhoneVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitPhoneForm" :loading="phoneFormLoading">确定</el-button>
         </div>
       </template>
     </el-dialog>
@@ -835,5 +937,43 @@ onMounted(() => {
   color: #409EFF;
   font-size: 12px;
   margin-left: 5px;
+}
+
+.card-info {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f8f8f8;
+  border-radius: 4px;
+}
+
+.info-item {
+  margin-bottom: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.info-item:last-child {
+  margin-bottom: 0;
+}
+
+.label {
+  font-weight: bold;
+  color: #606266;
+  margin-right: 10px;
+  display: inline-block;
+  width: 80px;
+}
+
+.value {
+  color: #303133;
+}
+
+.phone-form {
+  margin-bottom: 20px;
+}
+
+.no-data {
+  color: #909399;
+  font-style: italic;
 }
 </style>
