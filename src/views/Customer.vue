@@ -331,13 +331,8 @@ const fetchCustomers = async () => {
     
     const response = await getCustomerList(params)
     
-    if (response.code === 200) {
       tableData.value = handleResponseData(response.data)
       pagination.total = response.data.length // 注意：实际项目中可能需要从响应中获取总记录数
-    } else {
-      ElMessage.error(response.message || '获取用户列表失败')
-      tableData.value = []
-    }
   } catch (error) {
     console.error('获取用户列表失败:', error)
     tableData.value = []
