@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, reactive } from 'vue';
 import {getUserInfo, updateUserInfo} from '../api/user.js';
-import { User, Edit } from '@element-plus/icons-vue';
+import { Edit } from '@element-plus/icons-vue';
 
 import DateFormatter from "../utils/DateFormatter.js";
 import Message from "../utils/message.js";

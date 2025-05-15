@@ -340,20 +340,6 @@ onMounted(() => {
   align-items: center;
   margin-bottom: 20px;
 }
-
-.search-form {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.form-item {
-  display: flex;
-  align-items: center;
-  margin-right: 15px;
-  margin-bottom: 10px;
-}
-
 .form-item label {
   margin-right: 8px;
   white-space: nowrap;
