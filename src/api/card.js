@@ -20,3 +20,25 @@ export const editCard = (data) => {
         data
     });
 };
+
+/**
+ *重置卡商密码
+ */
+export const resetPassword = (data) => {
+    return request({
+        url: "/card/reset",
+        method: "put",
+        params: data
+    });
+};
+
+/**
+ * 添加卡商
+ */
+export const addCard = (data) => {
+    return request({
+        url: "/card/add",
+        method: "post",
+        data
+    });
+};

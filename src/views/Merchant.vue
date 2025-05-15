@@ -2,7 +2,7 @@
 import {ref, reactive, onMounted, computed} from 'vue'
 import ElMessage from '../utils/message.js'
 import {ElMessageBox} from 'element-plus'
-import {getCardList} from "../api/card.js";
+import {getCardList, editCard, resetPassword} from "../api/card.js";
 
 // 查询条件
 const queryForm = reactive({
@@ -65,10 +65,102 @@ const handleClearSelected = () => {
   selectedRows.value = []
 }
 
+// 编辑卡商弹窗相关
+const editDialogVisible = ref(false)
+const editForm = reactive({
+  id: '',
+  name: '',
+  account: '',
+  email: ''
+})
+const editFormLoading = ref(false)
+const editFormRef = ref(null)
+
+// 重置密码弹窗相关
+const resetPasswordVisible = ref(false)
+const resetPasswordForm = reactive({
+  userId: '',
+  username: '',
+  password: '',
+  confirmPassword: ''
+})
+const resetPasswordLoading = ref(false)
+const resetPasswordFormRef = ref(null)
+
+// 重置密码表单验证规则
+const resetPasswordRules = {
+  password: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, max: 16, message: '密码长度需在6到16个字符之间', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认新密码', trigger: 'blur' },
+    {
+      validator: (rule, value, callback) => {
+        if (value !== resetPasswordForm.password) {
+          callback(new Error('两次输入的密码不一致'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ]
+}
+
+// 表单验证规则
+const editRules = {
+  name: [
+    { required: true, message: '请输入卡商名称', trigger: 'blur' },
+    { min: 1, max: 20, message: '名称长度需在1到20个字符之间', trigger: 'blur' }
+  ],
+  email: [
+    { required: false, message: '请输入邮箱地址', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+  ]
+}
+
 // 修改卡商信息
 const handleEdit = (row) => {
-  console.log('修改卡商:', row)
-  // TODO: 打开编辑对话框
+  // 填充表单数据
+  editForm.id = row.id
+  editForm.name = row.name
+  editForm.account = row.account
+  editForm.email = row.email
+  
+  // 显示编辑弹窗
+  editDialogVisible.value = true
+}
+
+// 提交编辑表单
+const submitEditForm = async () => {
+  if (!editFormRef.value) return
+  
+  try {
+    // 表单校验
+    await editFormRef.value.validate()
+    
+    editFormLoading.value = true
+    
+    // 准备请求数据
+    const cardInfo = {
+      userId: editForm.id,
+      nickName: editForm.name,
+      email: editForm.email
+    }
+    
+    // 调用API
+    await editCard(cardInfo);
+    ElMessage.success('卡商信息更新成功')
+      editDialogVisible.value = false
+      await fetchMerchants() // 刷新数据
+  } catch (error) {
+    if (error.message && !error.message.includes('验证未通过')) {
+      console.error('更新卡商信息失败:', error)
+    }
+  } finally {
+    editFormLoading.value = false
+  }
 }
 
 // 删除卡商
@@ -134,6 +226,46 @@ const fetchMerchants = async () => {
       tableData.value = processedData
   } finally {
     tableLoading.value = false
+  }
+}
+
+// 重置密码
+const handleResetPassword = (row) => {
+  resetPasswordForm.userId = row.id
+  resetPasswordForm.username = row.name
+  resetPasswordForm.password = ''
+  resetPasswordForm.confirmPassword = ''
+  resetPasswordVisible.value = true
+}
+
+// 提交重置密码
+const submitResetPassword = async () => {
+  if (!resetPasswordFormRef.value) return
+  
+  try {
+    // 表单校验
+    await resetPasswordFormRef.value.validate()
+    
+    resetPasswordLoading.value = true
+    
+    // 准备请求数据
+    const data = {
+      userId: resetPasswordForm.userId,
+      password: resetPasswordForm.password
+    }
+    
+    // 调用API
+    const response = await resetPassword(data)
+    
+      ElMessage.success('密码重置成功')
+      resetPasswordVisible.value = false
+  } catch (error) {
+    if (error.message && !error.message.includes('验证未通过')) {
+      console.error('重置密码失败:', error)
+      ElMessage.error('重置密码失败，请稍后重试')
+    }
+  } finally {
+    resetPasswordLoading.value = false
   }
 }
 
@@ -209,7 +341,7 @@ onMounted(() => {
           </template>
         </el-table-column>
 
-        <el-table-column prop="id" label="卡商ID" width="150" align="center"/>
+        <el-table-column prop="id" label="卡商ID(唯一标识不是账号)" width="190" align="center"/>
         <el-table-column prop="account" label="账号" width="120" align="center"/>
         <el-table-column prop="email" label="邮箱" width="180" align="center"/>
         <el-table-column prop="createdAt" label="注册时间" width="180" align="center"/>
@@ -233,7 +365,7 @@ onMounted(() => {
                 <el-button
                     type="primary"
                     size="small"
-                    @click=""
+                    @click="handleResetPassword(scope.row)"
                     class="table-op-button reset-button"
                 >密码重置</el-button>
               </div>
@@ -256,6 +388,90 @@ onMounted(() => {
         </el-table-column>
       </el-table>
     </div>
+    
+    <!-- 编辑卡商弹窗 -->
+    <el-dialog
+        v-model="editDialogVisible"
+        title="编辑卡商信息"
+        width="500px"
+        :close-on-click-modal="false"
+        :close-on-press-escape="false"
+    >
+      <el-form 
+          ref="editFormRef"
+          :model="editForm" 
+          :rules="editRules"
+          label-width="80px" 
+          label-position="right"
+          status-icon
+      >
+        <el-form-item label="卡商ID">
+          <el-input v-model="editForm.id" disabled />
+        </el-form-item>
+        <el-form-item label="账号">
+          <el-input v-model="editForm.account" disabled />
+        </el-form-item>
+        <el-form-item label="名称" prop="name">
+          <el-input v-model="editForm.name" placeholder="请输入卡商名称" />
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="editForm.email" placeholder="请输入邮箱" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="editDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitEditForm" :loading="editFormLoading">确定</el-button>
+        </div>
+      </template>
+    </el-dialog>
+    
+    <!-- 重置密码弹窗 -->
+    <el-dialog
+        v-model="resetPasswordVisible"
+        title="重置密码"
+        width="450px"
+        :close-on-click-modal="false"
+        :close-on-press-escape="false"
+    >
+      <el-form 
+          ref="resetPasswordFormRef"
+          :model="resetPasswordForm" 
+          :rules="resetPasswordRules"
+          label-width="100px" 
+          label-position="right"
+          status-icon
+      >
+        <el-form-item label="卡商ID">
+          <el-input v-model="resetPasswordForm.userId" disabled />
+        </el-form-item>
+        <el-form-item label="卡商名称">
+          <el-input v-model="resetPasswordForm.username" disabled />
+        </el-form-item>
+        <el-form-item label="新密码" prop="password">
+          <el-input 
+              v-model="resetPasswordForm.password" 
+              placeholder="请输入新密码，6-16个字符" 
+              show-password 
+              autocomplete="new-password"
+          />
+        </el-form-item>
+        <el-form-item label="确认新密码" prop="confirmPassword">
+          <el-input 
+              v-model="resetPasswordForm.confirmPassword" 
+              placeholder="请再次输入新密码" 
+              show-password 
+              autocomplete="new-password"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="resetPasswordVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitResetPassword" :loading="resetPasswordLoading">确定</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -440,5 +656,9 @@ onMounted(() => {
 
 :deep(.el-table th) {
   font-weight: bold;
+}
+
+.dialog-footer {
+  text-align: right;
 }
 </style>
