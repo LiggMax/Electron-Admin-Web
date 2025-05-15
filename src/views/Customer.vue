@@ -3,7 +3,7 @@ import {ref, reactive, onMounted} from 'vue'
 import ElMessage from '../utils/message.js'
 import {ElMessageBox} from 'element-plus'
 import {
-  getCustomerList,
+  getCustomerList, updateCustomerInfo,
   updateCustomerStatus
 } from '../api/customer.js'
 import DateFormatter from '../utils/DateFormatter.js'
@@ -24,6 +24,30 @@ const statusOptions = [
 // 表格数据
 const tableData = ref([])
 const tableLoading = ref(false)
+
+// 编辑弹窗相关
+const editDialogVisible = ref(false)
+const editForm = reactive({
+  id: '',
+  name: '',
+  account: '',
+  email: '',
+  status: true
+})
+const editFormLoading = ref(false)
+const editFormRef = ref(null)
+
+// 表单验证规则
+const editRules = {
+  email: [
+    { required: false, message: '请输入邮箱地址', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+  ],
+  name: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 1, max: 20, message: '用户名长度需在1到20个字符之间', trigger: 'blur' }
+  ]
+}
 
 // 分页配置
 const pagination = reactive({
@@ -73,8 +97,46 @@ const handleClearSelected = () => {
 
 // 修改客户信息
 const handleEdit = (row) => {
-  console.log('修改客户:', row)
-  // TODO: 打开编辑对话框
+  // 填充表单数据
+  editForm.id = row.id
+  editForm.name = row.name
+  editForm.account = row.account
+  editForm.email = row.email
+  editForm.status = row.status
+  
+  // 显示编辑弹窗
+  editDialogVisible.value = true
+}
+
+// 提交编辑表单
+const submitEditForm = async () => {
+  if (!editFormRef.value) return
+  
+  try {
+    // 表单校验
+    await editFormRef.value.validate()
+    
+    editFormLoading.value = true
+    const userInfo = {
+      userId: editForm.id,
+      nickName: editForm.name,
+      email: editForm.email,
+      status: editForm.status
+    }
+    // TODO: 调用API更新客户信息
+    await updateCustomerInfo(userInfo)
+
+    ElMessage.success('用户信息更新成功')
+    editDialogVisible.value = false
+    await fetchCustomers() // 刷新数据
+  } catch (error) {
+    if (error.message) {
+      console.error('更新用户信息失败:', error)
+      ElMessage.error('更新用户信息失败: ' + error.message)
+    }
+  } finally {
+    editFormLoading.value = false
+  }
 }
 
 // 修改状态
@@ -360,6 +422,52 @@ onMounted(() => {
         />
       </div>
     </div>
+    
+    <!-- 编辑用户弹窗 -->
+    <el-dialog
+        v-model="editDialogVisible"
+        title="编辑用户信息"
+        width="500px"
+        :close-on-click-modal="false"
+        :close-on-press-escape="false"
+    >
+      <el-form 
+          ref="editFormRef"
+          :model="editForm" 
+          :rules="editRules"
+          label-width="80px" 
+          label-position="right"
+          status-icon
+      >
+        <el-form-item label="用户ID">
+          <el-input v-model="editForm.id" disabled />
+        </el-form-item>
+        <el-form-item label="账号">
+          <el-input v-model="editForm.account" disabled />
+        </el-form-item>
+        <el-form-item label="用户名" prop="name">
+          <el-input v-model="editForm.name" placeholder="请输入用户名" />
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="editForm.email" placeholder="请输入邮箱" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-switch
+              v-model="editForm.status"
+              :active-value="true"
+              :inactive-value="false"
+              active-text="启用"
+              inactive-text="停用"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="editDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitEditForm" :loading="editFormLoading">确定</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -544,5 +652,9 @@ onMounted(() => {
 
 :deep(.el-table--striped .el-table__body tr.el-table__row--striped td) {
   background-color: #fafafa;
+}
+
+.dialog-footer {
+  text-align: right;
 }
 </style> 

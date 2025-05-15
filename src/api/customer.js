@@ -16,8 +16,19 @@ export const getCustomerList = (params) => {
  */
 export const updateCustomerStatus = (data) => {
   return request({
-    url: "/customer",
+    url: "/customer/status",
     method: "put",
     params: data
+  });
+};
+
+/**
+ * 编辑客户信息
+ */
+export const updateCustomerInfo = (data) => {
+  return request({
+    url: "/customer/edit",
+    method: "put",
+    data
   });
 };
