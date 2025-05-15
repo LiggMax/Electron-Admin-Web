@@ -2,7 +2,7 @@
 import { ref, reactive, onMounted, computed, nextTick } from 'vue'
 import ElMessage from '../utils/message.js'
 import { ElMessageBox } from 'element-plus'
-import { getProjectListService, addProjectService } from "../api/project.js";
+import {getProjectListService, addProjectService, deleteProjectService} from "../api/project.js";
 import DateFormatter from "../utils/DateFormatter.js";
 // 查询条件
 const queryForm = reactive({
@@ -131,11 +131,19 @@ const handleDelete = async (row) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    console.log('删除项目:', row)
+    
+    // 获取项目ID
+    const projectId = typeof row === 'object' ? row.id : row
+    
+    // 调用删除API
+    await deleteProjectService(projectId)
     ElMessage.success('删除成功')
     await fetchProjects() // 重新获取数据
   } catch (error) {
     // 用户取消删除
+    if (error !== 'cancel' && !error.toString().includes('cancel')) {
+      ElMessage.error('删除失败：' + (error.message || '未知错误'))
+    }
   }
 }
 
@@ -153,12 +161,35 @@ const handleBatchDelete = async () => {
       type: 'warning'
     })
     
-    console.log('批量删除项目:', selectedRows.value)
-    ElMessage.success('批量删除成功')
+    // 获取选中项目的ID列表
+    const projectIds = selectedRows.value.map(item => item.id)
+    
+    // 逐个删除项目
+    let errorCount = 0
+    for (const projectId of projectIds) {
+      try {
+        await deleteProjectService(projectId)
+      } catch (error) {
+        console.error('删除项目失败:', error)
+        errorCount++
+      }
+    }
+    
+    if (errorCount === 0) {
+      ElMessage.success('批量删除成功')
+    } else if (errorCount < projectIds.length) {
+      ElMessage.warning(`部分删除成功，${errorCount}个项目删除失败`)
+    } else {
+      ElMessage.error('批量删除失败')
+    }
+    
     selectedRows.value = []
     await fetchProjects() // 重新获取数据
   } catch (error) {
     // 用户取消删除
+    if (error !== 'cancel' && !error.toString().includes('cancel')) {
+      ElMessage.error('批量删除失败：' + (error.message || '未知错误'))
+    }
   }
 }
 
@@ -252,7 +283,7 @@ onMounted(() => {
               <el-button
                   type="danger"
                   size="small"
-                  @click="handleDelete(scope.row)"
+                  @click="handleDelete(scope.row.id)"
                   class="table-op-button delete-button"
               >删除</el-button>
             </div>

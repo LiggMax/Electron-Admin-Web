@@ -5,7 +5,7 @@ import request from "../utils/request.js";
  */
 export const getProjectListService = () => {
     return request({
-        url: "/project",
+        url: "/adminWeb/project",
         method: "get",
     });
 };
@@ -15,8 +15,20 @@ export const getProjectListService = () => {
  */
 export const addProjectService = (data) => {
     return request({
-        url: "/project/add",
+        url: "/adminWeb/project/add",
         method: "post",
         params: data
+    });
+};
+
+/**
+ * 删除项目
+ * @param {number|string} projectId - 项目ID
+ */
+export const deleteProjectService = (projectId) => {
+    return request({
+        url: "/adminWeb/project",
+        method: "delete",
+        params: { projectId }
     });
 };
