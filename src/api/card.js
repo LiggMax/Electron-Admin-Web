@@ -5,7 +5,18 @@ import request from "../utils/request.js";
  */
 export const getCardList = () => {
     return request({
-        url: "/Card",
+        url: "/card",
         method: "get",
+    });
+};
+
+/**
+ * 编辑卡商数据
+ */
+export const editCard = (data) => {
+    return request({
+        url: "/card/edit",
+        method: "put",
+        data
     });
 };

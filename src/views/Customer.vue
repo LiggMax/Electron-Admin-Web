@@ -1,8 +1,9 @@
 <script setup>
-import {ref, reactive, onMounted} from 'vue'
+import {ref, reactive, onMounted, nextTick} from 'vue'
 import ElMessage from '../utils/message.js'
 import {ElMessageBox} from 'element-plus'
 import {
+  addCustomerService,
   getCustomerList, resetPasswordService, updateCustomerInfo,
   updateCustomerStatus
 } from '../api/customer.js'
@@ -48,6 +49,18 @@ const resetPasswordForm = reactive({
 const resetPasswordLoading = ref(false)
 const resetPasswordFormRef = ref(null)
 
+// 添加客户弹窗相关
+const addCustomerVisible = ref(false)
+const addCustomerForm = reactive({
+  account: '',
+  nickName: '',
+  email: '',
+  password: '',
+  confirmPassword: ''
+})
+const addCustomerLoading = ref(false)
+const addCustomerFormRef = ref(null)
+
 // 重置密码表单验证规则
 const resetPasswordRules = {
   password: [
@@ -78,6 +91,39 @@ const editRules = {
   name: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
     { min: 1, max: 20, message: '用户名长度需在1到20个字符之间', trigger: 'blur' }
+  ]
+}
+
+// 添加客户表单验证规则
+const addCustomerRules = {
+  account: [
+    { required: true, message: '请输入账号', trigger: 'blur' },
+    { min: 4, max: 20, message: '账号长度需在4到20个字符之间', trigger: 'blur' }
+  ],
+  nickName: [
+    { required: true, message: '请输入昵称', trigger: 'blur' },
+    { min: 1, max: 20, message: '昵称长度需在1到20个字符之间', trigger: 'blur' }
+  ],
+  email: [
+    { required: false, message: '请输入邮箱地址', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 16, message: '密码长度需在6到16个字符之间', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认密码', trigger: 'blur' },
+    {
+      validator: (rule, value, callback) => {
+        if (value !== addCustomerForm.password) {
+          callback(new Error('两次输入的密码不一致'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
   ]
 }
 
@@ -113,8 +159,20 @@ const handleReset = () => {
 
 // 添加客户
 const handleAddCustomer = () => {
-  console.log('添加客户')
-  // TODO: 打开添加客户对话框
+  // 重置表单数据
+  addCustomerForm.account = ''
+  addCustomerForm.nickName = ''
+  addCustomerForm.email = ''
+  addCustomerForm.password = ''
+  addCustomerForm.confirmPassword = ''
+  
+  // 显示添加客户弹窗
+  addCustomerVisible.value = true
+  
+  // 下一帧后重置表单校验结果
+  nextTick(() => {
+    addCustomerFormRef.value?.resetFields()
+  })
 }
 
 // 导出客户数据
@@ -337,6 +395,37 @@ const submitResetPassword = async () => {
   }
 }
 
+// 提交添加客户表单
+const submitAddCustomer = async () => {
+  if (!addCustomerFormRef.value) return
+  
+  try {
+    // 表单校验
+    await addCustomerFormRef.value.validate()
+    
+    addCustomerLoading.value = true
+
+    const addCustomer = {
+      account: addCustomerForm.account,
+      nickName: addCustomerForm.nickName,
+      password: addCustomerForm.password,
+      email: addCustomerForm.email,
+    }
+    // TODO: 调用API添加客户
+    await addCustomerService(addCustomer)
+
+    ElMessage.success('客户添加成功')
+    addCustomerVisible.value = false
+    await fetchCustomers() // 刷新数据
+  } catch (error) {
+    if (error.message && !error.message.includes('验证未通过')) {
+      console.error('添加客户失败:', error)
+    }
+  } finally {
+    addCustomerLoading.value = false
+  }
+}
+
 onMounted(() => {
   fetchCustomers()
 })
@@ -370,7 +459,7 @@ onMounted(() => {
       </div>
       
       <div class="operation-buttons">
-        <el-button type="primary" @click="handleAddCustomer" class="add-button">添加用户</el-button>
+        <el-button type="primary" @click="handleAddCustomer" class="add-button">添加客户</el-button>
         <el-button @click="handleExport" class="export-button">导出</el-button>
       </div>
     </div>
@@ -415,7 +504,7 @@ onMounted(() => {
           </template>
         </el-table-column>
 
-        <el-table-column prop="id" label="用户ID" width="150" align="center"/>
+        <el-table-column prop="id" label="用户ID" width="190" align="center"/>
         <el-table-column prop="account" label="账号" width="120" align="center"/>
         <el-table-column prop="email" label="邮箱" width="150" align="center"/>
         <el-table-column prop="status" label="状态" width="100" align="center">
@@ -581,6 +670,60 @@ onMounted(() => {
         <div class="dialog-footer">
           <el-button @click="resetPasswordVisible = false">取消</el-button>
           <el-button type="primary" @click="submitResetPassword" :loading="resetPasswordLoading">确定</el-button>
+        </div>
+      </template>
+    </el-dialog>
+    
+    <!-- 添加客户弹窗 -->
+    <el-dialog
+        v-model="addCustomerVisible"
+        title="添加客户"
+        width="500px"
+        :close-on-click-modal="false"
+        :close-on-press-escape="false"
+    >
+      <el-form 
+          ref="addCustomerFormRef"
+          :model="addCustomerForm" 
+          :rules="addCustomerRules"
+          label-width="100px" 
+          label-position="right"
+          status-icon
+      >
+        <el-form-item label="账号" prop="account">
+          <el-input 
+              v-model="addCustomerForm.account" 
+              placeholder="请输入账号，4-20个字符"
+              autocomplete="off"
+          />
+        </el-form-item>
+        <el-form-item label="昵称" prop="nickName">
+          <el-input 
+              v-model="addCustomerForm.nickName" 
+              placeholder="请输入昵称，1-20个字符"
+          />
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input 
+              v-model="addCustomerForm.password" 
+              placeholder="请输入密码，6-16个字符" 
+              show-password 
+              autocomplete="new-password"
+          />
+        </el-form-item>
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input 
+              v-model="addCustomerForm.confirmPassword" 
+              placeholder="请再次输入密码" 
+              show-password 
+              autocomplete="new-password"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="addCustomerVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitAddCustomer" :loading="addCustomerLoading">确定</el-button>
         </div>
       </template>
     </el-dialog>

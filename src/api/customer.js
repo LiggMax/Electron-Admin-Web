@@ -43,3 +43,14 @@ export const resetPasswordService = (data) => {
     params: data
   });
 };
+
+/**
+ * 添加客户
+ */
+export const addCustomerService = (data) => {
+  return request({
+    url: "/customer/addUser",
+    method: "post",
+    data
+  });
+};
