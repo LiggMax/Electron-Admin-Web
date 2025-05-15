@@ -59,6 +59,10 @@ const addProjectRules = {
     { required: true, message: '请输入项目名称', trigger: 'blur' },
     { min: 1, max: 50, message: '项目名称长度需在1到50个字符之间', trigger: 'blur' }
   ],
+  projectPrice: [
+    { required: true, message: '请输入项目价格', trigger: 'blur' },
+    { pattern: /^(0|[1-9]\d*)(\.\d{1,2})?$/, message: '价格必须是有效的金额，最多两位小数', trigger: 'blur' }
+  ]
 }
 
 // 添加项目
@@ -89,6 +93,7 @@ const submitAddProject = async () => {
     // 准备请求数据
     const projectData = {
       projectName: addProjectForm.projectName,
+      projectPrice: Number(addProjectForm.projectPrice)
     }
     
     // 调用API
@@ -314,6 +319,15 @@ onMounted(() => {
               placeholder="请输入项目名称"
           />
         </el-form-item>
+        <el-form-item label="项目价格" prop="projectPrice">
+          <el-input 
+              v-model="addProjectForm.projectPrice" 
+              placeholder="请输入项目价格"
+              class="price-input"
+          >
+            <template #prefix>￥</template>
+          </el-input>
+        </el-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -452,5 +466,21 @@ onMounted(() => {
 .no-price {
   color: #909399;
   font-style: italic;
+}
+
+/* 价格输入框样式 */
+.price-input :deep(.el-input__prefix) {
+  color: #f56c6c;
+  font-weight: bold;
+}
+
+.price-input :deep(.el-input__suffix) {
+  color: #909399;
+}
+
+.price-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 5px;
 }
 </style> 

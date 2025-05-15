@@ -491,8 +491,7 @@ onMounted(() => {
           </template>
         </el-table-column>
 
-        <el-table-column prop="id" label="卡商ID(唯一标识不是账号)" width="190" align="center"/>
-        <el-table-column prop="account" label="账号" width="120" align="center"/>
+        <el-table-column prop="account" label="卡商ID" width="120" align="center"/>
         <el-table-column prop="email" label="邮箱" width="180" align="center"/>
         <el-table-column prop="loginTime" label="登录时间" width="180" align="center">
           <template #default="scope">
@@ -940,7 +939,8 @@ onMounted(() => {
 .relative-time {
   color: #409EFF;
   font-size: 12px;
-  margin-left: 5px;
+  margin-top: 5px;
+  display: block;
 }
 
 .card-info {
