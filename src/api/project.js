@@ -32,3 +32,18 @@ export const deleteProjectService = (projectId) => {
         params: { projectId }
     });
 };
+
+/**
+ * 编辑项目
+ */
+export const editProjectService = (projectId,projectPrice,projectName) => {
+    return request({
+        url: "/adminWeb/project/edit",
+        method: "put",
+        params: {
+            projectId,
+            projectPrice,
+            projectName
+        }
+    });
+};

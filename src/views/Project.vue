@@ -2,7 +2,12 @@
 import { ref, reactive, onMounted, computed, nextTick } from 'vue'
 import ElMessage from '../utils/message.js'
 import { ElMessageBox } from 'element-plus'
-import {getProjectListService, addProjectService, deleteProjectService} from "../api/project.js";
+import {
+  getProjectListService, 
+  addProjectService, 
+  deleteProjectService, 
+  editProjectService
+} from "../api/project.js";
 import DateFormatter from "../utils/DateFormatter.js";
 // 查询条件
 const queryForm = reactive({
@@ -53,8 +58,30 @@ const addProjectForm = reactive({
 const addProjectLoading = ref(false)
 const addProjectFormRef = ref(null)
 
+// 编辑项目弹窗相关
+const editProjectVisible = ref(false)
+const editProjectForm = reactive({
+  id: '',
+  projectName: '',
+  projectPrice: ''
+})
+const editProjectLoading = ref(false)
+const editProjectFormRef = ref(null)
+
 // 添加项目验证规则
 const addProjectRules = {
+  projectName: [
+    { required: true, message: '请输入项目名称', trigger: 'blur' },
+    { min: 1, max: 50, message: '项目名称长度需在1到50个字符之间', trigger: 'blur' }
+  ],
+  projectPrice: [
+    { required: true, message: '请输入项目价格', trigger: 'blur' },
+    { pattern: /^(0|[1-9]\d*)(\.\d{1,2})?$/, message: '价格必须是有效的金额，最多两位小数', trigger: 'blur' }
+  ]
+}
+
+// 编辑项目验证规则
+const editProjectRules = {
   projectName: [
     { required: true, message: '请输入项目名称', trigger: 'blur' },
     { min: 1, max: 50, message: '项目名称长度需在1到50个字符之间', trigger: 'blur' }
@@ -124,8 +151,49 @@ const handleClearSelected = () => {
 
 // 修改项目信息
 const handleEdit = (row) => {
-  console.log('修改项目:', row)
-  // TODO: 打开编辑对话框
+  // 填充表单数据
+  editProjectForm.id = row.id
+  editProjectForm.projectName = row.projectName
+  editProjectForm.projectPrice = row.hasPrice ? row.price : ''
+  
+  // 显示编辑弹窗
+  editProjectVisible.value = true
+  
+  // 下一帧后重置表单校验结果
+  nextTick(() => {
+    editProjectFormRef.value?.resetFields()
+  })
+}
+
+// 提交编辑项目表单
+const submitEditProject = async () => {
+  if (!editProjectFormRef.value) return
+  
+  try {
+    // 表单校验
+    await editProjectFormRef.value.validate()
+    
+    editProjectLoading.value = true
+    
+    // 获取表单数据
+    const projectId = editProjectForm.id
+    const projectPrice = Number(editProjectForm.projectPrice)
+    const projectName = editProjectForm.projectName
+    
+    // 调用API
+    await editProjectService(projectId, projectPrice, projectName)
+    
+    ElMessage.success('项目更新成功')
+    editProjectVisible.value = false
+    await fetchProjects() // 刷新数据
+  } catch (error) {
+    if (error.message && !error.message.includes('验证未通过')) {
+      console.error('更新项目失败:', error)
+      ElMessage.error('更新项目失败: ' + error.message)
+    }
+  } finally {
+    editProjectLoading.value = false
+  }
 }
 
 // 删除项目
@@ -333,6 +401,49 @@ onMounted(() => {
         <div class="dialog-footer">
           <el-button @click="addProjectVisible = false">取消</el-button>
           <el-button type="primary" @click="submitAddProject" :loading="addProjectLoading">确定</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 编辑项目弹窗 -->
+    <el-dialog
+        v-model="editProjectVisible"
+        title="编辑项目"
+        width="500px"
+        :close-on-click-modal="false"
+        :close-on-press-escape="false"
+    >
+      <el-form 
+          ref="editProjectFormRef"
+          :model="editProjectForm" 
+          :rules="editProjectRules"
+          label-width="100px" 
+          label-position="right"
+          status-icon
+      >
+        <el-form-item label="项目ID">
+          <el-input v-model="editProjectForm.id" disabled />
+        </el-form-item>
+        <el-form-item label="项目名称" prop="projectName">
+          <el-input 
+              v-model="editProjectForm.projectName" 
+              placeholder="请输入项目名称"
+          />
+        </el-form-item>
+        <el-form-item label="项目价格" prop="projectPrice">
+          <el-input 
+              v-model="editProjectForm.projectPrice" 
+              placeholder="请输入项目价格"
+              class="price-input"
+          >
+            <template #prefix>￥</template>
+          </el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="editProjectVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitEditProject" :loading="editProjectLoading">确定</el-button>
         </div>
       </template>
     </el-dialog>
