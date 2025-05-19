@@ -186,11 +186,6 @@ const submitEditProject = async () => {
     ElMessage.success('项目更新成功')
     editProjectVisible.value = false
     await fetchProjects() // 刷新数据
-  } catch (error) {
-    if (error.message && !error.message.includes('验证未通过')) {
-      console.error('更新项目失败:', error)
-      ElMessage.error('更新项目失败: ' + error.message)
-    }
   } finally {
     editProjectLoading.value = false
   }
