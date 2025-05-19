@@ -33,7 +33,8 @@ const editForm = reactive({
   name: '',
   account: '',
   email: '',
-  status: true
+  status: true,
+  money: 0
 })
 const editFormLoading = ref(false)
 const editFormRef = ref(null)
@@ -85,12 +86,26 @@ const resetPasswordRules = {
 // 表单验证规则
 const editRules = {
   email: [
-    { required: false, message: '请输入邮箱地址', trigger: 'blur' },
     { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
   ],
   name: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
     { min: 1, max: 20, message: '用户名长度需在1到20个字符之间', trigger: 'blur' }
+  ],
+  money: [
+    { required: true, message: '请输入余额', trigger: 'blur' },
+    { 
+      validator: (rule, value, callback) => {
+        if (isNaN(value) || value === '') {
+          callback(new Error('余额必须是数字'));
+        } else if (parseFloat(value) < 0) {
+          callback(new Error('余额不能为负数'));
+        } else {
+          callback();
+        }
+      }, 
+      trigger: 'blur' 
+    }
   ]
 }
 
@@ -193,6 +208,7 @@ const handleEdit = (row) => {
   editForm.account = row.account
   editForm.email = row.email
   editForm.status = row.status
+  editForm.money = row.money
   
   // 显示编辑弹窗
   editDialogVisible.value = true
@@ -211,7 +227,8 @@ const submitEditForm = async () => {
       userId: editForm.id,
       nickName: editForm.name,
       email: editForm.email,
-      status: editForm.status
+      status: editForm.status,
+      money: parseFloat(editForm.money) // 添加余额更新
     }
     // TODO: 调用API更新客户信息
     await updateCustomerInfo(userInfo)
@@ -309,7 +326,8 @@ const handleResponseData = (data) => {
     avatar: item.userAvatar,
     name: item.nickName || item.account,
     account: item.account,
-    email: item.email || '未设置',
+    email: item.email,
+    money: item.money,
     loginTime: item.loginTime ? DateFormatter.format(item.loginTime) : '暂无登录',
     rawLoginTime: item.loginTime, // 保存原始登录时间用于计算相对时间
     createdAt: DateFormatter.format(item.createdAt),
@@ -334,7 +352,7 @@ const fetchCustomers = async () => {
     const response = await getCustomerList(params)
     
       tableData.value = handleResponseData(response.data)
-      pagination.total = response.data.length // 注意：实际项目中可能需要从响应中获取总记录数
+      pagination.total = response.data.length
   } catch (error) {
     console.error('获取用户列表失败:', error)
     tableData.value = []
@@ -503,6 +521,11 @@ onMounted(() => {
         <el-table-column prop="id" label="用户ID" width="190" align="center"/>
         <el-table-column prop="account" label="账号" width="120" align="center"/>
         <el-table-column prop="email" label="邮箱" width="150" align="center"/>
+        <el-table-column prop="money" label="余额" width="100" align="center">
+          <template #default="scope">
+            <span class="money-value">￥{{ scope.row.money }} </span>
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="状态" width="100" align="center">
           <template #default="scope">
             <el-switch
@@ -598,6 +621,12 @@ onMounted(() => {
         </el-form-item>
         <el-form-item label="账号">
           <el-input v-model="editForm.account" disabled />
+        </el-form-item>
+        <el-form-item label="余额" prop="money">
+          <div class="edit-money-field">
+            <span class="money-prefix">￥</span>
+            <el-input v-model="editForm.money" placeholder="请输入余额" type="number" class="money-input" />
+          </div>
         </el-form-item>
         <el-form-item label="用户名" prop="name">
           <el-input v-model="editForm.name" placeholder="请输入用户名" />
@@ -911,5 +940,25 @@ onMounted(() => {
 
 .dialog-footer {
   text-align: right;
+}
+
+.money-value {
+  font-weight: bold;
+  color: #f56c6c;
+}
+
+.edit-money-field {
+  display: flex;
+  align-items: center;
+}
+
+.money-prefix {
+  margin-right: 8px;
+  font-size: 16px;
+  color: #909399;
+}
+
+.money-input {
+  width: 100%;
 }
 </style> 
