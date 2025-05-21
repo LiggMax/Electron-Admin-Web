@@ -37,6 +37,10 @@ watch(() => route.path, (newPath) => {
       activeMenu.value = '6'
       currentMenu.value = '资料管理'
       break
+    case '/order':
+      activeMenu.value = '7'
+      currentMenu.value = '订单管理'
+      break
   }
 }, { immediate: true })
 
