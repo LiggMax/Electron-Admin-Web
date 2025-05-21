@@ -26,6 +26,14 @@
       >
         <el-table-column type="selection" width="55" />
         <el-table-column prop="phoneNum" label="号码" width="180" />
+        <el-table-column prop="money" label="价格" width="120">
+          <template #default="scope">
+            <span class="price-column">
+              <span class="currency-symbol">¥</span>
+              <span class="price-value">{{ formatPrice(scope.row.money) }}</span>
+            </span>
+          </template>
+        </el-table-column>
         <el-table-column prop="country" label="国家/地区" width="120" />
         <el-table-column prop="project" label="项目" width="180" />
         <el-table-column prop="status" label="账号状态" width="120" />
@@ -106,6 +114,7 @@ const loadData = async () => {
           // 状态映射
           status: statusMap[item.usageStatus] || '未知',
           usage: item.usageStatus,
+          money: item.money,
           createTime: item.registrationTime ? item.registrationTime.split('T')[0] : ''
         }
       })
@@ -198,6 +207,12 @@ const handleCurrentChange = (page) => {
   currentPage.value = page
   loadData()
 }
+
+// 格式化价格
+const formatPrice = (price) => {
+  if (price === undefined || price === null) return '0.00'
+  return Number(price).toFixed(2)
+}
 </script>
 
 <style scoped>
@@ -246,5 +261,23 @@ const handleCurrentChange = (page) => {
   margin-top: 20px;
   display: flex;
   justify-content: center;
+}
+
+/* 价格列样式 */
+.price-column {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+}
+
+.currency-symbol {
+  color: #f56c6c;
+  margin-right: 2px;
+  font-size: 14px;
+}
+
+.price-value {
+  color: #f56c6c;
+  font-size: 16px;
 }
 </style> 
