@@ -40,8 +40,9 @@ export const updatePhone = (data) => {
  */
 export const deletePhone = (phoneId) => {
   return request({
-    url: `/phone/${phoneId}`,
-    method: "delete"
+    url: `/phone`,
+    method: "delete",
+    params: { phoneId }
   });
 };
 

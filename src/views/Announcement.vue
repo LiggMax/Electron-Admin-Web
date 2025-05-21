@@ -1,9 +1,10 @@
 <script setup>
 // 公共栏管理组件
 import { ref, computed, onMounted } from 'vue'
-import { publishAnnouncement, getAnnouncementList } from "../api/announcement.js"
+import {publishAnnouncement, getAnnouncementList, deleteAnnouncementService} from "../api/announcement.js"
 import ElMessage from '../utils/message.js'
 import DateFormatter from '../utils/DateFormatter.js'
+import { Delete } from '@element-plus/icons-vue'
 
 const announcement = ref('')
 const announcementList = ref([])
@@ -49,6 +50,18 @@ const fetchAnnouncementList = async () => {
   }
 }
 
+/**
+ * 删除公告
+ */
+const deleteAnnouncement = async (id) => {
+  try {
+    await deleteAnnouncementService(id)
+    ElMessage.success('删除成功')
+    await fetchAnnouncementList() // 删除成功后刷新列表
+  } catch (error) {
+    ElMessage.error('删除失败')
+  }
+}
 // 组件挂载时获取公告列表
 onMounted(() => {
   fetchAnnouncementList()
@@ -98,6 +111,20 @@ onMounted(() => {
         <el-table-column prop="id" label="序号" width="80" align="center" />
         <el-table-column prop="content" label="公告内容" min-width="300" show-overflow-tooltip />
         <el-table-column prop="createTime" label="发布时间" width="180" align="center" />
+        <el-table-column label="操作" width="120" align="center">
+          <template #default="scope">
+            <el-popconfirm
+              title="确定删除这条公告吗？"
+              confirm-button-text="确定"
+              cancel-button-text="取消"
+              @confirm="deleteAnnouncement(scope.row.id)"
+            >
+              <template #reference>
+                <el-button type="danger" size="small" :icon="Delete">删除</el-button>
+              </template>
+            </el-popconfirm>
+          </template>
+        </el-table-column>
       </el-table>
       
       <div v-if="!loading && announcementList.length === 0" class="empty-data">
@@ -203,5 +230,11 @@ onMounted(() => {
 
 :deep(.el-table .cell) {
   padding: 10px;
+}
+
+/* 操作按钮样式 */
+:deep(.el-button--danger) {
+  padding: 6px 12px;
+  font-size: 12px;
 }
 </style> 

@@ -9,7 +9,7 @@ const userStore = userTokenStore();
 const baseURL = '/api';
 const instance = axios.create({
     baseURL,
-    timeout: 20000 // 设置20秒超时
+    timeout: 30000 // 设置30秒超时
 })
 //添加请求拦截器
 instance.interceptors.request.use(

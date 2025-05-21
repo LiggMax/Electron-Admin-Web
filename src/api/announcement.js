@@ -20,3 +20,14 @@ export const getAnnouncementList = () => {
     method: "get",
   });
 };
+
+/**
+ * 删除公告
+ */
+export const deleteAnnouncementService = (id) => {
+  return request({
+    url: `/announcement`,
+    method: "delete",
+    params: { id },
+  });
+};
