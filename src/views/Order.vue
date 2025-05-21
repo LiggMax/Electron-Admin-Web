@@ -1,20 +1,13 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { getOrderList } from '../api/order.js'
-import ElMessage from '../utils/message.js'
-import { ElMessageBox } from 'element-plus'
+import Message from '../utils/message.js'
 import DateFormatter from '../utils/DateFormatter.js'
 
 // 订单数据
 const tableData = ref([])
 const tableLoading = ref(false)
 
-// 订单状态选项
-const orderStatusOptions = [
-  { label: '全部', value: '' },
-  { label: '未分配', value: 0 },
-  { label: '已分配', value: 1 }
-]
 
 // 查询条件
 const queryForm = reactive({
@@ -39,36 +32,11 @@ const fetchOrders = async () => {
   tableLoading.value = true
   try {
     const res = await getOrderList()
-    if (res.code === 200) {
       tableData.value = res.data
       pagination.total = res.data.length
-    } else {
-      ElMessage.error(res.message || '获取订单列表失败')
-    }
-  } catch (error) {
-    console.error('获取订单列表出错:', error)
-    ElMessage.error('获取订单列表失败')
   } finally {
     tableLoading.value = false
   }
-}
-
-// 搜索方法
-const handleSearch = () => {
-  pagination.currentPage = 1
-  fetchOrders()
-}
-
-// 重置搜索条件
-const handleReset = () => {
-  queryForm.orderId = ''
-  queryForm.phoneNumber = ''
-  queryForm.status = ''
-  queryForm.userId = ''
-  queryForm.startDate = ''
-  queryForm.endDate = ''
-  pagination.currentPage = 1
-  fetchOrders()
 }
 
 // 格式化订单状态
@@ -99,30 +67,7 @@ onMounted(() => {
   fetchOrders()
 })
 
-// 查看订单详情
-const handleOrderDetail = (row) => {
 
-}
-
-// 分配订单
-const handleAssignOrder = (row) => {
-  ElMessageBox.confirm(
-    '确定要分配此订单吗？',
-    '提示',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  ).then(async () => {
-    // 这里应该调用API进行订单分配操作
-    ElMessage.success('订单分配成功')
-    // 重新获取列表
-    await fetchOrders()
-  }).catch(() => {
-    // 取消操作
-  })
-}
 </script>
 
 <template>
@@ -240,9 +185,6 @@ const handleAssignOrder = (row) => {
   flex-wrap: wrap;
 }
 
-.date-separator {
-  margin: 0 10px;
-}
 
 .table-container {
   margin-top: 20px;
