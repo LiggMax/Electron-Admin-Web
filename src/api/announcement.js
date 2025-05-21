@@ -1,13 +1,13 @@
 import request from "../utils/request.js";
 
 /**
- * 发布公告
+ * 发布、编辑公告
  */
-export const publishAnnouncement = (content) => {
+export const Announcement = (data) => {
   return request({
-    url: "/announcement/publish",
+    url: "/announcement/publishOrUpdate",
     method: "post",
-    data: { content },
+    data
   });
 };
 
