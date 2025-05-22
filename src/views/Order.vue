@@ -1,6 +1,6 @@
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { getOrderList } from '../api/order.js'
+import {ref, reactive, onMounted} from 'vue'
+import {getOrderList, orderSettlementService} from '../api/order.js'
 import Message from '../utils/message.js'
 import DateFormatter from '../utils/DateFormatter.js'
 
@@ -32,8 +32,8 @@ const fetchOrders = async () => {
   tableLoading.value = true
   try {
     const res = await getOrderList()
-      tableData.value = res.data
-      pagination.total = res.data.length
+    tableData.value = res.data
+    pagination.total = res.data.length
   } finally {
     tableLoading.value = false
   }
@@ -45,8 +45,10 @@ const formatOrderStatus = (row) => {
     return '未使用'
   } else if (row.state === 1) {
     return '已使用'
-  }else if (row.state === 2) {
+  } else if (row.state === 2) {
     return '已结算'
+  } else {
+    return '未知状态'
   }
 }
 
@@ -62,12 +64,16 @@ const handleCurrentChange = (val) => {
   fetchOrders()
 }
 
+//订单姐结算
+const handleOrderDetail = async (row) => {
+  await orderSettlementService(row.id);
+  Message.success('结算成功')
+  await fetchOrders()
+}
 // 页面加载时获取订单列表
 onMounted(() => {
   fetchOrders()
 })
-
-
 </script>
 
 <template>
@@ -82,17 +88,17 @@ onMounted(() => {
     <!-- 订单列表 -->
     <div class="table-container">
       <el-table
-        v-loading="tableLoading"
-        :data="tableData.slice((pagination.currentPage - 1) * pagination.pageSize, pagination.currentPage * pagination.pageSize)"
-        border
-        stripe
-        style="width: 100%"
+          v-loading="tableLoading"
+          :data="tableData.slice((pagination.currentPage - 1) * pagination.pageSize, pagination.currentPage * pagination.pageSize)"
+          border
+          stripe
+          style="width: 100%"
       >
-        <el-table-column prop="id" label="订单ID" width="100" align="center" />
-        <el-table-column prop="adminNickName" label="卡商" width="120" align="center">
+        <el-table-column prop="id" label="订单ID" width="100" align="center"/>
+        <el-table-column prop="adminNickName" label="卡商" width="150" align="center">
           <template #default="scope">
             <div v-if="scope.row.adminNickName">
-              <el-avatar v-if="scope.row.adminAvatar" :size="30" :src="scope.row.adminAvatar" />
+              <el-avatar v-if="scope.row.adminAvatar" :size="30" :src="scope.row.adminAvatar"/>
               {{ scope.row.adminNickName }}
             </div>
             <span v-else>未分配</span>
@@ -101,13 +107,13 @@ onMounted(() => {
         <el-table-column prop="userNickName" label="客户" width="120" align="center">
           <template #default="scope">
             <div v-if="scope.row.userNickName">
-              <el-avatar v-if="scope.row.userAvatar" :size="30" :src="scope.row.userAvatar" />
+              <el-avatar v-if="scope.row.userAvatar" :size="30" :src="scope.row.userAvatar"/>
               {{ scope.row.userNickName }}
             </div>
             <span v-else>未分配</span>
           </template>
         </el-table-column>
-        <el-table-column prop="phoneNumber" label="手机号码" width="120" align="center" />
+        <el-table-column prop="phoneNumber" label="手机号码" width="120" align="center"/>
         <el-table-column prop="projectMoney" label="金额" width="80" align="center">
           <template #default="scope">
             {{ scope.row.projectMoney + scope.row.phoneMoney }} 元
@@ -120,7 +126,7 @@ onMounted(() => {
         </el-table-column>
         <el-table-column prop="state" label="状态" width="100" align="center">
           <template #default="scope">
-            <el-tag :type="scope.row.state === 0 ? 'danger' : 'success'">
+            <el-tag :type="scope.row.state === 0 ? 'danger' : (scope.row.state === 1 ? 'info' : (scope.row.state === 2 ? 'success' : ''))">
               {{ formatOrderStatus(scope.row) }}
             </el-tag>
           </template>
@@ -138,27 +144,27 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="操作" width="150" align="center" fixed="right">
           <template #default="scope">
-            <el-button 
-              size="small" 
-              type="primary" 
-              @click="handleOrderDetail(scope.row)"
+            <el-button
+                size="small"
+                type="primary"
+                @click="handleOrderDetail(scope.row)"
             >
               结算
             </el-button>
           </template>
         </el-table-column>
       </el-table>
-      
+
       <!-- 分页 -->
       <div class="pagination-container">
         <el-pagination
-          v-model:current-page="pagination.currentPage"
-          v-model:page-size="pagination.pageSize"
-          :page-sizes="pagination.pageSizes"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="pagination.total"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
+            v-model:current-page="pagination.currentPage"
+            v-model:page-size="pagination.pageSize"
+            :page-sizes="pagination.pageSizes"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="pagination.total"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
         />
       </div>
     </div>
@@ -204,4 +210,4 @@ onMounted(() => {
   vertical-align: middle;
   margin-right: 5px;
 }
-</style> 
+</style>

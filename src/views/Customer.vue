@@ -65,11 +65,11 @@ const addCustomerFormRef = ref(null)
 // 重置密码表单验证规则
 const resetPasswordRules = {
   password: [
-    { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, max: 16, message: '密码长度需在6到16个字符之间', trigger: 'blur' }
+    {required: true, message: '请输入新密码', trigger: 'blur'},
+    {min: 6, max: 16, message: '密码长度需在6到16个字符之间', trigger: 'blur'}
   ],
   confirmPassword: [
-    { required: true, message: '请确认新密码', trigger: 'blur' },
+    {required: true, message: '请确认新密码', trigger: 'blur'},
     {
       validator: (rule, value, callback) => {
         if (value !== resetPasswordForm.password) {
@@ -86,15 +86,15 @@ const resetPasswordRules = {
 // 表单验证规则
 const editRules = {
   email: [
-    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+    {type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur'}
   ],
   name: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 1, max: 20, message: '用户名长度需在1到20个字符之间', trigger: 'blur' }
+    {required: true, message: '请输入用户名', trigger: 'blur'},
+    {min: 1, max: 20, message: '用户名长度需在1到20个字符之间', trigger: 'blur'}
   ],
   money: [
-    { required: true, message: '请输入余额', trigger: 'blur' },
-    { 
+    {required: true, message: '请输入余额', trigger: 'blur'},
+    {
       validator: (rule, value, callback) => {
         if (isNaN(value) || value === '') {
           callback(new Error('余额必须是数字'));
@@ -103,8 +103,8 @@ const editRules = {
         } else {
           callback();
         }
-      }, 
-      trigger: 'blur' 
+      },
+      trigger: 'blur'
     }
   ]
 }
@@ -112,23 +112,23 @@ const editRules = {
 // 添加客户表单验证规则
 const addCustomerRules = {
   account: [
-    { required: true, message: '请输入账号', trigger: 'blur' },
-    { min: 4, max: 20, message: '账号长度需在4到20个字符之间', trigger: 'blur' }
+    {required: true, message: '请输入账号', trigger: 'blur'},
+    {min: 4, max: 20, message: '账号长度需在4到20个字符之间', trigger: 'blur'}
   ],
   nickName: [
-    { required: true, message: '请输入昵称', trigger: 'blur' },
-    { min: 1, max: 20, message: '昵称长度需在1到20个字符之间', trigger: 'blur' }
+    {required: true, message: '请输入昵称', trigger: 'blur'},
+    {min: 1, max: 20, message: '昵称长度需在1到20个字符之间', trigger: 'blur'}
   ],
   email: [
-    { required: false, message: '请输入邮箱地址', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+    {required: false, message: '请输入邮箱地址', trigger: 'blur'},
+    {type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur'}
   ],
   password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 16, message: '密码长度需在6到16个字符之间', trigger: 'blur' }
+    {required: true, message: '请输入密码', trigger: 'blur'},
+    {min: 6, max: 16, message: '密码长度需在6到16个字符之间', trigger: 'blur'}
   ],
   confirmPassword: [
-    { required: true, message: '请确认密码', trigger: 'blur' },
+    {required: true, message: '请确认密码', trigger: 'blur'},
     {
       validator: (rule, value, callback) => {
         if (value !== addCustomerForm.password) {
@@ -180,10 +180,10 @@ const handleAddCustomer = () => {
   addCustomerForm.email = ''
   addCustomerForm.password = ''
   addCustomerForm.confirmPassword = ''
-  
+
   // 显示添加客户弹窗
   addCustomerVisible.value = true
-  
+
   // 下一帧后重置表单校验结果
   nextTick(() => {
     addCustomerFormRef.value?.resetFields()
@@ -209,7 +209,7 @@ const handleEdit = (row) => {
   editForm.email = row.email
   editForm.status = row.status
   editForm.money = row.money
-  
+
   // 显示编辑弹窗
   editDialogVisible.value = true
 }
@@ -217,11 +217,11 @@ const handleEdit = (row) => {
 // 提交编辑表单
 const submitEditForm = async () => {
   if (!editFormRef.value) return
-  
+
   try {
     // 表单校验
     await editFormRef.value.validate()
-    
+
     editFormLoading.value = true
     const userInfo = {
       userId: editForm.id,
@@ -251,27 +251,27 @@ const handleToggleStatus = async (row) => {
   try {
     // 显示确认对话框
     await ElMessageBox.confirm(
-      `确定要${row.status ? '启用' : '停用'}用户 "${row.name}" 吗？`, 
-      '提示', 
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: row.status ? 'success' : 'warning'
-      }
+        `确定要${row.status ? '启用' : '停用'}用户 "${row.name}" 吗？`,
+        '提示',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: row.status ? 'success' : 'warning'
+        }
     )
-    
+
     // 设置加载状态
     row.statusLoading = true
-    
+
     // 准备请求数据
     const data = {
       userId: row.id,
       status: row.status
     }
-    
+
     // 调用API
     const response = await updateCustomerStatus(data)
-    
+
     if (response.code === 200) {
       ElMessage.success(`已${row.status ? '启用' : '停用'}用户: ${row.name}`)
     } else {
@@ -286,7 +286,7 @@ const handleToggleStatus = async (row) => {
       row.status = !row.status
       return
     }
-    
+
     // 发生错误时恢复状态
     row.status = !row.status
     console.error('更新用户状态失败:', error)
@@ -348,11 +348,11 @@ const fetchCustomers = async () => {
       userId: queryForm.userId,
       userStatus: queryForm.userStatus
     }
-    
+
     const response = await getCustomerList(params)
-    
-      tableData.value = handleResponseData(response.data)
-      pagination.total = response.data.length
+
+    tableData.value = handleResponseData(response.data)
+    pagination.total = response.data.length
   } catch (error) {
     console.error('获取用户列表失败:', error)
     tableData.value = []
@@ -385,20 +385,20 @@ const handleResetPassword = (row) => {
 // 提交重置密码
 const submitResetPassword = async () => {
   if (!resetPasswordFormRef.value) return
-  
+
   try {
     // 表单校验
     await resetPasswordFormRef.value.validate()
-    
+
     resetPasswordLoading.value = true
-    
+
     // TODO: 调用API重置密码
     const resetPassword = {
       userId: resetPasswordForm.userId,
       password: resetPasswordForm.password
     }
     await resetPasswordService(resetPassword)
-    
+
     ElMessage.success('密码重置成功')
     resetPasswordVisible.value = false
   } catch (error) {
@@ -413,11 +413,11 @@ const submitResetPassword = async () => {
 // 提交添加客户表单
 const submitAddCustomer = async () => {
   if (!addCustomerFormRef.value) return
-  
+
   try {
     // 表单校验
     await addCustomerFormRef.value.validate()
-    
+
     addCustomerLoading.value = true
 
     const addCustomer = {
@@ -471,13 +471,13 @@ onMounted(() => {
           <el-button @click="handleReset" class="reset-button">重置</el-button>
         </div>
       </div>
-      
+
       <div class="operation-buttons">
         <el-button type="primary" @click="handleAddCustomer" class="add-button">添加客户</el-button>
         <el-button @click="handleExport" class="export-button">导出</el-button>
       </div>
     </div>
-    
+
     <!-- 表格区域 -->
     <div class="table-container">
       <div class="selected-info" v-if="selectedRows.length > 0">
@@ -510,15 +510,13 @@ onMounted(() => {
           <template #default="scope">
             <div class="customer-avatar-name">
               <span class="customer-avatar">
-                <img v-if="scope.row.avatar" :src="scope.row.avatar" class="avatar-img" alt="头像" />
+                <img v-if="scope.row.avatar" :src="scope.row.avatar" class="avatar-img" alt="头像"/>
                 <span v-else class="default-avatar">{{ scope.row.name?.charAt(0)?.toUpperCase() || 'U' }}</span>
               </span>
               <span>{{ scope.row.name }}</span>
             </div>
           </template>
         </el-table-column>
-
-        <el-table-column prop="id" label="用户ID" width="190" align="center"/>
         <el-table-column prop="account" label="账号" width="120" align="center"/>
         <el-table-column prop="email" label="邮箱" width="150" align="center"/>
         <el-table-column prop="money" label="余额" width="100" align="center">
@@ -564,21 +562,24 @@ onMounted(() => {
                   size="small"
                   @click="handleEdit(scope.row)"
                   class="table-op-button edit-button"
-              >修改</el-button>
-              
+              >修改
+              </el-button>
+
               <el-button
                   type="primary"
                   size="small"
                   @click="handleResetPassword(scope.row)"
                   class="table-op-button status-button"
-              >重置密码</el-button>
-              
+              >重置密码
+              </el-button>
+
               <el-button
                   type="danger"
                   size="small"
                   @click="handleDelete(scope.row)"
                   class="table-op-button delete-button"
-              >删除</el-button>
+              >删除
+              </el-button>
             </div>
           </template>
         </el-table-column>
@@ -599,7 +600,7 @@ onMounted(() => {
         />
       </div>
     </div>
-    
+
     <!-- 编辑用户弹窗 -->
     <el-dialog
         v-model="editDialogVisible"
@@ -608,31 +609,31 @@ onMounted(() => {
         :close-on-click-modal="false"
         :close-on-press-escape="false"
     >
-      <el-form 
+      <el-form
           ref="editFormRef"
-          :model="editForm" 
+          :model="editForm"
           :rules="editRules"
-          label-width="80px" 
+          label-width="80px"
           label-position="right"
           status-icon
       >
         <el-form-item label="用户ID">
-          <el-input v-model="editForm.id" disabled />
+          <el-input v-model="editForm.id" disabled/>
         </el-form-item>
         <el-form-item label="账号">
-          <el-input v-model="editForm.account" disabled />
+          <el-input v-model="editForm.account" disabled/>
         </el-form-item>
         <el-form-item label="余额" prop="money">
           <div class="edit-money-field">
             <span class="money-prefix">￥</span>
-            <el-input v-model="editForm.money" placeholder="请输入余额" type="number" class="money-input" />
+            <el-input v-model="editForm.money" placeholder="请输入余额" type="number" class="money-input"/>
           </div>
         </el-form-item>
         <el-form-item label="用户名" prop="name">
-          <el-input v-model="editForm.name" placeholder="请输入用户名" />
+          <el-input v-model="editForm.name" placeholder="请输入用户名"/>
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
-          <el-input v-model="editForm.email" placeholder="请输入邮箱" />
+          <el-input v-model="editForm.email" placeholder="请输入邮箱"/>
         </el-form-item>
         <el-form-item label="状态">
           <el-switch
@@ -651,7 +652,7 @@ onMounted(() => {
         </div>
       </template>
     </el-dialog>
-    
+
     <!-- 重置密码弹窗 -->
     <el-dialog
         v-model="resetPasswordVisible"
@@ -660,33 +661,33 @@ onMounted(() => {
         :close-on-click-modal="false"
         :close-on-press-escape="false"
     >
-      <el-form 
+      <el-form
           ref="resetPasswordFormRef"
-          :model="resetPasswordForm" 
+          :model="resetPasswordForm"
           :rules="resetPasswordRules"
-          label-width="100px" 
+          label-width="100px"
           label-position="right"
           status-icon
       >
         <el-form-item label="用户ID">
-          <el-input v-model="resetPasswordForm.userId" disabled />
+          <el-input v-model="resetPasswordForm.userId" disabled/>
         </el-form-item>
         <el-form-item label="用户名">
-          <el-input v-model="resetPasswordForm.username" disabled />
+          <el-input v-model="resetPasswordForm.username" disabled/>
         </el-form-item>
         <el-form-item label="新密码" prop="password">
-          <el-input 
-              v-model="resetPasswordForm.password" 
-              placeholder="请输入新密码" 
-              show-password 
+          <el-input
+              v-model="resetPasswordForm.password"
+              placeholder="请输入新密码"
+              show-password
               autocomplete="new-password"
           />
         </el-form-item>
         <el-form-item label="确认新密码" prop="confirmPassword">
-          <el-input 
-              v-model="resetPasswordForm.confirmPassword" 
-              placeholder="请再次输入新密码" 
-              show-password 
+          <el-input
+              v-model="resetPasswordForm.confirmPassword"
+              placeholder="请再次输入新密码"
+              show-password
               autocomplete="new-password"
           />
         </el-form-item>
@@ -698,7 +699,7 @@ onMounted(() => {
         </div>
       </template>
     </el-dialog>
-    
+
     <!-- 添加客户弹窗 -->
     <el-dialog
         v-model="addCustomerVisible"
@@ -707,40 +708,40 @@ onMounted(() => {
         :close-on-click-modal="false"
         :close-on-press-escape="false"
     >
-      <el-form 
+      <el-form
           ref="addCustomerFormRef"
-          :model="addCustomerForm" 
+          :model="addCustomerForm"
           :rules="addCustomerRules"
-          label-width="100px" 
+          label-width="100px"
           label-position="right"
           status-icon
       >
         <el-form-item label="账号" prop="account">
-          <el-input 
-              v-model="addCustomerForm.account" 
+          <el-input
+              v-model="addCustomerForm.account"
               placeholder="请输入账号，4-20个字符"
               autocomplete="off"
           />
         </el-form-item>
         <el-form-item label="昵称" prop="nickName">
-          <el-input 
-              v-model="addCustomerForm.nickName" 
+          <el-input
+              v-model="addCustomerForm.nickName"
               placeholder="请输入昵称，1-20个字符"
           />
         </el-form-item>
         <el-form-item label="密码" prop="password">
-          <el-input 
-              v-model="addCustomerForm.password" 
-              placeholder="请输入密码，6-16个字符" 
-              show-password 
+          <el-input
+              v-model="addCustomerForm.password"
+              placeholder="请输入密码，6-16个字符"
+              show-password
               autocomplete="new-password"
           />
         </el-form-item>
         <el-form-item label="确认密码" prop="confirmPassword">
-          <el-input 
-              v-model="addCustomerForm.confirmPassword" 
-              placeholder="请再次输入密码" 
-              show-password 
+          <el-input
+              v-model="addCustomerForm.confirmPassword"
+              placeholder="请再次输入密码"
+              show-password
               autocomplete="new-password"
           />
         </el-form-item>
