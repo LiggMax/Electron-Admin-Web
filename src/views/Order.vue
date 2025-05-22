@@ -108,9 +108,9 @@ onMounted(() => {
           </template>
         </el-table-column>
         <el-table-column prop="phoneNumber" label="手机号码" width="120" align="center" />
-        <el-table-column prop="money" label="金额" width="80" align="center">
+        <el-table-column prop="projectMoney" label="金额" width="80" align="center">
           <template #default="scope">
-            {{ scope.row.money }} 元
+            {{ scope.row.projectMoney + scope.row.phoneMoney }} 元
           </template>
         </el-table-column>
         <el-table-column prop="code" label="验证码" width="120" align="center">
