@@ -40,7 +40,7 @@ const handleLogin = async () => {
   <div class="login-container">
     <div class="login-form">
       <div class="login-header">
-        <h1>欢迎使用管理后台</h1>
+        <h1>长虹国际管理介面</h1>
       </div>
       <div class="form-item">
         <div class="input-container">

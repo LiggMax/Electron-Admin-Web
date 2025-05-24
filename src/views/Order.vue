@@ -3,6 +3,7 @@ import {ref, reactive, onMounted} from 'vue'
 import {getOrderList, orderSettlementService} from '../api/order.js'
 import Message from '../utils/message.js'
 import DateFormatter from '../utils/DateFormatter.js'
+import { ElMessageBox } from 'element-plus'
 
 // 订单数据
 const tableData = ref([])
@@ -70,6 +71,32 @@ const handleOrderDetail = async (row) => {
   Message.success('结算成功')
   await fetchOrders()
 }
+
+// 显示验证码详情
+const showCodeDetail = (row) => {
+  ElMessageBox.alert(
+    `<strong>订单ID:</strong> ${row.id}<br>
+     <strong>手机号:</strong> ${row.phoneNumber}<br>
+     <strong>验证码:</strong> ${row.code || '暂无'}<br>
+     <strong>验证码详情:</strong><br>
+     <div style="max-height: 300px; overflow-y: auto; margin-top: 10px; padding: 10px; background-color: #f8f8f8; border-radius: 4px;">
+       ${row.code || '暂无验证码详情'}
+     </div>`,
+    '验证码详情',
+    {
+      dangerouslyUseHTMLString: true,
+      confirmButtonText: '关闭',
+      customClass: 'code-detail-dialog'
+    }
+  )
+}
+
+// 截取验证码文本
+const truncateText = (text, length = 15) => {
+  if (!text) return '暂无';
+  return text.length > length ? text.substring(0, length) + '...' : text;
+}
+
 // 页面加载时获取订单列表
 onMounted(() => {
   fetchOrders()
@@ -119,9 +146,17 @@ onMounted(() => {
             {{ scope.row.projectMoney + scope.row.phoneMoney }} 元
           </template>
         </el-table-column>
-        <el-table-column prop="code" label="验证码" width="120" align="center">
+        <el-table-column prop="code" label="验证码" width="150" align="center">
           <template #default="scope">
-            {{ scope.row.code || '暂无' }}
+            <el-tooltip 
+              v-if="scope.row.code" 
+              :content="scope.row.code" 
+              placement="top" 
+              :hide-after="100"
+            >
+              <span class="truncated-text">{{ truncateText(scope.row.code) }}</span>
+            </el-tooltip>
+            <span v-else>暂无</span>
           </template>
         </el-table-column>
         <el-table-column prop="state" label="状态" width="100" align="center">
@@ -142,7 +177,7 @@ onMounted(() => {
             {{ DateFormatter.format(scope.row.createdAt) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150" align="center" fixed="right">
+        <el-table-column label="操作" width="180" align="center" fixed="right">
           <template #default="scope">
             <el-button
                 size="small"
@@ -150,6 +185,13 @@ onMounted(() => {
                 @click="handleOrderDetail(scope.row)"
             >
               结算
+            </el-button>
+            <el-button
+                size="small"
+                type="success"
+                @click="showCodeDetail(scope.row)"
+            >
+              详情
             </el-button>
           </template>
         </el-table-column>
@@ -209,5 +251,15 @@ onMounted(() => {
 :deep(.el-avatar) {
   vertical-align: middle;
   margin-right: 5px;
+}
+
+.truncated-text {
+  cursor: pointer;
+  color: #409EFF;
+}
+
+:deep(.code-detail-dialog .el-message-box__content) {
+  max-height: 500px;
+  overflow-y: auto;
 }
 </style>
