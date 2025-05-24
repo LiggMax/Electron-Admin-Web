@@ -13,6 +13,14 @@ const router = createRouter({
             }
         },
         {
+            path: '/download',
+            name: 'download',
+            component: () => import('../views/electronapp/Download.vue'),
+            meta: {
+                title: '长虹国际下'
+            }
+        },
+        {
             path: '/',
             name: 'layout',
             component: () => import('../views/layout/Layout.vue'),
