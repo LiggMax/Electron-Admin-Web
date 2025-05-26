@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -12,8 +12,8 @@ const props = defineProps({
   }
 })
 
-// 菜单项配置
-const menuItems = [
+// 使用computed优化菜单项配置
+const menuItems = computed(() => [
   { id: '1', name: '公共栏管理', icon: 'el-icon-setting', route: '/' },
   { id: '2', name: '客户管理', icon: 'el-icon-user', route: '/customer' },
   { id: '3', name: '卡商管理', icon: 'el-icon-document', route: '/merchant' },
@@ -23,11 +23,12 @@ const menuItems = [
   { id: '7', name: '资料管理', icon: 'el-icon-data', route: '/material' },
   { id: '8', name: '订单管理', icon: 'el-icon-shopping-cart', route: '/order' },
   { id: '9', name: '登出账号', icon: 'el-icon-key', route: '/logout' }
-]
+])
 
 // 菜单点击事件
 const emit = defineEmits(['menu-change'])
 const handleMenuClick = (menu) => {
+  if (!menu) return
   emit('menu-change', menu.name)
   
   // 如果是登出账号，需要特殊处理
@@ -53,7 +54,12 @@ const handleMenuClick = (menu) => {
       active-text-color="#fff"
       @select="(index) => handleMenuClick(menuItems.find(item => item.id === index))"
     >
-      <el-menu-item v-for="item in menuItems" :key="item.id" :index="item.id" :route="item.route">
+      <el-menu-item
+        v-for="item in menuItems"
+        :key="item.id"
+        :index="item.id"
+        :route="item.route"
+      >
         <el-icon v-if="false"><i :class="item.icon"></i></el-icon>
         <span class="menu-text">{{ item.name }}</span>
       </el-menu-item>
@@ -68,6 +74,7 @@ const handleMenuClick = (menu) => {
   flex: 1;
   overflow-y: auto;
   width: 100%;
+  will-change: transform;
 }
 
 .sidebar-menu {
@@ -86,6 +93,7 @@ const handleMenuClick = (menu) => {
   text-align: center;
   padding: 0 !important;
   justify-content: center;
+  transition: background-color 0.2s ease;
 }
 
 .menu-text {
@@ -101,4 +109,4 @@ const handleMenuClick = (menu) => {
 :deep(.el-menu-item:hover) {
   background-color: #333333;
 }
-</style> 
+</style>
