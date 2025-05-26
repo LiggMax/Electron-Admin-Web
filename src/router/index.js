@@ -69,6 +69,14 @@ const router = createRouter({
                     }
                 },
                 {
+                    path: 'region',
+                    name: 'region',
+                    component: () => import('../views/Region.vue'),
+                    meta: {
+                        title: '地区管理'
+                    }
+                },
+                {
                     path: 'material',
                     name: 'material',
                     component: () => import('../views/Material.vue'),

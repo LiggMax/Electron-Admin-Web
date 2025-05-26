@@ -13,19 +13,21 @@
     </div>
     <div class="table-container">
       <div class="selected-hint" v-if="selectedItems.length > 0">
-        <el-icon><InfoFilled /></el-icon>
+        <el-icon>
+          <InfoFilled/>
+        </el-icon>
         已选择 {{ selectedItems.length }} 项
         <el-link type="primary" @click="clearSelection">清除</el-link>
       </div>
 
       <el-table
-        ref="tableRef"
-        :data="tableData"
-        style="width: 100%"
-        @selection-change="handleSelectionChange"
+          ref="tableRef"
+          :data="tableData"
+          style="width: 100%"
+          @selection-change="handleSelectionChange"
       >
-        <el-table-column type="selection" width="55" />
-        <el-table-column prop="phoneNum" label="号码" width="180" />
+        <el-table-column type="selection" width="55"/>
+        <el-table-column prop="phoneNum" label="号码" width="180"/>
         <el-table-column prop="money" label="价格" width="120">
           <template #default="scope">
             <span class="price-column">
@@ -34,11 +36,25 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="country" label="国家/地区" width="120" />
-        <el-table-column prop="project" label="项目" width="180" />
-        <el-table-column prop="status" label="账号状态" width="120" />
-        <el-table-column prop="usage" label="使用情况" />
-        <el-table-column prop="createTime" label="上传时间" width="180" />
+        <el-table-column prop="nickName" label="卡商" width="120">
+          <template #default="scope">
+           <span class="merchant-avatar">
+                <img v-if="scope.row.avatar" :src="scope.row.avatar"  alt="头像"/>
+           </span>
+          <span>{{ scope.row.nickName }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="country" label="国家/地区" width="120"/>
+        <el-table-column prop="projectName" label="项目" width="120"/>
+        <el-table-column prop="usage" label="使用情况">
+          <template #default="scope">
+            <!--            <el-icon>-->
+            <!--              <component :is="scope.row.usage === 0 ? CircleCheck : CircleClose"/>-->
+            <!--            </el-icon>-->
+            {{ scope.row.usage === 0 ? '未使用' : '被购买' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="createTime" label="上传时间" width="180"/>
         <el-table-column label="操作" width="160" fixed="right">
           <template #default="scope">
             <el-button type="warning" size="small" @click="handleEdit(scope.row)">修改</el-button>
@@ -49,13 +65,13 @@
 
       <div class="pagination-container">
         <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="total"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :page-sizes="[10, 20, 50, 100]"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
         />
       </div>
     </div>
@@ -63,10 +79,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { InfoFilled } from '@element-plus/icons-vue'
-import { getPhoneList, deletePhone } from '../api/phone.js'
+import {ref, reactive, onMounted} from 'vue'
+import {ElMessage, ElMessageBox} from 'element-plus'
+import {InfoFilled, CircleCheck, CircleClose} from '@element-plus/icons-vue'
+import {getPhoneList, deletePhone} from '../api/phone.js'
+import DateFormatter from '../utils/DateFormatter.js'
 
 // 搜索表单
 const searchForm = reactive({
@@ -77,12 +94,6 @@ const searchForm = reactive({
 
 // 表格数据
 const tableData = ref([])
-
-// 状态映射
-const statusMap = {
-  0: '空闲',
-  1: '已用'
-}
 
 // 分页相关
 const currentPage = ref(1)
@@ -102,23 +113,21 @@ onMounted(() => {
 const loadData = async () => {
   try {
     const res = await getPhoneList()
-      // 处理数据映射
-      tableData.value = res.data.map(item => {
-        return {
-          phoneId: item.phoneId,
-          phoneNum: item.phoneNumber,
-          // 由于接口中没有返回国家信息，这里可能需要根据phoneRegionId转换
-          country: item.phoneRegionId === 1 ? '中国大陆' : '',
-          // 项目名称映射，可能需要根据phoneProjectId转换
-          project: item.phoneProjectId === 1 ? 'Facebook/WhatsApp' : '',
-          // 状态映射
-          status: statusMap[item.usageStatus] || '未知',
-          usage: item.usageStatus,
-          money: item.money,
-          createTime: item.registrationTime ? item.registrationTime.split('T')[0] : ''
-        }
-      })
-      total.value = res.data.length
+    // 处理数据映射
+    tableData.value = res.data.map(item => {
+      return {
+        phoneId: item.phoneId,
+        phoneNum: item.phoneNumber,
+        country: item.regionName,
+        projectName: item.projectName,
+        usage: item.usageStatus,
+        money: item.money,
+        nickName: item.adminNickName,
+        avatar: item.adminAvatar,
+        createTime: DateFormatter.format(item.registrationTime)
+      }
+    })
+    total.value = res.data.length
   } catch (error) {
     console.error('加载数据出错:', error)
   }
@@ -228,10 +237,6 @@ const formatPrice = (price) => {
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 }
 
-.button-group {
-  margin-bottom: 20px;
-}
-
 .table-container {
   background-color: #fff;
   padding: 20px;
@@ -249,20 +254,21 @@ const formatPrice = (price) => {
   color: #67c23a;
 }
 
-.selected-hint .el-icon {
-  margin-right: 8px;
-}
-
-.selected-hint .el-link {
-  margin-left: 10px;
-}
-
 .pagination-container {
   margin-top: 20px;
   display: flex;
   justify-content: center;
 }
 
+.merchant-avatar {
+  display: inline-block;
+  margin-right: 8px;
+}
+.merchant-avatar img {
+  width: 28px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
 /* 价格列样式 */
 .price-column {
   display: flex;

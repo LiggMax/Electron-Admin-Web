@@ -389,44 +389,12 @@ onMounted(() => {
 
 .operation-buttons {
   display: flex;
+  flex-direction: row;
   justify-content: center;
   gap: 10px;
 }
 
-:deep(.el-textarea__inner) {
-  resize: none;
-  border-radius: 14px;
-  border: 1px solid #dcdfe6;
-  min-height: 120px;
-  background-color: #ffffff;
-  padding: 15px;
-}
-
 /* 修改保存按钮的颜色为浅紫色，与图片一致 */
-:deep(.el-button--primary) {
-  background-color: #7c7de9;
-  border-color: #7c7de9;
-}
-
-:deep(.el-button--primary:hover) {
-  background-color: #8e8ff0;
-  border-color: #8e8ff0;
-}
-
-:deep(.el-button--primary:disabled) {
-  background-color: #a0a0e3;
-  border-color: #a0a0e3;
-  cursor: not-allowed;
-}
-
-:deep(.el-table .cell) {
-  padding: 10px;
-}
 
 /* 操作按钮样式 */
-:deep(.el-button--danger),
-:deep(.el-button--primary) {
-  padding: 6px 12px;
-  font-size: 12px;
-}
-</style> 
+</style>

@@ -19,9 +19,10 @@ const menuItems = [
   { id: '3', name: '卡商管理', icon: 'el-icon-document', route: '/merchant' },
   { id: '4', name: '号码管理', icon: 'el-icon-phone', route: '/phone' },
   { id: '5', name: '项目管理', icon: 'el-icon-coin', route: '/project' },
-  { id: '6', name: '资料管理', icon: 'el-icon-data', route: '/material' },
-  { id: '7', name: '订单管理', icon: 'el-icon-shopping-cart', route: '/order' },
-  { id: '8', name: '登出账号', icon: 'el-icon-key', route: '/logout' }
+  { id: '6', name: '地区管理', icon: 'el-icon-location', route: '/region' },
+  { id: '7', name: '资料管理', icon: 'el-icon-data', route: '/material' },
+  { id: '8', name: '订单管理', icon: 'el-icon-shopping-cart', route: '/order' },
+  { id: '9', name: '登出账号', icon: 'el-icon-key', route: '/logout' }
 ]
 
 // 菜单点击事件
@@ -30,7 +31,7 @@ const handleMenuClick = (menu) => {
   emit('menu-change', menu.name)
   
   // 如果是登出账号，需要特殊处理
-  if (menu.id === '8') {
+  if (menu.id === '9') {
     // TODO: 实现登出逻辑
     console.log('登出账号')
     // 跳转到登录页

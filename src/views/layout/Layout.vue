@@ -33,12 +33,16 @@ watch(() => route.path, (newPath) => {
       activeMenu.value = '5'
       currentMenu.value = '项目管理'
       break
-    case '/material':
+    case '/region':
       activeMenu.value = '6'
+      currentMenu.value = '项目管理'
+      break
+    case '/material':
+      activeMenu.value = '7'
       currentMenu.value = '资料管理'
       break
     case '/order':
-      activeMenu.value = '7'
+      activeMenu.value = '8'
       currentMenu.value = '订单管理'
       break
   }

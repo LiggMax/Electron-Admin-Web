@@ -506,7 +506,7 @@ onMounted(() => {
       >
         <el-table-column type="selection" width="55"/>
 
-        <el-table-column label="用户信息" width="150" align="center">
+        <el-table-column label="客戶信息" width="150" align="center">
           <template #default="scope">
             <div class="customer-avatar-name">
               <span class="customer-avatar">
@@ -928,11 +928,6 @@ onMounted(() => {
 .delete-button {
   background-color: #ff4d4f;
   border-color: #ff4d4f;
-}
-
-:deep(.el-table) {
-  --el-table-border-color: #ebeef5;
-  --el-table-header-bg-color: #f5f7fa;
 }
 
 :deep(.el-table--striped .el-table__body tr.el-table__row--striped td) {

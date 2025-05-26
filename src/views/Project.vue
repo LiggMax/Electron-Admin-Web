@@ -107,6 +107,14 @@ const handleAddProject = () => {
   })
 }
 
+// 取消添加项目
+const cancelAddProject = () => {
+  addProjectVisible.value = false
+  // 清空表单数据
+  addProjectForm.projectName = ''
+  addProjectForm.projectPrice = ''
+}
+
 // 提交添加项目表单
 const submitAddProject = async () => {
   if (!addProjectFormRef.value) return
@@ -158,11 +166,15 @@ const handleEdit = (row) => {
   
   // 显示编辑弹窗
   editProjectVisible.value = true
-  
-  // 下一帧后重置表单校验结果
-  nextTick(() => {
-    editProjectFormRef.value?.resetFields()
-  })
+}
+
+// 取消编辑项目
+const cancelEditProject = () => {
+  editProjectVisible.value = false
+  // 清空表单数据
+  editProjectForm.id = ''
+  editProjectForm.projectName = ''
+  editProjectForm.projectPrice = ''
 }
 
 // 提交编辑项目表单
@@ -367,6 +379,7 @@ onMounted(() => {
         width="500px"
         :close-on-click-modal="false"
         :close-on-press-escape="false"
+        @closed="cancelAddProject"
     >
       <el-form 
           ref="addProjectFormRef"
@@ -394,7 +407,7 @@ onMounted(() => {
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="addProjectVisible = false">取消</el-button>
+          <el-button @click="cancelAddProject">取消</el-button>
           <el-button type="primary" @click="submitAddProject" :loading="addProjectLoading">确定</el-button>
         </div>
       </template>
@@ -407,6 +420,7 @@ onMounted(() => {
         width="500px"
         :close-on-click-modal="false"
         :close-on-press-escape="false"
+        @closed="cancelEditProject"
     >
       <el-form 
           ref="editProjectFormRef"
@@ -437,7 +451,7 @@ onMounted(() => {
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="editProjectVisible = false">取消</el-button>
+          <el-button @click="cancelEditProject">取消</el-button>
           <el-button type="primary" @click="submitEditProject" :loading="editProjectLoading">确定</el-button>
         </div>
       </template>
