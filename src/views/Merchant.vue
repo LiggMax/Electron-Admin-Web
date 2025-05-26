@@ -491,7 +491,7 @@ onMounted(() => {
           </template>
         </el-table-column>
 
-        <el-table-column prop="account" label="卡商ID" width="120" align="center"/>
+        <el-table-column prop="account" label="卡商账号" width="120" align="center"/>
         <el-table-column prop="email" label="邮箱" width="180" align="center"/>
         <el-table-column prop="loginTime" label="登录时间" width="180" align="center">
           <template #default="scope">

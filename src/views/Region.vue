@@ -20,7 +20,7 @@ const originalData = ref([]) // 保存原始数据，用于本地搜索
 const tableLoading = ref(false)
 
 // 处理本地搜索，根据查询条件过滤数据
-const filteredData = computed(() => {
+computed(() => {
   if (!queryForm.regionName) {
     return originalData.value
   }
@@ -28,8 +28,7 @@ const filteredData = computed(() => {
   return originalData.value.filter(item => {
     return item.regionName.toLowerCase().includes(queryForm.regionName.toLowerCase())
   })
-})
-
+});
 // 选中的行
 const selectedRows = ref([])
 
@@ -38,16 +37,6 @@ const handleSelectionChange = (selection) => {
   selectedRows.value = selection
 }
 
-// 搜索方法
-const handleSearch = () => {
-  tableData.value = filteredData.value
-}
-
-// 重置搜索条件
-const handleReset = () => {
-  queryForm.regionName = ''
-  tableData.value = originalData.value
-}
 
 // 添加地区弹窗相关
 const addRegionVisible = ref(false)
@@ -137,11 +126,6 @@ const submitAddRegion = async () => {
   } finally {
     addRegionLoading.value = false
   }
-}
-
-// 清除选中的行
-const handleClearSelected = () => {
-  selectedRows.value = []
 }
 
 // 修改地区信息
@@ -402,29 +386,6 @@ onMounted(() => {
   overflow-x: auto;
 }
 
-.selected-info {
-  margin-bottom: 10px;
-}
-
-.selected-text {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
-.clear-text {
-  color: #409eff;
-  cursor: pointer;
-  margin-left: 10px;
-}
-
-.batch-delete-button {
-  padding: 2px 8px;
-  height: 24px;
-  line-height: 20px;
-}
-
 .operation-buttons-group {
   display: flex;
   flex-direction: row;
@@ -452,17 +413,8 @@ onMounted(() => {
   border-color: #ff4d4f;
 }
 
-:deep(.el-table) {
-  --el-table-border-color: #ebeef5;
-  --el-table-header-bg-color: #f5f7fa;
-}
-
 :deep(.el-table--striped .el-table__body tr.el-table__row--striped td) {
   background-color: #fafafa;
-}
-
-:deep(.el-table .cell) {
-  padding: 0 10px;
 }
 
 :deep(.el-table th) {
