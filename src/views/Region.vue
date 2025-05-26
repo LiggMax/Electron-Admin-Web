@@ -189,7 +189,7 @@ const handleDelete = async (row) => {
     })
 
     // 获取地区ID
-    const regionId = typeof row === row.id
+    const regionId = typeof row === 'object' ? row.id : row
 
     // 调用删除API
     await deleteRegionService(regionId)
@@ -199,52 +199,6 @@ const handleDelete = async (row) => {
     // 用户取消删除
     if (error !== 'cancel' && !error.toString().includes('cancel')) {
       ElMessage.error('删除失败：' + (error.message || '未知错误'))
-    }
-  }
-}
-
-// 批量删除选中地区
-const handleBatchDelete = async () => {
-  if (selectedRows.value.length === 0) {
-    ElMessage.warning('请先选择要删除的地区')
-    return
-  }
-
-  try {
-    await ElMessageBox.confirm(`确定要删除选中的 ${selectedRows.value.length} 个地区吗？`, '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-
-    // 获取选中地区的ID列表
-    const regionIds = selectedRows.value.map(item => item.id)
-
-    // 逐个删除地区
-    let errorCount = 0
-    for (const regionId of regionIds) {
-      try {
-        await deleteRegionService(regionId)
-      } catch (error) {
-        console.error('删除地区失败:', error)
-        errorCount++
-      }
-    }
-
-    if (errorCount === 0) {
-      ElMessage.success('批量删除成功')
-    } else if (errorCount < regionIds.length) {
-      ElMessage.warning(`部分删除成功，${errorCount}个地区删除失败`)
-    } else {
-      ElMessage.error('批量删除失败')
-    }
-
-    selectedRows.value = []
-    await fetchRegions() // 重新获取数据
-  } catch (error) {
-    // 用户取消删除
-    if (error !== 'cancel' && !error.toString().includes('cancel')) {
-      ElMessage.error('批量删除失败：' + (error.message || '未知错误'))
     }
   }
 }
@@ -290,21 +244,6 @@ onMounted(() => {
 
     <!-- 表格区域 -->
     <div class="table-container">
-      <div class="selected-info" v-if="selectedRows.length > 0">
-        <el-alert type="info" :closable="false">
-          <template #default>
-            <div class="selected-text">
-              已选择 {{ selectedRows.length }} 项
-              <div>
-                <el-button type="danger" size="small" @click="handleBatchDelete" class="batch-delete-button">删除
-                </el-button>
-                <span class="clear-text" @click="handleClearSelected">清除</span>
-              </div>
-            </div>
-          </template>
-        </el-alert>
-      </div>
-
       <el-table
           :data="tableData"
           v-loading="tableLoading"
@@ -334,7 +273,7 @@ onMounted(() => {
               <el-button
                   type="danger"
                   size="small"
-                  @click="handleDelete(scope.row.id)"
+                  @click="handleDelete(scope.row)"
                   class="table-op-button delete-button"
               >删除
               </el-button>
