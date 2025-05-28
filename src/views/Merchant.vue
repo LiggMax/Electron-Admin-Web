@@ -143,6 +143,25 @@ const editRules = {
   email: [
     { required: false, message: '请输入邮箱地址', trigger: 'blur' },
     { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+  ],
+  divideInto: [
+    { required: true, message: '请输入分成比例', trigger: 'blur' },
+    { 
+      validator: (rule, value, callback) => {
+        if (value === null || value === undefined || value === '') {
+          callback(new Error('请输入分成比例'))
+        } else if (isNaN(Number(value))) {
+          callback(new Error('分成比例必须是数字'))
+        } else if (!Number.isInteger(Number(value))) {
+          callback(new Error('分成比例必须是整数'))
+        } else if (Number(value) < 0 || Number(value) > 100) {
+          callback(new Error('分成比例必须在0-100之间'))
+        } else {
+          callback()
+        }
+      }, 
+      trigger: 'blur' 
+    }
   ]
 }
 
@@ -267,7 +286,7 @@ const handleBatchDelete = async () => {
   }
 }
 
-// 处理API响应数据
+// 处理卡商响应数据
 const handleResponseData = (data) => {
   return data.map(item => ({
     id: item.userId,
@@ -277,11 +296,40 @@ const handleResponseData = (data) => {
     email: item.email || '未设置',
     phoneNumber: item.phoneNumber || '未设置',
     divideInto: item.divideInto, // 分成比例
+    money: item.money, //余额
     loginTime: item.loginTime ? DateFormatter.format(item.loginTime) : '暂无登录',
     rawLoginTime: item.loginTime,
     createdAt: DateFormatter.format(item.createdAt),
     updatedAt: item.updatedAt ? DateFormatter.format(item.updatedAt) : '暂无更新'
   }))
+}
+
+// 格式化分成比例显示
+const formatDivideRatio = (ratio) => {
+  if (ratio === null || ratio === undefined || ratio === '') {
+    return '未设置'
+  }
+  const numRatio = Number(ratio)
+  if (isNaN(numRatio)) {
+    return '无效'
+  }
+  return `${numRatio}%`
+}
+
+// 根据分成比例获取颜色
+const getRatioColor = (ratio) => {
+  const numRatio = Number(ratio)
+  if (isNaN(numRatio) || numRatio === 0) {
+    return '#d9d9d9' // 灰色 - 未设置或0
+  } else if (numRatio <= 30) {
+    return '#52c41a' // 绿色 - 低比例
+  } else if (numRatio <= 60) {
+    return '#1890ff' // 蓝色 - 中等比例
+  } else if (numRatio <= 80) {
+    return '#fa8c16' // 橙色 - 较高比例
+  } else {
+    return '#f5222d' // 红色 - 高比例
+  }
 }
 
 // 获取卡商列表数据
@@ -496,7 +544,26 @@ onMounted(() => {
         </el-table-column>
 
         <el-table-column prop="account" label="卡商账号" width="120" align="center"/>
-        <el-table-column prop="divideInto" label="分成比例" width="100" align="center"/>
+        <el-table-column prop="divideInto" label="分成比例" width="160" align="center">
+          <template #default="scope">
+            <div class="divide-ratio-cell">
+              <el-progress
+                :percentage="scope.row.divideInto || 0"
+                :color="getRatioColor(scope.row.divideInto)"
+                :stroke-width="17"
+                :show-text="true"
+                :format="() => formatDivideRatio(scope.row.divideInto)"
+                class="ratio-progress"
+              />
+            </div>
+          </template>
+        </el-table-column>
+        <!--余额-->
+        <el-table-column prop="money" label="余额" width="120" align="center">
+            <template #default="scope">
+              <span class="money-value">￥{{ scope.row.money }} </span>
+            </template>
+        </el-table-column>
         <el-table-column prop="email" label="邮箱" width="180" align="center"/>
         <el-table-column prop="loginTime" label="登录时间" width="180" align="center">
           <template #default="scope">
@@ -582,7 +649,38 @@ onMounted(() => {
           <el-input v-model="editForm.email" placeholder="请输入邮箱" />
         </el-form-item>
         <el-form-item label="分成比例" prop="divideInto">
-          <el-input v-model="editForm.divideInto" placeholder="修复比例" />
+          <div class="divide-ratio-input">
+            <div class="ratio-input-group">
+              <el-input-number
+                v-model="editForm.divideInto"
+                :min="0"
+                :max="100"
+                :precision="0"
+                :step="1"
+                placeholder="请输入分成比例"
+                class="ratio-number-input"
+              />
+            </div>
+            
+            <div class="ratio-slider-container">
+              <el-slider
+                v-model="editForm.divideInto"
+                :min="0"
+                :max="100"
+                :step="1"
+                :format-tooltip="(val) => `${val}%`"
+                show-stops
+                :marks="{
+                  0: '0%',
+                  25: '25%',
+                  50: '50%',
+                  75: '75%',
+                  100: '100%'
+                }"
+                class="ratio-slider"
+              />
+            </div>
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -781,6 +879,11 @@ onMounted(() => {
   margin-bottom: 10px;
 }
 
+.money-value {
+  font-weight: bold;
+  color: #f56c6c;
+}
+
 .form-item label {
   margin-right: 8px;
   white-space: nowrap;
@@ -918,17 +1021,8 @@ onMounted(() => {
   border-color: #ff4d4f;
 }
 
-:deep(.el-table) {
-  --el-table-border-color: #ebeef5;
-  --el-table-header-bg-color: #f5f7fa;
-}
-
 :deep(.el-table--striped .el-table__body tr.el-table__row--striped td) {
   background-color: #fafafa;
-}
-
-:deep(.el-table .cell) {
-  padding: 0 10px;
 }
 
 :deep(.el-table th) {
@@ -987,5 +1081,58 @@ onMounted(() => {
 .no-data {
   color: #909399;
   font-style: italic;
+}
+
+.divide-ratio-cell {
+  width: 100%;
+  padding: 4px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.ratio-progress {
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.divide-ratio-input {
+  width: 100%;
+}
+
+.ratio-input-group {
+  display: flex;
+  align-items: center;
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.ratio-number-input {
+  width: 100% !important;
+}
+
+
+.ratio-slider-container {
+  margin: 15px 0;
+  padding: 0 10px;
+}
+
+.ratio-slider {
+  width: 100%;
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+  .divide-ratio-cell {
+    padding: 2px 4px;
+    gap: 2px;
+  }
+
+  .ratio-slider-container {
+    margin: 10px 0;
+    padding: 0 5px;
+  }
+
 }
 </style>
