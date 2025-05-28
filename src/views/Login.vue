@@ -1,9 +1,9 @@
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import IconUser from '../assets/material/user.png'
 import IconPassword from '../assets/material/password.png'
-import {loginService} from "../api/login.js";
-import {userTokenStore} from "../store/token.js";
+import { loginService } from "../api/login.js";
+import { userTokenStore } from "../store/token.js";
 import Message from '../utils/message.js'
 import { useRouter } from 'vue-router'
 
@@ -17,6 +17,20 @@ const loginForm = reactive({
   remember: false
 })
 
+// 加载状态
+const loading = ref(false)
+
+// 页面加载时读取localStorage中的用户名和密码
+onMounted(() => {
+  const storedUsername = localStorage.getItem('rememberedUsername')
+  const storedPassword = localStorage.getItem('rememberedPassword')
+  if (storedUsername && storedPassword) {
+    loginForm.username = storedUsername
+    loginForm.password = storedPassword
+    loginForm.remember = true
+  }
+})
+
 // 登录方法
 const handleLogin = async () => {
   if (!loginForm.username || !loginForm.password) {
@@ -24,20 +38,38 @@ const handleLogin = async () => {
     return
   }
   
+  // 设置加载状态
+  loading.value = true
+  
+  try {
     const res = await loginService({
       account: loginForm.username,
       password: loginForm.password
     })
     
-      userToken.setToken(res.data)
-      Message.success('登录成功')
-      // 登录成功后跳转到首页
-      await router.push('/')
+    userToken.setToken(res.data)
+    Message.success('登录成功')
+    // 登录成功后跳转到首页
+    await router.push('/')
+    
+    // 如果勾选了“记住密码”，则保存用户名和密码到localStorage
+    if (loginForm.remember) {
+      localStorage.setItem('rememberedUsername', loginForm.username)
+      localStorage.setItem('rememberedPassword', loginForm.password)
+    } else {
+      // 如果取消勾选“记住密码”，则清除localStorage中的数据
+      localStorage.removeItem('rememberedUsername')
+      localStorage.removeItem('rememberedPassword')
+    }
+  } finally {
+    // 无论成功或失败，都重置加载状态
+    loading.value = false
+  }
 }
 </script>
 
 <template>
-  <div class="login-container">
+  <div class="login-container" @keydown.enter="handleLogin">
     <div class="login-form">
       <div class="login-header">
         <h1>长虹国际管理介面</h1>
@@ -45,7 +77,7 @@ const handleLogin = async () => {
       <div class="form-item">
         <div class="input-container">
           <div class="icon-wrapper">
-            <img :src="IconUser" class="icon-image"  alt=""/>
+            <img :src="IconUser" class="icon-image" alt=""/>
           </div>
           <el-input 
             v-model="loginForm.username" 
@@ -57,13 +89,13 @@ const handleLogin = async () => {
       <div class="form-item">
         <div class="input-container">
           <div class="icon-wrapper">
-            <img :src="IconPassword" class="icon-image" />
+            <img :src="IconPassword" class="icon-image" alt=""/>
           </div>
-          <el-input 
-            v-model="loginForm.password" 
-            type="password" 
+          <el-input
+            v-model="loginForm.password"
+            type="password"
             placeholder="请输入密码"
-            size="large" 
+            size="large"
           />
         </div>
       </div>
@@ -71,7 +103,14 @@ const handleLogin = async () => {
         <el-checkbox v-model="loginForm.remember">记住密码</el-checkbox>
       </div>
       <div class="form-item">
-        <el-button type="primary" class="login-button" @click="handleLogin">登 录</el-button>
+        <el-button
+          type="primary" 
+          class="login-button" 
+          @click="handleLogin"
+          :loading="loading"
+        >
+          登 录
+        </el-button>
       </div>
     </div>
   </div>
@@ -146,21 +185,11 @@ const handleLogin = async () => {
 }
 
 /* 调整Element Plus输入框高度 */
-:deep(.el-input) {
-  height: 45px;
-  width: 100%;
-}
 
 :deep(.el-input__wrapper) {
   padding: 0 11px 0 35px;
   height: 45px;
   border-radius: 3px;
-}
-
-:deep(.el-input__inner) {
-  height: 45px;
-  line-height: 45px;
-  font-size: 14px;
 }
 
 .remember-box {
@@ -170,20 +199,6 @@ const handleLogin = async () => {
 }
 
 /* 调整勾选框和文字的间距 */
-:deep(.el-checkbox) {
-  height: 20px;
-  line-height: 20px;
-}
-
-:deep(.el-checkbox__label) {
-  padding-left: 10px;
-  font-size: 14px;
-  color: #606266;
-}
-
-:deep(.el-checkbox__inner) {
-  border-radius: 2px;
-}
 
 .login-button {
   width: 100%;
@@ -198,20 +213,6 @@ const handleLogin = async () => {
 }
 
 /* 使用Element Plus主题色覆盖 */
-:deep(.el-button--primary) {
-  background-color: #f56c6c;
-  border-color: #f56c6c;
-}
-
-:deep(.el-button--primary:hover) {
-  background-color: #f78989;
-  border-color: #f78989;
-}
-
-:deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
-  background-color: #f56c6c;
-  border-color: #f56c6c;
-}
 
 /* 覆盖可能的全局样式 */
 :deep(*) {
