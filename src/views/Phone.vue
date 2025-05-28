@@ -39,19 +39,47 @@
         <el-table-column prop="nickName" label="卡商" width="120">
           <template #default="scope">
            <span class="merchant-avatar">
-                <img v-if="scope.row.avatar" :src="scope.row.avatar"  alt="头像"/>
+                <img v-if="scope.row.avatar" :src="scope.row.avatar" alt="头像"/>
            </span>
-          <span>{{ scope.row.nickName }}</span>
+            <span>{{ scope.row.nickName }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="country" label="国家/地区" width="120"/>
-        <el-table-column prop="projectName" label="项目" width="120"/>
-        <el-table-column prop="usage" label="使用情况">
+        <el-table-column prop="projects" label="项目" width="200">
           <template #default="scope">
-            <!--            <el-icon>-->
-            <!--              <component :is="scope.row.usage === 0 ? CircleCheck : CircleClose"/>-->
-            <!--            </el-icon>-->
-            {{ scope.row.usage === 0 ? '未使用' : '被购买' }}
+            <div class="projects-container">
+              <el-tag
+                  v-for="project in scope.row.projects"
+                  :key="project.projectId"
+                  size="small"
+                  class="project-tag"
+                  :title="`${project.projectName} - ¥${formatPrice(project.projectPrice)}`"
+              >
+                {{ project.projectName }}
+              </el-tag>
+              <el-popover
+                  v-if="scope.row.projects.length > 3"
+                  placement="top"
+                  width="300"
+                  trigger="hover"
+              >
+                <template #reference>
+                  <el-tag size="small" type="info" class="more-tag">
+                    +{{ scope.row.projects.length - 3 }}
+                  </el-tag>
+                </template>
+                <div class="project-details">
+                  <div
+                      v-for="project in scope.row.projects"
+                      :key="project.projectId"
+                      class="project-detail-item"
+                  >
+                    <span class="project-name">{{ project.projectName }}</span>
+                    <span class="project-price">¥{{ formatPrice(project.projectPrice) }}</span>
+                  </div>
+                </div>
+              </el-popover>
+            </div>
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="上传时间" width="180"/>
@@ -80,11 +108,11 @@
 
 <script setup>
 import {ref, reactive, onMounted} from 'vue'
-import {ElMessage, ElMessageBox} from 'element-plus'
-import {InfoFilled, CircleCheck, CircleClose} from '@element-plus/icons-vue'
+import { ElMessageBox} from 'element-plus'
+import {InfoFilled} from '@element-plus/icons-vue'
 import {getPhoneList, deletePhone} from '../api/phone.js'
 import DateFormatter from '../utils/DateFormatter.js'
-
+import Message from  '../utils/message.js'
 // 搜索表单
 const searchForm = reactive({
   country: '',
@@ -119,7 +147,7 @@ const loadData = async () => {
         phoneId: item.phoneId,
         phoneNum: item.phoneNumber,
         country: item.regionName,
-        projectName: item.projectName,
+        projects: item.projects || [], // 直接使用projects数组
         usage: item.usageStatus,
         money: item.money,
         nickName: item.adminNickName,
@@ -152,17 +180,17 @@ const resetForm = () => {
 // 添加号码
 const handleAdd = () => {
   // TODO: 实现添加号码的逻辑
-  ElMessage.success('添加号码功能待实现')
+  Message.success('添加号码功能待实现')
 }
 
 // 批量分配
 const batchOperation = () => {
   if (selectedItems.value.length === 0) {
-    ElMessage.warning('请先选择号码')
+    Message.warning('请先选择号码')
     return
   }
   // TODO: 实现批量分配的逻辑
-  ElMessage.success(`已选择${selectedItems.value.length}项进行批量操作`)
+  Message.success(`已选择${selectedItems.value.length}项进行批量操作`)
 }
 
 // 处理选择变化
@@ -178,7 +206,7 @@ const clearSelection = () => {
 // 编辑行
 const handleEdit = (row) => {
   console.log('编辑：', row)
-  ElMessage.success('编辑功能待实现')
+  Message.success('编辑功能待实现')
 }
 
 // 删除行
@@ -189,16 +217,12 @@ const handleDelete = (row) => {
     type: 'warning'
   }).then(async () => {
     try {
-      const res = await deletePhone(row.phoneId)
-      if (res.code === 200) {
-        ElMessage.success('删除成功')
-        loadData() // 重新加载数据
-      } else {
-        ElMessage.error(res.message || '删除失败')
-      }
+      await deletePhone(row.phoneId);
+      Message.success('删除成功')
+      await loadData() // 重新加载数据
     } catch (error) {
       console.error('删除出错:', error)
-      ElMessage.error('删除失败')
+      Message.error('删除失败')
     }
   }).catch(() => {
     // 取消删除
@@ -264,11 +288,13 @@ const formatPrice = (price) => {
   display: inline-block;
   margin-right: 8px;
 }
+
 .merchant-avatar img {
   width: 28px;
   border-radius: 50%;
   vertical-align: middle;
 }
+
 /* 价格列样式 */
 .price-column {
   display: flex;
@@ -285,5 +311,55 @@ const formatPrice = (price) => {
 .price-value {
   color: #f56c6c;
   font-size: 16px;
+}
+
+/* 项目列样式 */
+.projects-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.project-tag {
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-tag:nth-child(n+4) {
+  display: none;
+}
+
+.more-tag {
+  cursor: pointer;
+}
+
+.project-details {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.project-detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.project-detail-item:last-child {
+  border-bottom: none;
+}
+
+.project-name {
+  flex: 1;
+  margin-right: 10px;
+}
+
+.project-price {
+  color: #f56c6c;
+  font-weight: bold;
 }
 </style> 
