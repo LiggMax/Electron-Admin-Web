@@ -293,7 +293,7 @@ const handleResponseData = (data) => {
     avatar: item.userAvatar,
     name: item.nickName || item.account,
     account: item.account,
-    email: item.email || '未设置',
+    email: item.email,
     phoneNumber: item.phoneNumber || '未设置',
     divideInto: item.divideInto, // 分成比例
     money: item.money, //余额
@@ -564,7 +564,11 @@ onMounted(() => {
               <span class="money-value">￥{{ scope.row.money }} </span>
             </template>
         </el-table-column>
-        <el-table-column prop="email" label="邮箱" width="180" align="center"/>
+        <el-table-column prop="email" label="邮箱" width="180" align="center">
+          <template #default="scope">
+            <span class="email-value">{{ scope.row.email ? scope.row.email : '未设置邮箱'}}</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="loginTime" label="登录时间" width="180" align="center">
           <template #default="scope">
             <span :class="{'no-login': scope.row.loginTime === '暂无登录'}">
