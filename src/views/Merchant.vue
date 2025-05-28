@@ -84,7 +84,8 @@ const editForm = reactive({
   id: '',
   name: '',
   account: '',
-  email: ''
+  email: '',
+  divideInto: ''
 })
 const editFormLoading = ref(false)
 const editFormRef = ref(null)
@@ -188,6 +189,7 @@ const handleEdit = (row) => {
   editForm.name = row.name
   editForm.account = row.account
   editForm.email = row.email
+  editForm.divideInto = row.divideInto
   
   // 显示编辑弹窗
   editDialogVisible.value = true
@@ -207,7 +209,8 @@ const submitEditForm = async () => {
     const cardInfo = {
       userId: editForm.id,
       nickName: editForm.name,
-      email: editForm.email
+      email: editForm.email,
+      divideInto: editForm.divideInto
     }
     
     // 调用API
@@ -273,8 +276,9 @@ const handleResponseData = (data) => {
     account: item.account,
     email: item.email || '未设置',
     phoneNumber: item.phoneNumber || '未设置',
+    divideInto: item.divideInto, // 分成比例
     loginTime: item.loginTime ? DateFormatter.format(item.loginTime) : '暂无登录',
-    rawLoginTime: item.loginTime, // 保存原始登录时间用于计算相对时间
+    rawLoginTime: item.loginTime,
     createdAt: DateFormatter.format(item.createdAt),
     updatedAt: item.updatedAt ? DateFormatter.format(item.updatedAt) : '暂无更新'
   }))
@@ -492,6 +496,7 @@ onMounted(() => {
         </el-table-column>
 
         <el-table-column prop="account" label="卡商账号" width="120" align="center"/>
+        <el-table-column prop="divideInto" label="分成比例" width="100" align="center"/>
         <el-table-column prop="email" label="邮箱" width="180" align="center"/>
         <el-table-column prop="loginTime" label="登录时间" width="180" align="center">
           <template #default="scope">
@@ -575,6 +580,9 @@ onMounted(() => {
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="editForm.email" placeholder="请输入邮箱" />
+        </el-form-item>
+        <el-form-item label="分成比例" prop="divideInto">
+          <el-input v-model="editForm.divideInto" placeholder="修复比例" />
         </el-form-item>
       </el-form>
       <template #footer>
