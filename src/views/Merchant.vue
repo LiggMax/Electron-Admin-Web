@@ -544,7 +544,7 @@ onMounted(() => {
         </el-table-column>
 
         <el-table-column prop="account" label="卡商账号" width="120" align="center"/>
-        <el-table-column prop="divideInto" label="分成比例" width="160" align="center">
+        <el-table-column prop="divideInto" label="抽成比例" width="160" align="center">
           <template #default="scope">
             <div class="divide-ratio-cell">
               <el-progress
@@ -652,7 +652,7 @@ onMounted(() => {
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="editForm.email" placeholder="请输入邮箱" />
         </el-form-item>
-        <el-form-item label="分成比例" prop="divideInto">
+        <el-form-item label="抽成比例" prop="divideInto">
           <div class="divide-ratio-input">
             <div class="ratio-input-group">
               <el-input-number
