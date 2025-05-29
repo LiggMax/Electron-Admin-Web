@@ -22,7 +22,7 @@
             <span class="status-dot"></span>
             <span class="status-text">ONLINE</span>
           </div>
-          <div class="version-badge">v1.2.4</div>
+          <div class="version-badge">v1.2.5</div>
         </div>
         
         <div class="software-info">
@@ -96,7 +96,7 @@
         </div>
         
         <div class="download-info">
-          <p>文件大小: ~45MB | 最后更新: 2024年1月</p>
+          <p>文件大小: ~85MB | 最后更新: 2025年5月</p>
         </div>
       </div>
     </div>
@@ -108,14 +108,12 @@ export default {
   name: 'Download',
   methods: {
     downloadWindows() {
-      // 这里填写Windows版本的下载链接
-      console.log('下载Windows版本');
-      window.open('http://129.204.224.233:19000/electron-app/changhong-1.2.4.exe', '_blank');
+      console.log('客户端');
+      window.open('http://129.204.224.233:19000/electron-app/changhong-1.2.5.exe', '_blank');
     },
     downloadMac() {
-      // 这里填写macOS版本的下载链接
-      console.log('下载macOS版本');
-      window.open('http://129.204.224.233:19000/electron-app/changhong-ks-1.2.4.exe', '_blank');
+      console.log('卡商端');
+      window.open('http://129.204.224.233:19000/electron-app/changhong-ks-1.2.5.exe', '_blank');
     }
   }
 }
