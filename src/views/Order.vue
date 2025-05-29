@@ -67,9 +67,21 @@ const handleCurrentChange = (val) => {
 
 //订单姐结算
 const handleOrderDetail = async (row) => {
-  await orderSettlementService(row.id);
-  Message.success('结算成功')
-  await fetchOrders()
+    await ElMessageBox.confirm(
+      `确定要结算订单 ${row.id} 吗？<br>
+      <strong>手机号：</strong>${row.phoneNumber}<br>
+      <strong>金额：</strong>￥${row.projectMoney + row.phoneMoney}`,
+      '结算确认',
+      {
+        confirmButtonText: '确定结算',
+        cancelButtonText: '取消',
+        type: 'warning',
+        dangerouslyUseHTMLString: true
+      }
+    )
+    await orderSettlementService(row.id);
+    Message.success('结算成功')
+    await fetchOrders()
 }
 
 // 显示验证码详情
