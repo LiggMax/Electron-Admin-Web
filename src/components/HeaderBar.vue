@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { User, Notification, Bell } from '@element-plus/icons-vue'
+import { Bell } from '@element-plus/icons-vue'
 
 // 定义props
 const props = defineProps({
@@ -88,19 +88,6 @@ const currentTime = computed(() => {
   gap: 12px;
 }
 
-.title-icon {
-  width: 32px;
-  height: 32px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
 .title-text {
   font-size: 18px;
   font-weight: 600;
@@ -114,6 +101,7 @@ const currentTime = computed(() => {
   gap: 20px;
   position: relative;
   z-index: 1;
+  margin-right: 15px;
 }
 
 .time-display {
@@ -144,83 +132,6 @@ const currentTime = computed(() => {
   white-space: nowrap;
 }
 
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 25px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.user-info:hover {
-  background: rgba(255, 255, 255, 0.25);
-  transform: translateY(-1px);
-}
-
-.user-avatar {
-  width: 28px;
-  height: 28px;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-}
-
-.user-name {
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.notification-btn {
-  position: relative;
-  width: 36px;
-  height: 36px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.notification-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-  transform: translateY(-1px) scale(1.05);
-}
-
-.notification-btn .el-icon {
-  font-size: 16px;
-}
-
-.notification-badge {
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  background: #FF4757;
-  color: white;
-  font-size: 10px;
-  font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 10px;
-  min-width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 4px rgba(255, 71, 87, 0.3);
-  animation: pulse 2s infinite;
-}
-
 @keyframes pulse {
   0% {
     transform: scale(1);
@@ -237,6 +148,10 @@ const currentTime = computed(() => {
 @media screen and (max-width: 1024px) {
   .top-header {
     padding: 0 15px;
+  }
+  
+  .header-left {
+    margin-left: 10px;
   }
   
   .header-right {
@@ -261,6 +176,10 @@ const currentTime = computed(() => {
     padding: 0 12px;
   }
   
+  .header-left {
+    margin-left: 8px;
+  }
+  
   .header-right {
     gap: 12px;
   }
@@ -272,26 +191,16 @@ const currentTime = computed(() => {
   .title-text {
     font-size: 15px;
   }
-  
-  .title-icon {
-    width: 28px;
-    height: 28px;
-    font-size: 14px;
-  }
-  
-  .user-name {
-    display: none;
-  }
-  
-  .user-info {
-    padding: 6px;
-    gap: 0;
-  }
+
 }
 
 @media screen and (max-width: 480px) {
   .top-header {
     padding: 0 10px;
+  }
+  
+  .header-left {
+    margin-left: 5px;
   }
   
   .header-right {
@@ -309,22 +218,6 @@ const currentTime = computed(() => {
   .title-container {
     gap: 8px;
   }
-  
-  .title-icon {
-    width: 24px;
-    height: 24px;
-    font-size: 12px;
-  }
-  
-  .notification-btn {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .user-avatar {
-    width: 24px;
-    height: 24px;
-    font-size: 12px;
-  }
+
 }
 </style> 
