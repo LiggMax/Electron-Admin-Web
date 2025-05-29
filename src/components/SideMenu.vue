@@ -2,7 +2,6 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
-  Setting,
   Message,
   User, 
   Document, 
@@ -56,6 +55,20 @@ const handleMenuClick = (menu) => {
 
 <template>
   <div class="sidebar">
+    <!-- 动画背景层 -->
+    <div class="animation-layer">
+      <div class="wave wave1"></div>
+      <div class="wave wave2"></div>
+      <div class="wave wave3"></div>
+      <div class="particles">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+    
     <el-menu
       :default-active="activeMenu"
       class="sidebar-menu"
@@ -97,15 +110,124 @@ const handleMenuClick = (menu) => {
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
 }
 
-.sidebar::before {
-  content: '';
+/* 动画背景层 */
+.animation-layer {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="sidebar-pattern" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23sidebar-pattern)"/></svg>');
+  overflow: hidden;
   pointer-events: none;
+}
+
+/* 波纹效果 */
+.wave {
+  position: absolute;
+  width: 300%;
+  height: 300%;
+  top: -100%;
+  left: -100%;
+  background: radial-gradient(ellipse at center, transparent, transparent 40%, rgba(255, 255, 255, 0.1) 40%, transparent 41%);
+  animation: wave-animation 15s linear infinite;
+  opacity: 0.5;
+}
+
+.wave1 {
+  animation-duration: 20s;
+  background: radial-gradient(ellipse at center, transparent, transparent 35%, rgba(255, 255, 255, 0.08) 35%, transparent 36%);
+}
+
+.wave2 {
+  animation-duration: 25s;
+  animation-delay: -5s;
+  background: radial-gradient(ellipse at center, transparent, transparent 38%, rgba(255, 255, 255, 0.06) 38%, transparent 39%);
+}
+
+.wave3 {
+  animation-duration: 30s;
+  animation-delay: -10s;
+  background: radial-gradient(ellipse at center, transparent, transparent 42%, rgba(255, 255, 255, 0.04) 42%, transparent 43%);
+}
+
+@keyframes wave-animation {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+/* 粒子效果 */
+.particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.particles span {
+  position: absolute;
+  display: block;
+  width: 4px;
+  height: 4px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  animation: particle-float 10s linear infinite;
+}
+
+.particles span:nth-child(1) {
+  left: 10%;
+  animation-delay: 0s;
+  animation-duration: 8s;
+}
+
+.particles span:nth-child(2) {
+  left: 30%;
+  animation-delay: 2s;
+  animation-duration: 10s;
+}
+
+.particles span:nth-child(3) {
+  left: 50%;
+  animation-delay: 4s;
+  animation-duration: 12s;
+}
+
+.particles span:nth-child(4) {
+  left: 70%;
+  animation-delay: 6s;
+  animation-duration: 9s;
+}
+
+.particles span:nth-child(5) {
+  left: 90%;
+  animation-delay: 8s;
+  animation-duration: 11s;
+}
+
+@keyframes particle-float {
+  0% {
+    bottom: -10px;
+    opacity: 0;
+    transform: translateX(0);
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    bottom: 100%;
+    opacity: 0;
+    transform: translateX(100px);
+  }
 }
 
 .sidebar-menu {
@@ -114,7 +236,7 @@ const handleMenuClick = (menu) => {
   background: transparent;
   padding: 10px 0;
   position: relative;
-  z-index: 1;
+  z-index: 2;
   flex: 1;
 }
 
