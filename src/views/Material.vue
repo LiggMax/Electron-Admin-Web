@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, reactive } from 'vue';
 import {getUserInfo, updateUserInfo} from '../api/user.js';
-import { Edit } from '@element-plus/icons-vue';
+import { Edit,User,Memo, Phone, Clock, Location } from '@element-plus/icons-vue';
 
 import DateFormatter from "../utils/DateFormatter.js";
 import Message from "../utils/message.js";
@@ -105,7 +105,6 @@ const submitForm = async () => {
     
     // 调用API更新用户信息
     await updateUserInfo(updateData);
-    
     // 提示成功
     Message.success('修改成功');
     
@@ -138,54 +137,75 @@ onMounted(() => {
 
       <div class="admin-info-card">
         <div class="card-header">
-          <div class="title">
-            <img src="../assets/material/Gc_26_face-NotaryPublic.png" class="admin-icon" alt="管理员头像" />
-            <span>管理员信息</span>
+          <div class="admin-profile-header">
+            <div class="admin-avatar">
+              <span>{{ adminInfo.nickName?.charAt(0)?.toUpperCase() || 'A' }}</span>
+            </div>
+            <div class="admin-basic-info">
+              <div class="admin-name">{{ adminInfo.nickName || '管理员' }}</div>
+              <div class="admin-role">{{ adminInfo.role }}</div>
+              <div class="admin-account">@{{ adminInfo.account }}</div>
+            </div>
+            <div class="edit-button-container">
+              <el-button type="primary" @click="handleEdit" class="edit-btn" circle>
+                <el-icon><Edit /></el-icon>
+              </el-button>
+            </div>
           </div>
         </div>
         
         <div class="card-content">
-          <div class="info-item">
-            <span class="label">管理员ID</span>
-            <span class="value">{{ adminInfo.adminId }}</span>
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-icon">
+                <el-icon><User /></el-icon>
+              </div>
+              <div class="info-content">
+                <span class="label">管理员ID</span>
+                <span class="value">{{ adminInfo.adminId }}</span>
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <div class="info-icon">
+                <el-icon><Phone /></el-icon>
+              </div>
+              <div class="info-content">
+                <span class="label">手机号</span>
+                <span class="value">{{ adminInfo.phoneNumber || '未设置' }}</span>
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <div class="info-icon">
+                <el-icon><Memo /></el-icon>
+              </div>
+              <div class="info-content">
+                <span class="label">邮箱</span>
+                <span class="value">{{ adminInfo.email || '未设置' }}</span>
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <div class="info-icon">
+                <el-icon><Clock /></el-icon>
+              </div>
+              <div class="info-content">
+                <span class="label">最后登录</span>
+                <span class="value">{{ DateFormatter.format(adminInfo.loginTime) }}</span>
+              </div>
+            </div>
+            
+            <div class="info-item" v-if="adminInfo.loginIp">
+              <div class="info-icon">
+                <el-icon><Location /></el-icon>
+              </div>
+              <div class="info-content">
+                <span class="label">登录IP</span>
+                <span class="value">{{ adminInfo.loginIp }}</span>
+              </div>
+            </div>
           </div>
-          
-          <div class="info-item">
-            <span class="label">姓名</span>
-            <span class="value">{{ adminInfo.nickName }}</span>
-          </div>
-          
-          <div class="info-item">
-            <span class="label">账号</span>
-            <span class="value">{{ adminInfo.account }}</span>
-          </div>
-          
-          <div class="info-item">
-            <span class="label">角色</span>
-            <span class="value">{{ adminInfo.role }}</span>
-          </div>
-          
-          <div class="info-item">
-            <span class="label">手机号</span>
-            <span class="value">{{ adminInfo.phoneNumber }}</span>
-          </div>
-          
-          <div class="info-item">
-            <span class="label">邮箱</span>
-            <span class="value">{{ adminInfo.email }}</span>
-          </div>
-          
-          <div class="info-item">
-            <span class="label">最后登录</span>
-            <span class="value">{{ DateFormatter.format(adminInfo.loginTime) }} <span v-if="adminInfo.loginIp">   (IP地址:{{ adminInfo.loginIp}}) </span></span>
-          </div>
-        </div>
-        
-        <div class="card-footer">
-          <el-button type="primary" @click="handleEdit" class="edit-btn">
-            <el-icon><Edit /></el-icon>
-            修改信息
-          </el-button>
         </div>
       </div>
       <div class="money-card">
@@ -245,26 +265,30 @@ onMounted(() => {
 
 <style scoped>
 .material-container {
-  padding: 20px;
+  padding: clamp(10px, 2vw, 30px);
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 80vh;
-  gap: 20px;
+  gap: clamp(15px, 2vw, 25px);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .cards-row {
   display: flex;
-  gap: 20px;
+  gap: clamp(15px, 2vw, 25px);
   width: 100%;
-  max-width: 1200px;
+  max-width: min(1200px, 95vw);
   justify-content: center;
+  align-items: stretch;
 }
 
 .money-card {
-  flex: 0 0 350px;
+  flex: 0 0 clamp(280px, 30vw, 380px);
+  min-width: 280px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
+  border-radius: clamp(8px, 1vw, 12px);
   box-shadow: 0 8px 32px 0 rgba(102, 126, 234, 0.3);
   overflow: hidden;
   color: white;
@@ -283,7 +307,7 @@ onMounted(() => {
 }
 
 .money-header {
-  padding: 20px 24px 16px;
+  padding: clamp(16px, 2vw, 24px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   position: relative;
   z-index: 1;
@@ -309,14 +333,14 @@ onMounted(() => {
 }
 
 .money-content {
-  padding: 32px 24px;
+  padding: clamp(24px, 3vw, 32px);
   text-align: center;
   position: relative;
   z-index: 1;
 }
 
 .money-amount {
-  font-size: 42px;
+  font-size: clamp(28px, 4vw, 42px);
   font-weight: 700;
   margin-bottom: 12px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -325,7 +349,7 @@ onMounted(() => {
 
 .currency {
   color: rgba(255, 255, 255, 0.9);
-  font-size: 32px;
+  font-size: clamp(20px, 3vw, 32px);
   margin-right: 4px;
 }
 
@@ -341,77 +365,163 @@ onMounted(() => {
 }
 
 .admin-info-card {
-  flex: 1;
-  max-width: 600px;
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.08);
+  flex: 1 1 auto;
+  min-width: 320px;
+  max-width: clamp(500px, 60vw, 700px);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: clamp(8px, 1vw, 12px);
+  box-shadow: 0 8px 32px 0 rgba(102, 126, 234, 0.3);
   overflow: hidden;
-  border: 1px solid #f0f0f0;
+  color: white;
+  position: relative;
+}
+
+.admin-info-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="admin-grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.08)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.08)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.04)"/><circle cx="20" cy="80" r="0.5" fill="rgba(255,255,255,0.04)"/></pattern></defs><rect width="100" height="100" fill="url(%23admin-grain)"/></svg>');
+  pointer-events: none;
 }
 
 .card-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid #e8eaec;
+  padding: clamp(16px, 2vw, 24px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  z-index: 1;
 }
 
-.title {
+.admin-profile-header {
   display: flex;
   align-items: center;
 }
 
-.title span {
-  color: #2d68ff;
-  font-size: 18px;
+.admin-avatar {
+  width: clamp(40px, 5vw, 60px);
+  height: clamp(40px, 5vw, 60px);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: clamp(12px, 1.5vw, 16px);
+  font-size: clamp(16px, 2.5vw, 24px);
   font-weight: bold;
+  color: white;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.admin-icon {
-  width: 25px;
-  height: 25px;
-  margin-right: 10px;
+.admin-basic-info {
+  flex: 1;
+}
+
+.admin-name {
+  font-size: clamp(16px, 2.5vw, 22px);
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.admin-role {
+  font-size: clamp(12px, 1.5vw, 16px);
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 2px;
+  font-weight: 500;
+}
+
+.admin-account {
+  font-size: clamp(10px, 1.2vw, 14px);
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 400;
+}
+
+.edit-button-container {
+  margin-left: auto;
+}
+
+.edit-btn {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.edit-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
 }
 
 .card-content {
-  padding: 20px;
+  padding: clamp(16px, 2vw, 24px);
+  position: relative;
+  z-index: 1;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 }
 
 .info-item {
   display: flex;
-  margin-bottom: 20px;
-  line-height: 30px;
-  border-bottom: 1px dashed #e8e8e8;
-  padding-bottom: 10px;
+  align-items: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.info-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.info-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  font-size: 18px;
+  color: white;
+}
+
+.info-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .label {
-  flex: 0 0 120px;
-  color: #606266;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
   font-weight: 500;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .value {
-  flex: 1;
-  color: #303133;
-}
-
-.card-footer {
-  padding: 10px 20px 20px;
-  justify-content: center;
-  border-radius: 0 0 8px 8px;
-}
-
-.edit-btn {
-  width: 120px;
-  background-color: #4080ff;
-  border-color: #4080ff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.edit-btn .el-icon {
-  margin-right: 5px;
+  font-size: 14px;
+  color: white;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .dialog-footer {
@@ -425,23 +535,65 @@ onMounted(() => {
 }
 
 /* 响应式设计 */
-@media screen and (max-width: 768px) {
+/* 大屏幕优化 */
+@media screen and (min-width: 1400px) {
   .material-container {
-    padding: 15px;
+    padding: 30px;
   }
   
   .cards-row {
-    flex-direction: column;
-    gap: 15px;
+    max-width: 1400px;
+    gap: 30px;
+  }
+  
+  .admin-info-card {
+    max-width: 700px;
   }
   
   .money-card {
-    flex: none;
-    width: 100%;
+    flex: 0 0 400px;
+  }
+}
+
+/* 中等屏幕优化 */
+@media screen and (max-width: 1200px) {
+  .material-container {
+    padding: 20px;
   }
   
-  .money-content {
-    padding: 24px 20px;
+  .cards-row {
+    gap: 16px;
+  }
+  
+  .money-card {
+    flex: 0 0 320px;
+  }
+  
+  .admin-info-card {
+    max-width: 550px;
+  }
+  
+  .admin-name {
+    font-size: 20px;
+  }
+  
+  .admin-avatar {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+  
+  .edit-btn {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .info-grid {
+    gap: 16px;
+  }
+  
+  .info-item {
+    padding: 14px;
   }
   
   .money-amount {
@@ -451,34 +603,75 @@ onMounted(() => {
   .currency {
     font-size: 28px;
   }
+}
+
+/* 小屏幕优化 */
+@media screen and (max-width: 992px) {
+  .material-container {
+    padding: 16px;
+  }
+  
+  .cards-row {
+    flex-direction: column;
+    gap: 20px;
+    max-width: 100%;
+  }
+  
+  .money-card {
+    flex: none;
+    width: 100%;
+    max-width: none;
+  }
   
   .admin-info-card {
     flex: none;
     width: 100%;
+    max-width: none;
+  }
+  
+  .card-header {
+    padding: 20px;
   }
   
   .card-content {
-    padding: 15px;
+    padding: 20px;
   }
   
-  .info-item {
-    flex-direction: column;
-    align-items: flex-start;
-    margin-bottom: 15px;
+  .admin-profile-header {
+    flex-direction: row;
+    text-align: left;
   }
   
-  .label {
-    flex: none;
-    margin-bottom: 5px;
-    font-size: 14px;
+  .admin-avatar {
+    margin-right: 16px;
+    margin-bottom: 0;
   }
   
-  .value {
-    font-size: 15px;
+  .edit-button-container {
+    margin-left: auto;
+    margin-top: 0;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
   }
 }
 
-@media screen and (max-width: 480px) {
+/* 平板竖屏 */
+@media screen and (max-width: 768px) {
+  .material-container {
+    padding: 15px;
+  }
+  
+  .cards-row {
+    gap: 15px;
+  }
+  
+  .money-content {
+    padding: 24px 20px;
+  }
+  
   .money-amount {
     font-size: 32px;
   }
@@ -487,12 +680,258 @@ onMounted(() => {
     font-size: 24px;
   }
   
-  .money-description {
+  .card-header {
+    padding: 18px;
+  }
+  
+  .admin-profile-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .admin-avatar {
+    margin-right: 0;
+    margin-bottom: 12px;
+  }
+  
+  .edit-button-container {
+    margin-left: 0;
+    margin-top: 12px;
+  }
+  
+  .card-content {
+    padding: 18px;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  
+  .info-item {
+    padding: 12px;
+  }
+  
+  .admin-name {
+    font-size: 18px;
+  }
+  
+  .admin-role {
     font-size: 14px;
   }
   
-  .money-title span {
+  .admin-account {
+    font-size: 12px;
+  }
+  
+  .label {
+    font-size: 10px;
+  }
+  
+  .value {
+    font-size: 12px;
+  }
+}
+
+/* 手机横屏 */
+@media screen and (max-width: 640px) {
+  .material-container {
+    padding: 12px;
+  }
+  
+  .cards-row {
+    gap: 12px;
+  }
+  
+  .money-card {
+    border-radius: 8px;
+  }
+  
+  .admin-info-card {
+    border-radius: 8px;
+  }
+  
+  .money-content {
+    padding: 20px 16px;
+  }
+  
+  .money-amount {
+    font-size: 28px;
+  }
+  
+  .currency {
+    font-size: 20px;
+  }
+  
+  .card-header {
+    padding: 16px;
+  }
+  
+  .card-content {
+    padding: 16px;
+  }
+  
+  .info-item {
+    padding: 10px;
+  }
+  
+  .info-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+  
+  .admin-avatar {
+    width: 40px;
+    height: 40px;
     font-size: 16px;
+  }
+  
+  .edit-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* 手机竖屏 */
+@media screen and (max-width: 480px) {
+  .material-container {
+    padding: 10px;
+  }
+  
+  .cards-row {
+    gap: 10px;
+  }
+  
+  .money-amount {
+    font-size: 24px;
+  }
+  
+  .currency {
+    font-size: 18px;
+  }
+  
+  .money-description {
+    font-size: 12px;
+  }
+  
+  .money-title span {
+    font-size: 14px;
+  }
+  
+  .admin-name {
+    font-size: 16px;
+  }
+  
+  .admin-role {
+    font-size: 12px;
+  }
+  
+  .admin-account {
+    font-size: 10px;
+  }
+  
+  .label {
+    font-size: 9px;
+  }
+  
+  .value {
+    font-size: 11px;
+  }
+  
+  .info-grid {
+    gap: 10px;
+  }
+  
+  .info-item {
+    padding: 8px;
+  }
+  
+  .info-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+    margin-right: 8px;
+  }
+  
+  .card-header {
+    padding: 12px;
+  }
+  
+  .card-content {
+    padding: 12px;
+  }
+}
+
+/* 超小屏幕 */
+@media screen and (max-width: 360px) {
+  .material-container {
+    padding: 8px;
+  }
+  
+  .money-amount {
+    font-size: 20px;
+  }
+  
+  .currency {
+    font-size: 16px;
+  }
+  
+  .admin-name {
+    font-size: 14px;
+  }
+  
+  .admin-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+  
+  .edit-btn {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .info-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+}
+
+/* 高DPI屏幕优化 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .admin-info-card::before,
+  .money-card::before {
+    background-size: 50px 50px;
+  }
+}
+
+/* 容器查询支持 */
+@container (max-width: 600px) {
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .material-container {
+    background: white !important;
+    color: black !important;
+    padding: 20px;
+  }
+  
+  .admin-info-card,
+  .money-card {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
+  
+  .edit-btn {
+    display: none !important;
   }
 }
 </style> 

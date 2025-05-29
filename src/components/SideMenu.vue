@@ -1,6 +1,18 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { 
+  Setting,
+  Message,
+  User, 
+  Document, 
+  Phone, 
+  Coin, 
+  Location, 
+  ShoppingCart, 
+  DataAnalysis, 
+  SwitchButton 
+} from '@element-plus/icons-vue'
 
 const router = useRouter()
 
@@ -14,15 +26,15 @@ const props = defineProps({
 
 // 使用computed优化菜单项配置
 const menuItems = computed(() => [
-  { id: '1', name: '公共栏管理', icon: 'el-icon-setting', route: '/' },
-  { id: '2', name: '客户管理', icon: 'el-icon-user', route: '/customer' },
-  { id: '3', name: '卡商管理', icon: 'el-icon-document', route: '/merchant' },
-  { id: '4', name: '号码管理', icon: 'el-icon-phone', route: '/phone' },
-  { id: '5', name: '项目管理', icon: 'el-icon-coin', route: '/project' },
-  { id: '6', name: '地区管理', icon: 'el-icon-location', route: '/region' },
-  { id: '7', name: '订单管理', icon: 'el-icon-shopping-cart', route: '/order' },
-  { id: '8', name: '资料管理', icon: 'el-icon-data', route: '/material' },
-  { id: '9', name: '登出账号', icon: 'el-icon-key', route: '/logout' }
+  { id: '1', name: '公共栏管理', icon: Message, route: '/', color: '#667eea' },
+  { id: '2', name: '客户管理', icon: User, route: '/customer', color: '#4facfe' },
+  { id: '3', name: '卡商管理', icon: Document, route: '/merchant', color: '#43e97b' },
+  { id: '4', name: '号码管理', icon: Phone, route: '/phone', color: '#fa709a' },
+  { id: '5', name: '项目管理', icon: Coin, route: '/project', color: '#ffd89b' },
+  { id: '6', name: '地区管理', icon: Location, route: '/region', color: '#a8edea' },
+  { id: '7', name: '订单管理', icon: ShoppingCart, route: '/order', color: '#d299c2' },
+  { id: '8', name: '资料管理', icon: DataAnalysis, route: '/material', color: '#89f7fe' },
+  { id: '9', name: '登出账号', icon: SwitchButton, route: '/logout', color: '#ff9a9e' }
 ])
 
 // 菜单点击事件
@@ -37,7 +49,7 @@ const handleMenuClick = (menu) => {
     console.log('登出账号')
     // 跳转到登录页
     router.push('/login')
-    return
+
   }
 }
 </script>
@@ -49,8 +61,8 @@ const handleMenuClick = (menu) => {
       class="sidebar-menu"
       router
       :collapse="false"
-      background-color="#4D4D4D"
-      text-color="#fff"
+      background-color="transparent"
+      text-color="rgba(255, 255, 255, 0.8)"
       active-text-color="#fff"
       @select="(index) => handleMenuClick(menuItems.find(item => item.id === index))"
     >
@@ -59,9 +71,14 @@ const handleMenuClick = (menu) => {
         :key="item.id"
         :index="item.id"
         :route="item.route"
+        class="custom-menu-item"
       >
-        <el-icon v-if="false"><i :class="item.icon"></i></el-icon>
-        <span class="menu-text">{{ item.name }}</span>
+        <div class="menu-item-content">
+          <div class="menu-icon" :style="{ background: `linear-gradient(45deg, ${item.color}, ${item.color}88)` }">
+            <el-icon><component :is="item.icon" /></el-icon>
+          </div>
+          <span class="menu-text">{{ item.name }}</span>
+        </div>
       </el-menu-item>
     </el-menu>
   </div>
@@ -70,43 +87,147 @@ const handleMenuClick = (menu) => {
 <style scoped>
 /* 左侧菜单栏样式 */
 .sidebar {
-  background-color: #4D4D4D;
-  flex: 1;
-  overflow-y: auto;
+  background: linear-gradient(180deg, #2C3E50 0%, #34495E 50%, #2C3E50 100%);
+  height: 100%;
   width: 100%;
-  will-change: transform;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="sidebar-pattern" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23sidebar-pattern)"/></svg>');
+  pointer-events: none;
 }
 
 .sidebar-menu {
   border-right: none;
   width: 100%;
+  background: transparent;
+  padding: 10px 0;
+  position: relative;
+  z-index: 1;
+  flex: 1;
 }
 
 /* 覆盖Element Plus默认样式 */
-:deep(.el-menu) {
-  border-right: none;
-}
 
 :deep(.el-menu-item) {
-  height: 56px;
-  line-height: 56px;
-  text-align: center;
-  padding: 0 !important;
-  justify-content: center;
-  transition: background-color 0.2s ease;
+  height: 60px;
+  line-height: 60px;
+  padding: 0 15px !important;
+  margin: 5px 10px;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent;
+  position: relative;
+  overflow: hidden;
 }
 
-.menu-text {
-  text-align: center;
-  display: inline-block;
+
+.custom-menu-item {
+  justify-content: flex-start !important;
+}
+
+.menu-item-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
   width: 100%;
 }
 
+.menu-icon {
+  width: 35px;
+  height: 35px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.menu-text {
+  font-size: 14px;
+  font-weight: 500;
+  flex: 1;
+  text-align: left;
+  transition: all 0.3s ease;
+}
+
 :deep(.el-menu-item.is-active) {
-  background-color: #333333;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  transform: translateX(5px);
+}
+
+:deep(.el-menu-item.is-active .menu-icon) {
+  transform: scale(1.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+:deep(.el-menu-item.is-active .menu-text) {
+  color: white;
+  font-weight: 600;
 }
 
 :deep(.el-menu-item:hover) {
-  background-color: #333333;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+  transform: translateX(3px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+:deep(.el-menu-item:hover .menu-icon) {
+  transform: scale(1.05);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
+}
+
+:deep(.el-menu-item:hover .menu-text) {
+  color: white;
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+  .sidebar-header {
+    padding: 15px 10px;
+  }
+
+  .menu-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+  
+  .menu-text {
+    font-size: 13px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+
+  .menu-item-content {
+    gap: 10px;
+  }
+  
+  .menu-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .menu-text {
+    font-size: 12px;
+  }
 }
 </style>

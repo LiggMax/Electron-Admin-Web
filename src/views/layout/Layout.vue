@@ -103,9 +103,9 @@ const handleMenuChange = (menuName) => {
   padding: 0;
   height: 100%;
   width: 230px !important;
-  background-color: #4D4D4D;
   will-change: transform;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
 
 /* 右侧内容区域样式 */
@@ -114,6 +114,7 @@ const handleMenuChange = (menuName) => {
   height: 100%;
   overflow-y: auto;
   will-change: transform;
+  background-color: #f5f7fa;
 }
 
 :deep(.el-aside) {
