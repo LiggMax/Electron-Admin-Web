@@ -20,8 +20,8 @@ const menuItems = computed(() => [
   { id: '4', name: '号码管理', icon: 'el-icon-phone', route: '/phone' },
   { id: '5', name: '项目管理', icon: 'el-icon-coin', route: '/project' },
   { id: '6', name: '地区管理', icon: 'el-icon-location', route: '/region' },
-  { id: '7', name: '资料管理', icon: 'el-icon-data', route: '/material' },
-  { id: '8', name: '订单管理', icon: 'el-icon-shopping-cart', route: '/order' },
+  { id: '7', name: '订单管理', icon: 'el-icon-shopping-cart', route: '/order' },
+  { id: '8', name: '资料管理', icon: 'el-icon-data', route: '/material' },
   { id: '9', name: '登出账号', icon: 'el-icon-key', route: '/logout' }
 ])
 

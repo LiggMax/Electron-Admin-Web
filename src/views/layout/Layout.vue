@@ -20,8 +20,8 @@ const menuPathMap = {
   '/phone': { id: '4', name: '号码管理' },
   '/project': { id: '5', name: '项目管理' },
   '/region': { id: '6', name: '地区管理' },
-  '/material': { id: '7', name: '资料管理' },
-  '/order': { id: '8', name: '订单管理' }
+  '/order': { id: '7', name: '订单管理' },
+  '/material': { id: '8', name: '资料管理' },
 }
 
 // 优化路由监听逻辑

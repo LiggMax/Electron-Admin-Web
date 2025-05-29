@@ -14,7 +14,8 @@ const adminInfo = ref({
   phoneNumber: '',
   email: '',
   loginTime: '',
-  loginIp: ''
+  loginIp: '',
+  money: 0
 });
 
 // 编辑表单
@@ -63,7 +64,8 @@ const fetchAdminInfo = async () => {
       phoneNumber: userData.phoneNumber || '',
       email: userData.email || '',
       loginTime: userData.loginTime || '',
-      loginIp: userData.loginIp || ''
+      loginIp: userData.loginIp || '',
+      money: userData.money || 0
     };
   } catch (error) {
     console.error('获取管理员信息失败:', error);
@@ -131,56 +133,75 @@ onMounted(() => {
 
 <template>
   <div class="material-container" v-loading="loading">
-    <div class="admin-info-card">
-      <div class="card-header">
-        <div class="title">
-          <img src="../assets/material/Gc_26_face-NotaryPublic.png" class="admin-icon" alt="管理员头像" />
-          <span>管理员信息</span>
+    <div class="cards-row">
+
+
+      <div class="admin-info-card">
+        <div class="card-header">
+          <div class="title">
+            <img src="../assets/material/Gc_26_face-NotaryPublic.png" class="admin-icon" alt="管理员头像" />
+            <span>管理员信息</span>
+          </div>
+        </div>
+        
+        <div class="card-content">
+          <div class="info-item">
+            <span class="label">管理员ID</span>
+            <span class="value">{{ adminInfo.adminId }}</span>
+          </div>
+          
+          <div class="info-item">
+            <span class="label">姓名</span>
+            <span class="value">{{ adminInfo.nickName }}</span>
+          </div>
+          
+          <div class="info-item">
+            <span class="label">账号</span>
+            <span class="value">{{ adminInfo.account }}</span>
+          </div>
+          
+          <div class="info-item">
+            <span class="label">角色</span>
+            <span class="value">{{ adminInfo.role }}</span>
+          </div>
+          
+          <div class="info-item">
+            <span class="label">手机号</span>
+            <span class="value">{{ adminInfo.phoneNumber }}</span>
+          </div>
+          
+          <div class="info-item">
+            <span class="label">邮箱</span>
+            <span class="value">{{ adminInfo.email }}</span>
+          </div>
+          
+          <div class="info-item">
+            <span class="label">最后登录</span>
+            <span class="value">{{ DateFormatter.format(adminInfo.loginTime) }} <span v-if="adminInfo.loginIp">   (IP地址:{{ adminInfo.loginIp}}) </span></span>
+          </div>
+        </div>
+        
+        <div class="card-footer">
+          <el-button type="primary" @click="handleEdit" class="edit-btn">
+            <el-icon><Edit /></el-icon>
+            修改信息
+          </el-button>
         </div>
       </div>
-      
-      <div class="card-content">
-        <div class="info-item">
-          <span class="label">管理员ID</span>
-          <span class="value">{{ adminInfo.adminId }}</span>
+      <div class="money-card">
+        <div class="money-header">
+          <div class="money-title">
+            <img src="../assets/material/Gc_26_face-NotaryPublic.png" class="money-icon" alt="金额图标" />
+            <span>平台余额</span>
+          </div>
         </div>
-        
-        <div class="info-item">
-          <span class="label">姓名</span>
-          <span class="value">{{ adminInfo.nickName }}</span>
+        <div class="money-content">
+          <div class="money-amount">
+            <span class="currency">￥</span>
+            <span class="amount">{{ adminInfo.money.toFixed(2) }}</span>
+          </div>
+          <div class="money-description">当前可用余额</div>
         </div>
-        
-        <div class="info-item">
-          <span class="label">账号</span>
-          <span class="value">{{ adminInfo.account }}</span>
-        </div>
-        
-        <div class="info-item">
-          <span class="label">角色</span>
-          <span class="value">{{ adminInfo.role }}</span>
-        </div>
-        
-        <div class="info-item">
-          <span class="label">手机号</span>
-          <span class="value">{{ adminInfo.phoneNumber }}</span>
-        </div>
-        
-        <div class="info-item">
-          <span class="label">邮箱</span>
-          <span class="value">{{ adminInfo.email }}</span>
-        </div>
-        
-        <div class="info-item">
-          <span class="label">最后登录</span>
-          <span class="value">{{ DateFormatter.format(adminInfo.loginTime) }} <span v-if="adminInfo.loginIp">   (IP地址:{{ adminInfo.loginIp}}) </span></span>
-        </div>
-      </div>
-      
-      <div class="card-footer">
-        <el-button type="primary" @click="handleEdit" class="edit-btn">
-          <el-icon><Edit /></el-icon>
-          修改信息
-        </el-button>
       </div>
     </div>
     
@@ -226,18 +247,107 @@ onMounted(() => {
 .material-container {
   padding: 20px;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
   min-height: 80vh;
+  gap: 20px;
+}
+
+.cards-row {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+  justify-content: center;
+}
+
+.money-card {
+  flex: 0 0 350px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px 0 rgba(102, 126, 234, 0.3);
+  overflow: hidden;
+  color: white;
+  position: relative;
+}
+
+.money-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="20" cy="80" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+  pointer-events: none;
+}
+
+.money-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  z-index: 1;
+}
+
+.money-title {
+  display: flex;
+  align-items: center;
+}
+
+.money-title span {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.money-icon {
+  width: 28px;
+  height: 28px;
+  margin-right: 12px;
+  filter: brightness(0) invert(1);
+}
+
+.money-content {
+  padding: 32px 24px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.money-amount {
+  font-size: 42px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  letter-spacing: -1px;
+}
+
+.currency {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 32px;
+  margin-right: 4px;
+}
+
+.amount {
+  color: white;
+}
+
+.money-description {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 16px;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .admin-info-card {
-  width: 100%;
+  flex: 1;
   max-width: 600px;
   background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.08);
   overflow: hidden;
+  border: 1px solid #f0f0f0;
 }
 
 .card-header {
@@ -312,5 +422,77 @@ onMounted(() => {
 
 :deep(.el-form-item__label) {
   font-weight: 500;
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+  .material-container {
+    padding: 15px;
+  }
+  
+  .cards-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .money-card {
+    flex: none;
+    width: 100%;
+  }
+  
+  .money-content {
+    padding: 24px 20px;
+  }
+  
+  .money-amount {
+    font-size: 36px;
+  }
+  
+  .currency {
+    font-size: 28px;
+  }
+  
+  .admin-info-card {
+    flex: none;
+    width: 100%;
+  }
+  
+  .card-content {
+    padding: 15px;
+  }
+  
+  .info-item {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 15px;
+  }
+  
+  .label {
+    flex: none;
+    margin-bottom: 5px;
+    font-size: 14px;
+  }
+  
+  .value {
+    font-size: 15px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .money-amount {
+    font-size: 32px;
+  }
+  
+  .currency {
+    font-size: 24px;
+  }
+  
+  .money-description {
+    font-size: 14px;
+  }
+  
+  .money-title span {
+    font-size: 16px;
+  }
 }
 </style> 
