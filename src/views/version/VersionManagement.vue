@@ -190,16 +190,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import {
-  Upload,
-  UploadFilled,
-  Close,
-  List,
-  Refresh,
-  Download
-} from '@element-plus/icons-vue'
+import {computed, onMounted, reactive, ref} from 'vue'
+import {ElMessage, ElMessageBox} from 'element-plus'
+import {Close, Download, List, Refresh, Upload, UploadFilled} from '@element-plus/icons-vue'
 import axios from 'axios'
 import versionApi from '../../api/version.js'
 
@@ -354,10 +347,6 @@ const uploadSmallFile = async (file) => {
     headers: {
       'Content-Type': 'multipart/form-data',
       'Authorization': 'c18c6b5d-ad89-4e9e-9e45-211832' // 替换为实际的授权key
-    },
-    onUploadProgress: (progressEvent) => {
-      const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-      uploadProgress.percentage = progress
     }
   }
 
