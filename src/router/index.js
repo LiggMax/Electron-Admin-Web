@@ -91,6 +91,14 @@ const router = createRouter({
                     meta: {
                         title: '订单管理'
                     }
+                },
+                {
+                    path: 'version',
+                    name: 'version',
+                    component: () => import('../views/version/VersionManagement.vue'),
+                    meta: {
+                        title: '版本管理'
+                    }
                 }
             ]
         }
