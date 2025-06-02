@@ -322,11 +322,7 @@ const startUpload = async () => {
   const isLargeFile = versionApi.shouldUseChunkUpload(fileSize)
 
   try {
-    if (isLargeFile) {
-      await uploadLargeFile(file)
-    } else {
       await uploadSmallFile(file)
-    }
   } catch (error) {
     console.error('上传失败:', error)
     ElMessage.error(`上传失败: ${error.message || '未知错误'}`)
