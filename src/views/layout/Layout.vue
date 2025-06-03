@@ -22,7 +22,6 @@ const menuPathMap = {
   '/region': { id: '6', name: '地区管理' },
   '/order': { id: '7', name: '订单管理' },
   '/material': { id: '8', name: '资料管理' },
-  '/version': { id: '9', name: '版本管理' },
 }
 
 // 优化路由监听逻辑
