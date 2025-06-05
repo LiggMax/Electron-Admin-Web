@@ -91,6 +91,14 @@ const router = createRouter({
                     meta: {
                         title: '订单管理'
                     }
+                },
+                {
+                    path: 'bill',
+                    name: 'bill',
+                    component: () => import('../views/Bill.vue'),
+                    meta: {
+                        title: '账单管理'
+                    }
                 }
             ]
         }

@@ -34,6 +34,7 @@ const menuItems = computed(() => [
   { id: '6', name: '地区管理', icon: Location, route: '/region', color: '#a8edea' },
   { id: '7', name: '订单管理', icon: ShoppingCart, route: '/order', color: '#d299c2' },
   { id: '8', name: '资料管理', icon: DataAnalysis, route: '/material', color: '#89f7fe' },
+  { id: '9', name: '账单管理', icon: Upload, route: '/bill', color: '#fbc2eb' },
   { id: '10', name: '登出账号', icon: SwitchButton, route: '/logout', color: '#ff9a9e' }
 ])
 
