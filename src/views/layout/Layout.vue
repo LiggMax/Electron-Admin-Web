@@ -6,7 +6,7 @@ import HeaderBar from '../../components/HeaderBar.vue'
 import SideMenu from '../../components/SideMenu.vue'
 
 const route = useRoute()
-const currentMenu = ref('公共栏管理')
+const currentMenu = ref('账单管理')
 const activeMenu = ref('1')
 
 // 使用computed优化标题计算
@@ -14,14 +14,15 @@ const title = computed(() => '管理后台 — ' + currentMenu.value)
 
 // 菜单路径映射表
 const menuPathMap = {
-  '/': { id: '1', name: '公共栏管理' },
-  '/customer': { id: '2', name: '客户管理' },
-  '/merchant': { id: '3', name: '卡商管理' },
-  '/phone': { id: '4', name: '号码管理' },
-  '/project': { id: '5', name: '项目管理' },
-  '/region': { id: '6', name: '地区管理' },
-  '/order': { id: '7', name: '订单管理' },
-  '/material': { id: '8', name: '资料管理' },
+  '/': { id: '1', name: '账单管理' },
+  '/announcement': { id: '2', name: '公共栏管理' },
+  '/customer': { id: '3', name: '客户管理' },
+  '/merchant': { id: '4', name: '卡商管理' },
+  '/phone': { id: '5', name: '号码管理' },
+  '/project': { id: '6', name: '项目管理' },
+  '/region': { id: '7', name: '地区管理' },
+  '/order': { id: '8', name: '订单管理' },
+  '/material': { id: '9', name: '资料管理' },
 }
 
 // 优化路由监听逻辑
@@ -32,6 +33,10 @@ watch(
     if (menuInfo) {
       activeMenu.value = menuInfo.id
       currentMenu.value = menuInfo.name
+    } else {
+      // 如果没有匹配到路径，默认设置为账单管理
+      activeMenu.value = '1'
+      currentMenu.value = '账单管理'
     }
   },
   { immediate: true }

@@ -24,13 +24,22 @@ const router = createRouter({
             path: '/',
             name: 'layout',
             component: () => import('../views/layout/Layout.vue'),
+            redirect: '/', // 重定向到账单管理页面
             meta: {
                 title: '后台管理系统'
             },
             children: [
                 {
                     path: '',
-                    name: 'publicBar',
+                    name: 'bill',
+                    component: () => import('../views/Bill.vue'),
+                    meta: {
+                        title: '账单管理'
+                    }
+                },
+                {
+                    path: 'announcement',
+                    name: 'announcement',
                     component: () => import('../views/Announcement.vue'),
                     meta: {
                         title: '公共栏管理'
@@ -90,14 +99,6 @@ const router = createRouter({
                     component: () => import('../views/Order.vue'),
                     meta: {
                         title: '订单管理'
-                    }
-                },
-                {
-                    path: 'bill',
-                    name: 'bill',
-                    component: () => import('../views/Bill.vue'),
-                    meta: {
-                        title: '账单管理'
                     }
                 }
             ]

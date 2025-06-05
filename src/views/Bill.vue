@@ -87,33 +87,6 @@
         </el-col>
       </el-row>
 
-      <el-row :gutter="20" style="margin-top: 20px;">
-        <!-- 客户账单金额分布柱状图 -->
-        <el-col :span="12">
-          <el-card class="chart-card">
-            <template #header>
-              <div class="chart-header">
-                <span>客户账单金额分布</span>
-              </div>
-            </template>
-            <div ref="customerBillBarChart" class="chart-container"></div>
-          </el-card>
-        </el-col>
-
-        <!-- 订单账单趋势折线图 -->
-        <el-col :span="12">
-          <el-card class="chart-card">
-            <template #header>
-              <div class="chart-header">
-                <el-icon><Monitor /></el-icon>
-                <span>订单账单时间趋势</span>
-              </div>
-            </template>
-            <div ref="orderTrendLineChart" class="chart-container"></div>
-          </el-card>
-        </el-col>
-      </el-row>
-
       <!-- 订单金额对比图 -->
       <el-row :gutter="20" style="margin-top: 20px;">
         <el-col :span="24">
@@ -139,7 +112,7 @@
             <template #header>
               <div class="table-header">
                 <el-icon><User /></el-icon>
-                <span>客户账单记录</span>
+                <span>客户消费记录</span>
               </div>
             </template>
             <el-table :data="customerBillList" style="width: 100%" stripe size="small" height="400">
@@ -164,7 +137,7 @@
                 <template #default="scope">
                   <div class="time-info">
                     <el-icon><Clock /></el-icon>
-                    {{ formatDate(scope.row.purchaseTime) }}
+                    {{ format(scope.row.purchaseTime) }}
                   </div>
                 </template>
               </el-table-column>
@@ -188,12 +161,12 @@
                   <span class="money-text order-money">¥{{ scope.row.orderMoney }}</span>
                 </template>
               </el-table-column>
-              <el-table-column prop="remainingAmount" label="剩余" width="80" align="center">
+              <el-table-column prop="remainingAmount" label="卡商收益" width="80" align="center">
                 <template #default="scope">
                   <span class="money-text remaining">¥{{ scope.row.remainingAmount }}</span>
                 </template>
               </el-table-column>
-              <el-table-column prop="commissionAmount" label="佣金" width="80" align="center">
+              <el-table-column prop="commissionAmount" label="平台收益" width="80" align="center">
                 <template #default="scope">
                   <span class="money-text commission">¥{{ scope.row.commissionAmount }}</span>
                 </template>
@@ -201,7 +174,7 @@
               <el-table-column prop="startTime" label="时间" align="center">
                 <template #default="scope">
                   <div class="time-info">
-                    {{ formatDate(scope.row.startTime) }}
+                    {{ format(scope.row.startTime) }}
                   </div>
                 </template>
               </el-table-column>
@@ -235,7 +208,6 @@ import {
   Wallet, 
   Trophy, 
   DataAnalysis,
-  Monitor,
   Promotion,
   User, 
   List, 
@@ -245,7 +217,7 @@ import {
 import { ElMessage } from 'element-plus'
 import { getBillList } from '../api/bill.js'
 import * as echarts from 'echarts'
-
+import {format} from '../utils/DateFormatter.js'
 // 响应式数据
 const loading = ref(false)
 const customerBillList = ref([])
@@ -254,7 +226,6 @@ const orderBill = ref(null)
 // 图表引用
 const profitPieChart = ref(null)
 const billTypePieChart = ref(null)
-const customerBillBarChart = ref(null)
 const orderTrendLineChart = ref(null)
 const orderCompareBarChart = ref(null)
 
@@ -301,8 +272,6 @@ const fetchBillData = async () => {
 const initAllCharts = () => {
   initProfitPieChart()
   initBillTypePieChart()
-  initCustomerBillBarChart()
-  initOrderTrendLineChart()
   initOrderCompareBarChart()
 }
 
@@ -396,110 +365,6 @@ const initBillTypePieChart = () => {
   billTypePieChartInstance.setOption(option)
 }
 
-// 客户账单金额分布柱状图
-const initCustomerBillBarChart = () => {
-  if (!customerBillList.value.length || !customerBillBarChart.value) return
-  
-  const amounts = customerBillList.value.map(bill => bill.amount)
-  const labels = customerBillList.value.map((_, index) => `账单${index + 1}`)
-  
-  customerBillBarChartInstance = echarts.init(customerBillBarChart.value)
-  const option = {
-    tooltip: {
-      trigger: 'axis',
-      formatter: '{a} <br/>{b}: ¥{c}'
-    },
-    xAxis: {
-      type: 'category',
-      data: labels,
-      axisLabel: {
-        rotate: 45
-      }
-    },
-    yAxis: {
-      type: 'value',
-      name: '金额(¥)'
-    },
-    series: [
-      {
-        name: '客户账单',
-        data: amounts,
-        type: 'bar',
-        itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: '#83bff6' },
-            { offset: 0.5, color: '#188df0' },
-            { offset: 1, color: '#188df0' }
-          ])
-        },
-        emphasis: {
-          itemStyle: {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: '#2378f7' },
-              { offset: 0.7, color: '#2378f7' },
-              { offset: 1, color: '#83bff6' }
-            ])
-          }
-        }
-      }
-    ]
-  }
-  customerBillBarChartInstance.setOption(option)
-}
-
-// 订单账单趋势折线图
-const initOrderTrendLineChart = () => {
-  if (!orderBill.value?.orderBills?.length || !orderTrendLineChart.value) return
-  
-  const sortedOrders = [...orderBill.value.orderBills].sort((a, b) => 
-    new Date(a.startTime) - new Date(b.startTime)
-  )
-  
-  const times = sortedOrders.map(order => formatDate(order.startTime))
-  const amounts = sortedOrders.map(order => order.orderMoney)
-  
-  orderTrendLineChartInstance = echarts.init(orderTrendLineChart.value)
-  const option = {
-    tooltip: {
-      trigger: 'axis',
-      formatter: '{a} <br/>{b}: ¥{c}'
-    },
-    xAxis: {
-      type: 'category',
-      data: times,
-      axisLabel: {
-        rotate: 45
-      }
-    },
-    yAxis: {
-      type: 'value',
-      name: '金额(¥)'
-    },
-    series: [
-      {
-        name: '订单金额',
-        data: amounts,
-        type: 'line',
-        smooth: true,
-        lineStyle: {
-          color: '#5470c6',
-          width: 3
-        },
-        itemStyle: {
-          color: '#5470c6'
-        },
-        areaStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(84, 112, 198, 0.3)' },
-            { offset: 1, color: 'rgba(84, 112, 198, 0.1)' }
-          ])
-        }
-      }
-    ]
-  }
-  orderTrendLineChartInstance.setOption(option)
-}
-
 // 订单金额对比图
 const initOrderCompareBarChart = () => {
   if (!orderBill.value?.orderBills?.length || !orderCompareBarChart.value) return
@@ -577,25 +442,11 @@ const refreshData = () => {
   fetchBillData()
 }
 
-// 格式化日期
-const formatDate = (dateTimeStr) => {
-  if (!dateTimeStr) return '-'
-  const date = new Date(dateTimeStr)
-  return date.toLocaleDateString('zh-CN', {
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
 // 获取账单类型名称
 const getBillTypeName = (billType) => {
   const typeMap = {
     1: '充值',
     2: '消费',
-    3: '退款',
-    4: '提现'
   }
   return typeMap[billType] || '未知'
 }
