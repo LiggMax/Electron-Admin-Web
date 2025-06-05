@@ -6,9 +6,8 @@
         <el-icon><TrendCharts /></el-icon>
         账单数据分析
       </h2>
-      <el-button type="primary" @click="refreshData" :loading="loading">
-        <el-icon><Refresh /></el-icon>
-        刷新数据
+      <el-button type="primary" @click="refreshData" :loading="loading" :icon="Refresh">
+        刷新
       </el-button>
     </div>
 
@@ -29,23 +28,10 @@
           </el-card>
         </el-col>
         <el-col :span="8">
-          <el-card class="stat-card merchant-profit">
-            <div class="stat-content">
-              <div class="stat-icon">
-                <el-icon><Wallet /></el-icon>
-              </div>
-              <div class="stat-info">
-                <div class="stat-value">¥{{ orderBill.merchantProfit }}</div>
-                <div class="stat-label">卡商收益</div>
-              </div>
-            </div>
-          </el-card>
-        </el-col>
-        <el-col :span="8">
           <el-card class="stat-card platform-profit">
             <div class="stat-content">
               <div class="stat-icon">
-                <el-icon><Trophy /></el-icon>
+                <el-icon><Wallet /></el-icon>
               </div>
               <div class="stat-info">
                 <div class="stat-value">¥{{ orderBill.platformProfit }}</div>
@@ -54,6 +40,20 @@
             </div>
           </el-card>
         </el-col>
+        <el-col :span="8">
+          <el-card class="stat-card merchant-profit">
+            <div class="stat-content">
+              <div class="stat-icon">
+                <el-icon><WalletFilled /></el-icon>
+              </div>
+              <div class="stat-info">
+                <div class="stat-value">¥{{ orderBill.merchantProfit }}</div>
+                <div class="stat-label">卡商收益</div>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+
       </el-row>
     </div>
 
@@ -201,20 +201,20 @@
 
 <script setup>
 import { ref, onMounted, nextTick, onUnmounted } from 'vue'
-import { 
-  TrendCharts, 
-  Refresh, 
-  Money, 
-  Wallet, 
-  Trophy, 
+import {
+  TrendCharts,
+  Refresh,
+  Money,
+  Wallet,
   DataAnalysis,
   Promotion,
-  User, 
-  List, 
+  User,
+  List,
   Clock,
-  Loading
+  Loading,
+  WalletFilled
 } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import {ElMessage, ElNotification} from 'element-plus'
 import { getBillList } from '../api/bill.js'
 import * as echarts from 'echarts'
 import {format} from '../utils/DateFormatter.js'
@@ -226,7 +226,6 @@ const orderBill = ref(null)
 // 图表引用
 const profitPieChart = ref(null)
 const billTypePieChart = ref(null)
-const orderTrendLineChart = ref(null)
 const orderCompareBarChart = ref(null)
 
 // 图表实例
@@ -242,21 +241,24 @@ const fetchBillData = async () => {
   try {
     const response = await getBillList()
     console.log('API响应数据:', response)
-    
+
     // 根据实际响应结构适配数据
     if (response && response.code === 200) {
       const data = response.data
       customerBillList.value = data.customerBill || []
       orderBill.value = data.orderBill || null
-      
-      console.log('客户账单数据:', customerBillList.value)
-      console.log('订单账单数据:', orderBill.value)
-      
+
+
       // 数据加载完成后初始化图表
       await nextTick()
       initAllCharts()
-      
-      ElMessage.success('账单数据加载成功')
+
+      ElNotification.success({
+        title: '账单',
+        message: '账单数据加载成功',
+        showClose: false,
+        duration: 1500
+      })
     } else {
       ElMessage.error(response?.message || '获取账单数据失败')
     }
@@ -278,7 +280,7 @@ const initAllCharts = () => {
 // 收益分布饼图
 const initProfitPieChart = () => {
   if (!orderBill.value || !profitPieChart.value) return
-  
+
   profitPieChartInstance = echarts.init(profitPieChart.value)
   const option = {
     tooltip: {
@@ -320,16 +322,16 @@ const initProfitPieChart = () => {
 // 账单类型分布饼图
 const initBillTypePieChart = () => {
   if (!customerBillList.value.length || !billTypePieChart.value) return
-  
+
   // 统计账单类型
   const billTypeCount = {}
   customerBillList.value.forEach(bill => {
     const typeName = getBillTypeName(bill.billType)
     billTypeCount[typeName] = (billTypeCount[typeName] || 0) + 1
   })
-  
+
   const data = Object.entries(billTypeCount).map(([name, value]) => ({ name, value }))
-  
+
   billTypePieChartInstance = echarts.init(billTypePieChart.value)
   const option = {
     tooltip: {
@@ -368,13 +370,13 @@ const initBillTypePieChart = () => {
 // 订单金额对比图
 const initOrderCompareBarChart = () => {
   if (!orderBill.value?.orderBills?.length || !orderCompareBarChart.value) return
-  
+
   const orders = orderBill.value.orderBills
   const orderIds = orders.map(order => `订单${order.id}`)
   const orderMoney = orders.map(order => order.orderMoney)
   const remainingAmount = orders.map(order => order.remainingAmount)
   const commissionAmount = orders.map(order => order.commissionAmount)
-  
+
   orderCompareBarChartInstance = echarts.init(orderCompareBarChart.value)
   const option = {
     tooltip: {
@@ -665,11 +667,6 @@ onUnmounted(() => {
   font-size: 16px;
 }
 
-.loading-container .el-icon {
-  font-size: 32px;
-  color: #409eff;
-}
-
 /* 响应式设计 */
 @media screen and (max-width: 768px) {
   .page-header {
@@ -678,15 +675,11 @@ onUnmounted(() => {
     text-align: center;
   }
 
-  .stats-cards .el-col {
-    margin-bottom: 15px;
-  }
-  
   .stat-content {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .stat-icon {
     margin: 0 auto;
   }
@@ -700,10 +693,6 @@ onUnmounted(() => {
   }
 }
 
-/* Element Plus 样式优化 */
-:deep(.el-table) {
-  font-size: 12px;
-}
 
 :deep(.el-table th) {
   background: #f8f9fa;
@@ -715,18 +704,4 @@ onUnmounted(() => {
   background-color: #f5f7fa !important;
 }
 
-:deep(.el-tag) {
-  border-radius: 6px;
-  font-weight: 500;
-}
-
-:deep(.el-card__body) {
-  padding: 20px;
-}
-
-:deep(.el-card__header) {
-  padding: 15px 20px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #ebeef5;
-}
 </style>
