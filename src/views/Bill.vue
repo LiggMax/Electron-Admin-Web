@@ -130,9 +130,11 @@
               </el-table-column>
               <el-table-column prop="amount" label="金额" width="100" align="center">
                 <template #default="scope">
-                  <span class="money-text">¥{{ scope.row.amount }}</span>
+                  <span v-if="scope.row.billType === 1" class="money-text">¥{{ scope.row.amount }}</span>
+                  <span v-if="scope.row.billType === 2" >¥{{ scope.row.amount }}</span>
                 </template>
               </el-table-column>
+              <el-table-column prop="remark" label="订单备注" align="center"/>
               <el-table-column prop="purchaseTime" label="时间" align="center">
                 <template #default="scope">
                   <div class="time-info">
@@ -243,7 +245,6 @@ const fetchBillData = async () => {
     console.log('API响应数据:', response)
 
     // 根据实际响应结构适配数据
-    if (response && response.code === 200) {
       const data = response.data
       customerBillList.value = data.customerBill || []
       orderBill.value = data.orderBill || null
@@ -259,12 +260,8 @@ const fetchBillData = async () => {
         showClose: false,
         duration: 1500
       })
-    } else {
-      ElMessage.error(response?.message || '获取账单数据失败')
-    }
   } catch (error) {
     console.error('获取账单数据失败:', error)
-    ElMessage.error('获取账单数据失败，请检查网络连接')
   } finally {
     loading.value = false
   }
@@ -389,7 +386,7 @@ const initOrderCompareBarChart = () => {
       }
     },
     legend: {
-      data: ['订单金额', '剩余金额', '佣金金额']
+      data: ['订单金额', '卡商收益', '平台收益']
     },
     xAxis: [
       {
@@ -419,7 +416,7 @@ const initOrderCompareBarChart = () => {
         }
       },
       {
-        name: '剩余金额',
+        name: '卡商收益',
         type: 'bar',
         data: remainingAmount,
         itemStyle: {
@@ -427,7 +424,7 @@ const initOrderCompareBarChart = () => {
         }
       },
       {
-        name: '佣金金额',
+        name: '平台收益',
         type: 'bar',
         data: commissionAmount,
         itemStyle: {
@@ -620,6 +617,7 @@ onUnmounted(() => {
 
 .money-text {
   font-weight: 600;
+  color: #ff4d4f;
   font-size: 12px;
 }
 

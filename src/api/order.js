@@ -5,7 +5,7 @@ import request from "../utils/request.js";
  */
 export const getOrderList = () => {
   return request({
-    url: "/adminWeb/order",
+    url: "/admin_web/order",
     method: "get",
   });
 };
@@ -15,7 +15,7 @@ export const getOrderList = () => {
  */
 export const orderSettlementService = (orderId) => {
   return request({
-    url: "/adminWeb/order/settle",
+    url: "/admin_web/order/settle",
     method: "post",
     params: { orderId },
   });
