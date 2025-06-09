@@ -112,7 +112,7 @@
             <template #header>
               <div class="table-header">
                 <el-icon><User /></el-icon>
-                <span>客户消费记录</span>
+                <span>客户账单记录</span>
               </div>
             </template>
             <el-table :data="customerBillList" style="width: 100%" stripe size="small" height="400">

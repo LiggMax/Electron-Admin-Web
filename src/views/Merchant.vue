@@ -68,11 +68,6 @@ const handleAddMerchant = () => {
   })
 }
 
-// 导出卡商数据
-const handleExport = async () => {
-  // 导出逻辑
-}
-
 // 清除选中的行
 const handleClearSelected = () => {
   selectedRows.value = []
@@ -499,7 +494,6 @@ onMounted(() => {
       
       <div class="operation-buttons">
         <el-button type="primary" @click="handleAddMerchant" class="add-button">添加卡商</el-button>
-        <el-button @click="handleExport" class="export-button">导出</el-button>
       </div>
     </div>
     
@@ -906,15 +900,6 @@ onMounted(() => {
   background-color: #8e8ff0;
   border-color: #8e8ff0;
   margin-right: 10px;
-  font-size: 16px;
-  padding: 12px 20px;
-  height: auto;
-}
-
-.export-button {
-  background-color: #67c23a;
-  border-color: #67c23a;
-  color: white;
   font-size: 16px;
   padding: 12px 20px;
   height: auto;
