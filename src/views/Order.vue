@@ -176,7 +176,7 @@ onMounted(() => {
         <el-table-column prop="phoneNumber" label="手机号码" width="120" align="center"/>
         <el-table-column prop="projectMoney" label="金额" width="80" align="center">
           <template #default="scope">
-            {{ scope.row.projectMoney + scope.row.phoneMoney }} 元
+            <span class="money">￥{{ scope.row.projectMoney }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="code" label="验证码" width="150" align="center">
@@ -261,7 +261,11 @@ onMounted(() => {
   background-color: #f9f9f9;
   border-radius: 4px;
 }
-
+.money {
+  font-size: 15px;
+  font-weight: bold;
+  color: #ff4d4f;
+}
 .search-form {
   display: flex;
   flex-wrap: wrap;
