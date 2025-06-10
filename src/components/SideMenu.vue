@@ -1,41 +1,40 @@
 <script setup>
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { 
+import {computed} from 'vue'
+import {useRouter} from 'vue-router'
+import {
   Message,
-  User, 
-  Document, 
-  Phone, 
-  Coin, 
-  Location, 
-  ShoppingCart, 
+  User,
+  Document,
+  Phone,
+  Coin,
+  Location,
+  ShoppingCart,
   DataAnalysis,
-  Upload,
-  SwitchButton 
+  Tickets,
+  SwitchButton
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
 
 // 定义props
-const props = defineProps({
+defineProps({
   activeMenu: {
     type: String,
     default: '1'
   }
-})
-
+});
 // 使用computed优化菜单项配置
 const menuItems = computed(() => [
-  { id: '1', name: '账单管理', icon: Upload, route: '/', color: '#fbc2eb' },
-  { id: '2', name: '公共栏管理', icon: Message, route: '/announcement', color: '#667eea' },
-  { id: '3', name: '客户管理', icon: User, route: '/customer', color: '#4facfe' },
-  { id: '4', name: '卡商管理', icon: Document, route: '/merchant', color: '#43e97b' },
-  { id: '5', name: '号码管理', icon: Phone, route: '/phone', color: '#fa709a' },
-  { id: '6', name: '项目管理', icon: Coin, route: '/project', color: '#ffd89b' },
-  { id: '7', name: '地区管理', icon: Location, route: '/region', color: '#a8edea' },
-  { id: '8', name: '订单管理', icon: ShoppingCart, route: '/order', color: '#d299c2' },
-  { id: '9', name: '资料管理', icon: DataAnalysis, route: '/material', color: '#89f7fe' },
-  { id: '10', name: '登出账号', icon: SwitchButton, route: '/logout', color: '#ff9a9e' }
+  {id: '1', name: '账单管理', icon: Tickets, route: '/', color: '#fbc2eb'},
+  {id: '2', name: '公共栏管理', icon: Message, route: '/announcement', color: '#667eea'},
+  {id: '3', name: '客户管理', icon: User, route: '/customer', color: '#4facfe'},
+  {id: '4', name: '卡商管理', icon: Document, route: '/merchant', color: '#43e97b'},
+  {id: '5', name: '号码管理', icon: Phone, route: '/phone', color: '#fa709a'},
+  {id: '6', name: '项目管理', icon: Coin, route: '/project', color: '#ffd89b'},
+  {id: '7', name: '地区管理', icon: Location, route: '/region', color: '#a8edea'},
+  {id: '8', name: '订单管理', icon: ShoppingCart, route: '/order', color: '#d299c2'},
+  {id: '9', name: '资料管理', icon: DataAnalysis, route: '/material', color: '#89f7fe'},
+  {id: '10', name: '登出账号', icon: SwitchButton, route: '/logout', color: '#ff9a9e'}
 ])
 
 // 菜单点击事件
@@ -43,7 +42,7 @@ const emit = defineEmits(['menu-change'])
 const handleMenuClick = (menu) => {
   if (!menu) return
   emit('menu-change', menu.name)
-  
+
   // 如果是登出账号，需要特殊处理
   if (menu.id === '10') {
     // TODO: 实现登出逻辑
@@ -52,7 +51,7 @@ const handleMenuClick = (menu) => {
     router.push('/login')
     return
   }
-  
+
   // 正常菜单项，跳转到对应路由
   if (menu.route) {
     router.push(menu.route)
@@ -75,27 +74,29 @@ const handleMenuClick = (menu) => {
         <span></span>
       </div>
     </div>
-    
+
     <el-menu
-      :default-active="activeMenu"
-      class="sidebar-menu"
-      router
-      :collapse="false"
-      background-color="transparent"
-      text-color="rgba(255, 255, 255, 0.8)"
-      active-text-color="#fff"
-      @select="(index) => handleMenuClick(menuItems.find(item => item.id === index))"
+        :default-active="activeMenu"
+        class="sidebar-menu"
+        router
+        :collapse="false"
+        background-color="transparent"
+        text-color="rgba(255, 255, 255, 0.8)"
+        active-text-color="#fff"
+        @select="(index) => handleMenuClick(menuItems.find(item => item.id === index))"
     >
       <el-menu-item
-        v-for="item in menuItems"
-        :key="item.id"
-        :index="item.id"
-        :route="item.route"
-        class="custom-menu-item"
+          v-for="item in menuItems"
+          :key="item.id"
+          :index="item.id"
+          :route="item.route"
+          class="custom-menu-item"
       >
         <div class="menu-item-content">
           <div class="menu-icon" :style="{ background: `linear-gradient(45deg, ${item.color}, ${item.color}88)` }">
-            <el-icon><component :is="item.icon" /></el-icon>
+            <el-icon>
+              <component :is="item.icon"/>
+            </el-icon>
           </div>
           <span class="menu-text">{{ item.name }}</span>
         </div>
@@ -337,7 +338,7 @@ const handleMenuClick = (menu) => {
     height: 30px;
     font-size: 14px;
   }
-  
+
   .menu-text {
     font-size: 13px;
   }
@@ -348,7 +349,7 @@ const handleMenuClick = (menu) => {
   .menu-item-content {
     gap: 10px;
   }
-  
+
   .menu-icon {
     width: 28px;
     height: 28px;
