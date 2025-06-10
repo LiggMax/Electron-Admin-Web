@@ -3,7 +3,7 @@ import {ref, reactive, onMounted} from 'vue'
 import {getOrderList, orderSettlementService} from '../api/order.js'
 import Message from '../utils/message.js'
 import DateFormatter from '../utils/DateFormatter.js'
-import { ElMessageBox } from 'element-plus'
+import {ElMessageBox} from 'element-plus'
 
 // 订单数据
 const tableData = ref([])
@@ -67,7 +67,7 @@ const handleCurrentChange = (val) => {
 
 //订单姐结算
 const handleOrderDetail = async (row) => {
-    await ElMessageBox.confirm(
+  await ElMessageBox.confirm(
       `确定要结算订单 ${row.id} 吗？<br>
       <strong>手机号：</strong>${row.phoneNumber}<br>
       <strong>金额：</strong>￥${row.projectMoney + row.phoneMoney}`,
@@ -78,28 +78,28 @@ const handleOrderDetail = async (row) => {
         type: 'warning',
         dangerouslyUseHTMLString: true
       }
-    )
-    await orderSettlementService(row.id);
-    Message.success('结算成功')
-    await fetchOrders()
+  )
+  await orderSettlementService(row.id);
+  Message.success('结算成功')
+  await fetchOrders()
 }
 
 // 显示验证码详情
 const showCodeDetail = (row) => {
   ElMessageBox.alert(
-    `<strong>订单ID:</strong> ${row.id}<br>
+      `<strong>订单ID:</strong> ${row.id}<br>
      <strong>手机号:</strong> ${row.phoneNumber}<br>
      <strong>验证码:</strong> ${row.code || '暂无'}<br>
      <strong>验证码详情:</strong><br>
      <div style="max-height: 300px; overflow-y: auto; margin-top: 10px; padding: 10px; background-color: #f8f8f8; border-radius: 4px;">
        ${row.code || '暂无验证码详情'}
      </div>`,
-    '验证码详情',
-    {
-      dangerouslyUseHTMLString: true,
-      confirmButtonText: '关闭',
-      customClass: 'code-detail-dialog'
-    }
+      '验证码详情',
+      {
+        dangerouslyUseHTMLString: true,
+        confirmButtonText: '关闭',
+        customClass: 'code-detail-dialog'
+      }
   )
 }
 
@@ -107,6 +107,14 @@ const showCodeDetail = (row) => {
 const truncateText = (text, length = 15) => {
   if (!text) return '暂无';
   return text.length > length ? text.substring(0, length) + '...' : text;
+}
+
+// 格式化订单ID显示
+const formatOrderId = (id) => {
+  if (!id) return '';
+  if (id.length <= 12) return id;
+  // 显示前8位...后4位
+  return `${id.substring(0, 8)}...${id.substring(id.length - 4)}`;
 }
 
 // 页面加载时获取订单列表
@@ -133,7 +141,20 @@ onMounted(() => {
           stripe
           style="width: 100%"
       >
-        <el-table-column prop="id" label="订单ID" width="100" align="center"/>
+        <el-table-column prop="id" label="订单ID" width="140" align="center">
+          <template #default="scope">
+            <el-tooltip
+                :content="scope.row.id"
+                placement="top"
+            >
+              <span
+                  class="order-id-text"
+              >
+                {{ formatOrderId(scope.row.id) }}
+              </span>
+            </el-tooltip>
+          </template>
+        </el-table-column>
         <el-table-column prop="adminNickName" label="卡商" width="150" align="center">
           <template #default="scope">
             <div v-if="scope.row.adminNickName">
@@ -160,11 +181,11 @@ onMounted(() => {
         </el-table-column>
         <el-table-column prop="code" label="验证码" width="150" align="center">
           <template #default="scope">
-            <el-tooltip 
-              v-if="scope.row.code" 
-              :content="scope.row.code" 
-              placement="top" 
-              :hide-after="100"
+            <el-tooltip
+                v-if="scope.row.code"
+                :content="scope.row.code"
+                placement="top"
+                :hide-after="100"
             >
               <span class="truncated-text">{{ truncateText(scope.row.code) }}</span>
             </el-tooltip>
@@ -173,7 +194,8 @@ onMounted(() => {
         </el-table-column>
         <el-table-column prop="state" label="状态" width="100" align="center">
           <template #default="scope">
-            <el-tag :type="scope.row.state === 0 ? 'danger' : (scope.row.state === 1 ? 'info' : (scope.row.state === 2 ? 'success' : ''))">
+            <el-tag
+                :type="scope.row.state === 0 ? 'danger' : (scope.row.state === 1 ? 'info' : (scope.row.state === 2 ? 'success' : ''))">
               {{ formatOrderStatus(scope.row) }}
             </el-tag>
           </template>

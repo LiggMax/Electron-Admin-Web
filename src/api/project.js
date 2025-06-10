@@ -17,7 +17,7 @@ export const addProjectService = (data) => {
     return request({
         url: "/adminWeb/project/add",
         method: "post",
-        params: data
+        data
     });
 };
 
@@ -29,21 +29,17 @@ export const deleteProjectService = (projectId) => {
     return request({
         url: "/adminWeb/project",
         method: "delete",
-        params: { projectId }
+        params: {projectId}
     });
 };
 
 /**
  * 编辑项目
  */
-export const editProjectService = (projectId,projectPrice,projectName) => {
+export const editProjectService = (data) => {
     return request({
         url: "/adminWeb/project/edit",
         method: "put",
-        params: {
-            projectId,
-            projectPrice,
-            projectName
-        }
+        data
     });
 };

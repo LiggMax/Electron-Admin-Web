@@ -3,7 +3,9 @@
     <!-- 页面标题 -->
     <div class="page-header">
       <h2 class="page-title">
-        <el-icon><TrendCharts /></el-icon>
+        <el-icon>
+          <TrendCharts/>
+        </el-icon>
         账单数据分析
       </h2>
       <el-button type="primary" @click="refreshData" :loading="loading" :icon="Refresh">
@@ -18,7 +20,9 @@
           <el-card class="stat-card total-amount">
             <div class="stat-content">
               <div class="stat-icon">
-                <el-icon><Money /></el-icon>
+                <el-icon>
+                  <Money/>
+                </el-icon>
               </div>
               <div class="stat-info">
                 <div class="stat-value">¥{{ orderBill.amount }}</div>
@@ -31,7 +35,9 @@
           <el-card class="stat-card platform-profit">
             <div class="stat-content">
               <div class="stat-icon">
-                <el-icon><Wallet /></el-icon>
+                <el-icon>
+                  <Wallet/>
+                </el-icon>
               </div>
               <div class="stat-info">
                 <div class="stat-value">¥{{ orderBill.platformProfit }}</div>
@@ -44,7 +50,9 @@
           <el-card class="stat-card merchant-profit">
             <div class="stat-content">
               <div class="stat-icon">
-                <el-icon><WalletFilled /></el-icon>
+                <el-icon>
+                  <WalletFilled/>
+                </el-icon>
               </div>
               <div class="stat-info">
                 <div class="stat-value">¥{{ orderBill.merchantProfit }}</div>
@@ -65,7 +73,9 @@
           <el-card class="chart-card">
             <template #header>
               <div class="chart-header">
-                <el-icon><DataAnalysis /></el-icon>
+                <el-icon>
+                  <DataAnalysis/>
+                </el-icon>
                 <span>收益分布</span>
               </div>
             </template>
@@ -78,7 +88,9 @@
           <el-card class="chart-card">
             <template #header>
               <div class="chart-header">
-                <el-icon><TrendCharts /></el-icon>
+                <el-icon>
+                  <TrendCharts/>
+                </el-icon>
                 <span>账单类型分布</span>
               </div>
             </template>
@@ -93,7 +105,9 @@
           <el-card class="chart-card">
             <template #header>
               <div class="chart-header">
-                <el-icon><Promotion /></el-icon>
+                <el-icon>
+                  <Promotion/>
+                </el-icon>
                 <span>订单金额详细对比</span>
               </div>
             </template>
@@ -111,7 +125,9 @@
           <el-card class="table-card">
             <template #header>
               <div class="table-header">
-                <el-icon><User /></el-icon>
+                <el-icon>
+                  <User/>
+                </el-icon>
                 <span>客户账单记录</span>
               </div>
             </template>
@@ -131,14 +147,16 @@
               <el-table-column prop="amount" label="金额" width="100" align="center">
                 <template #default="scope">
                   <span v-if="scope.row.billType === 1" class="money-text">¥{{ scope.row.amount }}</span>
-                  <span v-if="scope.row.billType === 2" >¥{{ scope.row.amount }}</span>
+                  <span v-if="scope.row.billType === 2">¥{{ scope.row.amount }}</span>
                 </template>
               </el-table-column>
               <el-table-column prop="remark" label="订单备注" align="center"/>
               <el-table-column prop="purchaseTime" label="时间" align="center">
                 <template #default="scope">
                   <div class="time-info">
-                    <el-icon><Clock /></el-icon>
+                    <el-icon>
+                      <Clock/>
+                    </el-icon>
                     {{ format(scope.row.purchaseTime) }}
                   </div>
                 </template>
@@ -152,12 +170,14 @@
           <el-card class="table-card">
             <template #header>
               <div class="table-header">
-                <el-icon><List /></el-icon>
+                <el-icon>
+                  <List/>
+                </el-icon>
                 <span>订单账单记录</span>
               </div>
             </template>
             <el-table :data="orderBill?.orderBills" style="width: 100%" stripe size="small" height="400">
-              <el-table-column prop="id" label="ID" width="60" align="center" />
+              <el-table-column prop="id" label="ID" width="60" align="center"/>
               <el-table-column prop="orderMoney" label="订单金额" width="100" align="center">
                 <template #default="scope">
                   <span class="money-text order-money">¥{{ scope.row.orderMoney }}</span>
@@ -195,14 +215,16 @@
 
     <!-- 加载状态 -->
     <div v-if="loading" class="loading-container">
-      <el-icon class="is-loading"><Loading /></el-icon>
+      <el-icon class="is-loading">
+        <Loading/>
+      </el-icon>
       <span>正在加载账单数据...</span>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, onUnmounted } from 'vue'
+import {ref, onMounted, nextTick, onUnmounted} from 'vue'
 import {
   TrendCharts,
   Refresh,
@@ -216,8 +238,8 @@ import {
   Loading,
   WalletFilled
 } from '@element-plus/icons-vue'
-import {ElMessage, ElNotification} from 'element-plus'
-import { getBillList } from '../api/bill.js'
+import {ElNotification} from 'element-plus'
+import {getBillList} from '../api/bill.js'
 import * as echarts from 'echarts'
 import {format} from '../utils/DateFormatter.js'
 // 响应式数据
@@ -242,24 +264,23 @@ const fetchBillData = async () => {
   loading.value = true
   try {
     const response = await getBillList()
-    console.log('API响应数据:', response)
 
     // 根据实际响应结构适配数据
-      const data = response.data
-      customerBillList.value = data.customerBill || []
-      orderBill.value = data.orderBill || null
+    const data = response.data
+    customerBillList.value = data.customerBill || []
+    orderBill.value = data.orderBill || null
 
 
-      // 数据加载完成后初始化图表
-      await nextTick()
-      initAllCharts()
+    // 数据加载完成后初始化图表
+    await nextTick()
+    initAllCharts()
 
-      ElNotification.success({
-        title: '账单',
-        message: '账单数据加载成功',
-        showClose: false,
-        duration: 1500
-      })
+    ElNotification.success({
+      title: '账单',
+      message: '账单数据加载成功',
+      showClose: false,
+      duration: 1500
+    })
   } catch (error) {
     console.error('获取账单数据失败:', error)
   } finally {
@@ -294,8 +315,8 @@ const initProfitPieChart = () => {
         type: 'pie',
         radius: '50%',
         data: [
-          { value: orderBill.value.merchantProfit, name: '卡商收益' },
-          { value: orderBill.value.platformProfit, name: '平台收益' }
+          {value: orderBill.value.merchantProfit, name: '卡商收益'},
+          {value: orderBill.value.platformProfit, name: '平台收益'}
         ],
         emphasis: {
           itemStyle: {
@@ -327,7 +348,7 @@ const initBillTypePieChart = () => {
     billTypeCount[typeName] = (billTypeCount[typeName] || 0) + 1
   })
 
-  const data = Object.entries(billTypeCount).map(([name, value]) => ({ name, value }))
+  const data = Object.entries(billTypeCount).map(([name, value]) => ({name, value}))
 
   billTypePieChartInstance = echarts.init(billTypePieChart.value)
   const option = {

@@ -1,11 +1,11 @@
 <script setup>
-import { ref, reactive, onMounted, computed, nextTick } from 'vue'
-import ElMessage from '../utils/message.js'
-import { ElMessageBox } from 'element-plus'
+import {ref, reactive, onMounted, computed, nextTick} from 'vue'
+import Message from '../utils/message.js'
+import {ElMessageBox} from 'element-plus'
 import {
-  getProjectListService, 
-  addProjectService, 
-  deleteProjectService, 
+  getProjectListService,
+  addProjectService,
+  deleteProjectService,
   editProjectService
 } from "../api/project.js";
 import DateFormatter from "../utils/DateFormatter.js";
@@ -24,7 +24,7 @@ const filteredData = computed(() => {
   if (!queryForm.projectName) {
     return originalData.value
   }
-  
+
   return originalData.value.filter(item => {
     return item.projectName.toLowerCase().includes(queryForm.projectName.toLowerCase())
   })
@@ -43,164 +43,138 @@ const handleSearch = () => {
   tableData.value = filteredData.value
 }
 
-// 重置搜索条件
-const handleReset = () => {
-  queryForm.projectName = ''
-  tableData.value = originalData.value
-}
 
-// 添加项目弹窗相关
-const addProjectVisible = ref(false)
-const addProjectForm = reactive({
-  projectName: '',
-  projectPrice: ''
-})
-const addProjectLoading = ref(false)
-const addProjectFormRef = ref(null)
+// 统一的项目弹窗相关
+const projectDialogVisible = ref(false)
+const dialogMode = ref('add') // 'add' 或 'edit'
 
-// 编辑项目弹窗相关
-const editProjectVisible = ref(false)
-const editProjectForm = reactive({
+const projectForm = reactive({
   id: '',
   projectName: '',
-  projectPrice: ''
+  projectPrice: '',
+  keyword: '',
+  codeLength: '',
 })
-const editProjectLoading = ref(false)
-const editProjectFormRef = ref(null)
+const projectLoading = ref(false)
+const projectFormRef = ref(null)
 
-// 添加项目验证规则
-const addProjectRules = {
+// 弹窗标题
+const dialogTitle = computed(() => {
+  return dialogMode.value === 'add' ? '添加项目' : '编辑项目'
+})
+
+// 项目验证规则
+const projectRules = {
   projectName: [
-    { required: true, message: '请输入项目名称', trigger: 'blur' },
-    { min: 1, max: 50, message: '项目名称长度需在1到50个字符之间', trigger: 'blur' }
+    {required: true, message: '请输入项目名称', trigger: 'blur'},
+    {min: 1, max: 50, message: '项目名称长度需在1到50个字符之间', trigger: 'blur'}
   ],
   projectPrice: [
-    { required: true, message: '请输入项目价格', trigger: 'blur' },
-    { pattern: /^(0|[1-9]\d*)(\.\d{1,2})?$/, message: '价格必须是有效的金额，最多两位小数', trigger: 'blur' }
-  ]
-}
-
-// 编辑项目验证规则
-const editProjectRules = {
-  projectName: [
-    { required: true, message: '请输入项目名称', trigger: 'blur' },
-    { min: 1, max: 50, message: '项目名称长度需在1到50个字符之间', trigger: 'blur' }
+    {required: true, message: '请输入项目价格', trigger: 'blur'},
+    {pattern: /^(0|[1-9]\d*)(\.\d{1,2})?$/, message: '价格必须是有效的金额，最多两位小数', trigger: 'blur'}
   ],
-  projectPrice: [
-    { required: true, message: '请输入项目价格', trigger: 'blur' },
-    { pattern: /^(0|[1-9]\d*)(\.\d{1,2})?$/, message: '价格必须是有效的金额，最多两位小数', trigger: 'blur' }
+  keyword: [
+    {required: true, message: '请输入验证码参数', trigger: 'blur'},
+    {min: 1, max: 50, message: '关键字长度需在1到50个字符之间', trigger: 'blur'}
+  ],
+  codeLength: [
+    {required: true, message: '请输入验证码位数', trigger: 'blur'},
+    {pattern: /^([1-9]|1[0-9]|20)$/, message: '验证码位数必须是1到20之间的整数', trigger: 'blur'}
   ]
 }
 
 // 添加项目
 const handleAddProject = () => {
+  dialogMode.value = 'add'
   // 重置表单数据
-  addProjectForm.projectName = ''
-  addProjectForm.projectPrice = ''
-  
-  // 显示添加项目弹窗
-  addProjectVisible.value = true
-  
+  projectForm.id = ''
+  projectForm.projectName = ''
+  projectForm.projectPrice = ''
+  projectForm.keyword = ''
+  projectForm.codeLength = ''
+
+  // 显示弹窗
+  projectDialogVisible.value = true
+
   // 下一帧后重置表单校验结果
   nextTick(() => {
-    addProjectFormRef.value?.resetFields()
+    projectFormRef.value?.resetFields()
+    projectFormRef.value?.clearValidate()
   })
 }
 
-// 取消添加项目
-const cancelAddProject = () => {
-  addProjectVisible.value = false
-  // 清空表单数据
-  addProjectForm.projectName = ''
-  addProjectForm.projectPrice = ''
+// 修改项目信息
+const handleEdit = (row) => {
+  dialogMode.value = 'edit'
+  // 填充表单数据
+  projectForm.id = row.id
+  projectForm.projectName = row.projectName
+  projectForm.projectPrice = row.hasPrice ? row.price : ''
+  projectForm.keyword = row.keyword
+  projectForm.codeLength = row.codeLength
+  // 显示弹窗
+  projectDialogVisible.value = true
 }
 
-// 提交添加项目表单
-const submitAddProject = async () => {
-  if (!addProjectFormRef.value) return
-  
+// 取消操作
+const cancelProject = () => {
+  projectDialogVisible.value = false
+  // 清空表单数据
+  projectForm.id = ''
+  projectForm.projectName = ''
+  projectForm.projectPrice = ''
+  projectForm.keyword = ''
+  projectForm.codeLength = ''
+}
+
+// 提交表单
+const submitProject = async () => {
+  if (!projectFormRef.value) return
+
   try {
     // 表单校验
-    await addProjectFormRef.value.validate()
-    
-    addProjectLoading.value = true
-    
-    // 准备请求数据
-    const projectData = {
-      projectName: addProjectForm.projectName,
-      projectPrice: Number(addProjectForm.projectPrice)
+    await projectFormRef.value.validate()
+
+    projectLoading.value = true
+
+    if (dialogMode.value === 'add') {
+      // 添加项目
+      const projectData = {
+        projectName: projectForm.projectName,
+        projectPrice: Number(projectForm.projectPrice),
+        keyword: projectForm.keyword,
+        codeLength: Number(projectForm.codeLength)
+      }
+      await addProjectService(projectData)
+      Message.success('项目添加成功')
+    } else {
+      // 编辑项目
+      const projectData = {
+        projectId: projectForm.id,
+        projectPrice: Number(projectForm.projectPrice),
+        projectName:  projectForm.projectName,
+        keyword: projectForm.keyword,
+        codeLength: Number(projectForm.codeLength)
+      }
+      await editProjectService(projectData)
+      Message.success('项目更新成功')
     }
-    
-    // 调用API
-    await addProjectService(projectData)
-    
-    ElMessage.success('项目添加成功')
-    addProjectVisible.value = false
+
+    projectDialogVisible.value = false
     await fetchProjects() // 刷新数据
   } catch (error) {
     if (error.message && !error.message.includes('验证未通过')) {
-      console.error('添加项目失败:', error)
-      ElMessage.error('添加项目失败: ' + error.message)
+      console.error('操作失败:', error)
+      Message.error('操作失败: ' + error.message)
     }
   } finally {
-    addProjectLoading.value = false
+    projectLoading.value = false
   }
-}
-
-// 导出项目数据
-const handleExport = async () => {
-  // 导出逻辑
 }
 
 // 清除选中的行
 const handleClearSelected = () => {
   selectedRows.value = []
-}
-
-// 修改项目信息
-const handleEdit = (row) => {
-  // 填充表单数据
-  editProjectForm.id = row.id
-  editProjectForm.projectName = row.projectName
-  editProjectForm.projectPrice = row.hasPrice ? row.price : ''
-  
-  // 显示编辑弹窗
-  editProjectVisible.value = true
-}
-
-// 取消编辑项目
-const cancelEditProject = () => {
-  editProjectVisible.value = false
-  // 清空表单数据
-  editProjectForm.id = ''
-  editProjectForm.projectName = ''
-  editProjectForm.projectPrice = ''
-}
-
-// 提交编辑项目表单
-const submitEditProject = async () => {
-  if (!editProjectFormRef.value) return
-  
-  try {
-    // 表单校验
-    await editProjectFormRef.value.validate()
-    
-    editProjectLoading.value = true
-    
-    // 获取表单数据
-    const projectId = editProjectForm.id
-    const projectPrice = Number(editProjectForm.projectPrice)
-    const projectName = editProjectForm.projectName
-    
-    // 调用API
-    await editProjectService(projectId, projectPrice, projectName)
-    
-    ElMessage.success('项目更新成功')
-    editProjectVisible.value = false
-    await fetchProjects() // 刷新数据
-  } finally {
-    editProjectLoading.value = false
-  }
 }
 
 // 删除项目
@@ -211,10 +185,10 @@ const handleDelete = async (row) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    
+
     // 获取项目ID
     const projectId = typeof row === 'object' ? row.id : row
-    
+
     // 调用删除API
     await deleteProjectService(projectId)
     ElMessage.success('删除成功')
@@ -233,17 +207,17 @@ const handleBatchDelete = async () => {
     ElMessage.warning('请先选择要删除的项目')
     return
   }
-  
+
   try {
     await ElMessageBox.confirm(`确定要删除选中的 ${selectedRows.value.length} 个项目吗？`, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
     })
-    
+
     // 获取选中项目的ID列表
     const projectIds = selectedRows.value.map(item => item.id)
-    
+
     // 逐个删除项目
     let errorCount = 0
     for (const projectId of projectIds) {
@@ -254,7 +228,7 @@ const handleBatchDelete = async () => {
         errorCount++
       }
     }
-    
+
     if (errorCount === 0) {
       ElMessage.success('批量删除成功')
     } else if (errorCount < projectIds.length) {
@@ -262,7 +236,7 @@ const handleBatchDelete = async () => {
     } else {
       ElMessage.error('批量删除失败')
     }
-    
+
     selectedRows.value = []
     await fetchProjects() // 重新获取数据
   } catch (error) {
@@ -280,6 +254,8 @@ const handleResponseData = (data) => {
     projectName: item.projectName,
     price: item.projectPrice !== null ? Number(item.projectPrice) : 0,
     hasPrice: item.projectPrice !== null,
+    keyword: item.keyword || '',
+    codeLength: item.codeLength || '',
     createdAt: item.projectCreatedAt ? DateFormatter.format(item.projectCreatedAt) : '未知时间'
   }))
 }
@@ -312,7 +288,7 @@ onMounted(() => {
         <el-button type="primary" @click="handleAddProject" class="add-button">添加项目</el-button>
       </div>
     </div>
-    
+
     <!-- 表格区域 -->
     <div class="table-container">
       <div class="selected-info" v-if="selectedRows.length > 0">
@@ -348,6 +324,17 @@ onMounted(() => {
             <span v-else class="no-price">未设置</span>
           </template>
         </el-table-column>
+        <el-table-column prop="keyword" label="关键字" width="120" align="center">
+          <template #default="scope">
+            <el-tooltip 
+              :content="scope.row.keyword" 
+              placement="top" 
+            >
+              <div class="keyword-cell">{{ scope.row.keyword }}</div>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+        <el-table-column prop="codeLength" label="验证码参数" width="110" align="center"/>
         <el-table-column prop="createdAt" label="创建时间" width="180" align="center"/>
 
         <el-table-column label="操作" fixed="right" width="200" align="center">
@@ -358,101 +345,74 @@ onMounted(() => {
                   size="small"
                   @click="handleEdit(scope.row)"
                   class="table-op-button edit-button"
-              >修改</el-button>
-              
+              >修改
+              </el-button>
+
               <el-button
                   type="danger"
                   size="small"
                   @click="handleDelete(scope.row.id)"
                   class="table-op-button delete-button"
-              >删除</el-button>
+              >删除
+              </el-button>
             </div>
           </template>
         </el-table-column>
       </el-table>
     </div>
 
-    <!-- 添加项目弹窗 -->
+    <!-- 项目弹窗 -->
     <el-dialog
-        v-model="addProjectVisible"
-        title="添加项目"
+        v-model="projectDialogVisible"
+        :title="dialogTitle"
         width="500px"
         :close-on-click-modal="false"
         :close-on-press-escape="false"
-        @closed="cancelAddProject"
+        @closed="cancelProject"
     >
-      <el-form 
-          ref="addProjectFormRef"
-          :model="addProjectForm" 
-          :rules="addProjectRules"
-          label-width="100px" 
+      <el-form
+          ref="projectFormRef"
+          :model="projectForm"
+          :rules="projectRules"
+          label-width="100px"
           label-position="right"
           status-icon
       >
+        <el-form-item v-if="dialogMode === 'edit'" label="项目ID">
+          <el-input v-model="projectForm.id" disabled/>
+        </el-form-item>
         <el-form-item label="项目名称" prop="projectName">
-          <el-input 
-              v-model="addProjectForm.projectName" 
+          <el-input
+              v-model="projectForm.projectName"
               placeholder="请输入项目名称"
           />
         </el-form-item>
         <el-form-item label="项目价格" prop="projectPrice">
-          <el-input 
-              v-model="addProjectForm.projectPrice" 
+          <el-input
+              v-model="projectForm.projectPrice"
               placeholder="请输入项目价格"
               class="price-input"
           >
             <template #prefix>￥</template>
           </el-input>
         </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="cancelAddProject">取消</el-button>
-          <el-button type="primary" @click="submitAddProject" :loading="addProjectLoading">确定</el-button>
-        </div>
-      </template>
-    </el-dialog>
-
-    <!-- 编辑项目弹窗 -->
-    <el-dialog
-        v-model="editProjectVisible"
-        title="编辑项目"
-        width="500px"
-        :close-on-click-modal="false"
-        :close-on-press-escape="false"
-        @closed="cancelEditProject"
-    >
-      <el-form 
-          ref="editProjectFormRef"
-          :model="editProjectForm" 
-          :rules="editProjectRules"
-          label-width="100px" 
-          label-position="right"
-          status-icon
-      >
-        <el-form-item label="项目ID">
-          <el-input v-model="editProjectForm.id" disabled />
-        </el-form-item>
-        <el-form-item label="项目名称" prop="projectName">
-          <el-input 
-              v-model="editProjectForm.projectName" 
-              placeholder="请输入项目名称"
+        <el-form-item label="输入关键字" prop="keyword">
+          <el-input
+              v-model="projectForm.keyword"
+              placeholder="请输入关键字"
           />
         </el-form-item>
-        <el-form-item label="项目价格" prop="projectPrice">
-          <el-input 
-              v-model="editProjectForm.projectPrice" 
-              placeholder="请输入项目价格"
-              class="price-input"
-          >
-            <template #prefix>￥</template>
-          </el-input>
+        <el-form-item label="验证码数" prop="codeLength">
+          <el-input
+              v-model="projectForm.codeLength"
+              placeholder="关键字后多少位是验证码"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="cancelEditProject">取消</el-button>
-          <el-button type="primary" @click="submitEditProject" :loading="editProjectLoading">确定</el-button>
+          <el-button @click="cancelProject">取消</el-button>
+          <el-button type="primary" @click="submitProject" :loading="projectLoading">确定</el-button>
         </div>
       </template>
     </el-dialog>
@@ -474,6 +434,7 @@ onMounted(() => {
   align-items: center;
   margin-bottom: 20px;
 }
+
 .form-item label {
   margin-right: 8px;
   white-space: nowrap;
@@ -488,15 +449,6 @@ onMounted(() => {
   background-color: #8f90ff;
   border-color: #8e8ff0;
   margin-right: 10px;
-  font-size: 16px;
-  padding: 12px 20px;
-  height: auto;
-}
-
-.export-button {
-  background-color: #67c23a;
-  border-color: #67c23a;
-  color: white;
   font-size: 16px;
   padding: 12px 20px;
   height: auto;
@@ -598,9 +550,15 @@ onMounted(() => {
   color: #909399;
 }
 
-.price-tip {
-  font-size: 12px;
-  color: #909399;
-  margin-top: 5px;
+.keyword-cell {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  line-height: 1.2;
+  max-height: 2.4em;
 }
-</style> 
+
+</style>
