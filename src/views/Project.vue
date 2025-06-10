@@ -191,12 +191,12 @@ const handleDelete = async (row) => {
 
     // 调用删除API
     await deleteProjectService(projectId)
-    ElMessage.success('删除成功')
+    Message.success('删除成功')
     await fetchProjects() // 重新获取数据
   } catch (error) {
     // 用户取消删除
     if (error !== 'cancel' && !error.toString().includes('cancel')) {
-      ElMessage.error('删除失败：' + (error.message || '未知错误'))
+      Message.error('删除失败：' + (error.message || '未知错误'))
     }
   }
 }
@@ -204,7 +204,7 @@ const handleDelete = async (row) => {
 // 批量删除选中项目
 const handleBatchDelete = async () => {
   if (selectedRows.value.length === 0) {
-    ElMessage.warning('请先选择要删除的项目')
+    Message.warning('请先选择要删除的项目')
     return
   }
 
@@ -230,11 +230,11 @@ const handleBatchDelete = async () => {
     }
 
     if (errorCount === 0) {
-      ElMessage.success('批量删除成功')
+      Message.success('批量删除成功')
     } else if (errorCount < projectIds.length) {
-      ElMessage.warning(`部分删除成功，${errorCount}个项目删除失败`)
+      Message.warning(`部分删除成功，${errorCount}个项目删除失败`)
     } else {
-      ElMessage.error('批量删除失败')
+      Message.error('批量删除失败')
     }
 
     selectedRows.value = []
@@ -242,7 +242,7 @@ const handleBatchDelete = async () => {
   } catch (error) {
     // 用户取消删除
     if (error !== 'cancel' && !error.toString().includes('cancel')) {
-      ElMessage.error('批量删除失败：' + (error.message || '未知错误'))
+      Message.error('批量删除失败：' + (error.message || '未知错误'))
     }
   }
 }
@@ -256,7 +256,8 @@ const handleResponseData = (data) => {
     hasPrice: item.projectPrice !== null,
     keyword: item.keyword || '',
     codeLength: item.codeLength || '',
-    createdAt: item.projectCreatedAt ? DateFormatter.format(item.projectCreatedAt) : '未知时间'
+    createdAt: item.projectCreatedAt ? DateFormatter.format(item.projectCreatedAt) : '未知时间',
+    updateAt: item.projectUpdateAt ? DateFormatter.format(item.projectUpdateAt) : '未知时间'
   }))
 }
 
@@ -336,6 +337,7 @@ onMounted(() => {
         </el-table-column>
         <el-table-column prop="codeLength" label="验证码参数" width="110" align="center"/>
         <el-table-column prop="createdAt" label="创建时间" width="180" align="center"/>
+        <el-table-column prop="updateAt" label="更新时间" width="180" align="center"/>
 
         <el-table-column label="操作" fixed="right" width="200" align="center">
           <template #default="scope">

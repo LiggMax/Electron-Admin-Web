@@ -240,8 +240,7 @@ onMounted(() => {
         <el-table-column type="selection" width="55"/>
         <el-table-column prop="id" label="地区ID" width="190" align="center"/>
         <el-table-column prop="regionName" label="地区名称" min-width="150" align="center"/>
-<!--        <el-table-column prop="regionCode" label="地区代码" width="120" align="center"/>-->
-        <el-table-column prop="createdAt" label="更新时间" width="180" align="center"/>
+        <el-table-column prop="createdAt" label="创建时间" width="180" align="center"/>
 
         <el-table-column label="操作" fixed="right" width="200" align="center">
           <template #default="scope">
