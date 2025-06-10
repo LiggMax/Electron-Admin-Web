@@ -240,12 +240,37 @@ import {
 } from '@element-plus/icons-vue'
 import {ElNotification} from 'element-plus'
 import {getBillList} from '../api/bill.js'
-import * as echarts from 'echarts'
+// 按需导入 ECharts
+import * as echarts from 'echarts/core'
+import {
+  TooltipComponent,
+  LegendComponent,
+  GridComponent
+} from 'echarts/components'
+import {
+  PieChart,
+  BarChart
+} from 'echarts/charts'
+import {
+  CanvasRenderer
+} from 'echarts/renderers'
 import {format} from '../utils/DateFormatter.js'
+
+// 注册必须的组件
+echarts.use([
+  TooltipComponent,
+  LegendComponent,
+  GridComponent,
+  PieChart,
+  BarChart,
+  CanvasRenderer
+])
+
 // 响应式数据
 const loading = ref(false)
 const customerBillList = ref([])
 const orderBill = ref(null)
+const chartsLoaded = ref(false)
 
 // 图表引用
 const profitPieChart = ref(null)
@@ -290,9 +315,15 @@ const fetchBillData = async () => {
 
 // 初始化所有图表
 const initAllCharts = () => {
-  initProfitPieChart()
-  initBillTypePieChart()
-  initOrderCompareBarChart()
+  if (chartsLoaded.value) return
+  
+  // 使用 requestAnimationFrame 优化渲染性能
+  requestAnimationFrame(() => {
+    initProfitPieChart()
+    initBillTypePieChart()
+    initOrderCompareBarChart()
+    chartsLoaded.value = true
+  })
 }
 
 // 收益分布饼图
@@ -301,37 +332,18 @@ const initProfitPieChart = () => {
 
   profitPieChartInstance = echarts.init(profitPieChart.value)
   const option = {
-    tooltip: {
-      trigger: 'item',
-      formatter: '{a} <br/>{b}: ¥{c} ({d}%)'
-    },
-    legend: {
-      orient: 'vertical',
-      left: 'left'
-    },
-    series: [
-      {
-        name: '收益分布',
-        type: 'pie',
-        radius: '50%',
-        data: [
-          {value: orderBill.value.merchantProfit, name: '卡商收益'},
-          {value: orderBill.value.platformProfit, name: '平台收益'}
-        ],
-        emphasis: {
-          itemStyle: {
-            shadowBlur: 10,
-            shadowOffsetX: 0,
-            shadowColor: 'rgba(0, 0, 0, 0.5)'
-          }
-        },
-        itemStyle: {
-          borderRadius: 8,
-          borderColor: '#fff',
-          borderWidth: 2
-        }
-      }
-    ],
+    tooltip: { trigger: 'item' },
+    legend: { orient: 'vertical', left: 'left' },
+    series: [{
+      name: '收益分布',
+      type: 'pie',
+      radius: '50%',
+      data: [
+        {value: orderBill.value.merchantProfit, name: '卡商收益'},
+        {value: orderBill.value.platformProfit, name: '平台收益'}
+      ],
+      itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 }
+    }],
     color: ['#5470c6', '#91cc75']
   }
   profitPieChartInstance.setOption(option)
@@ -352,34 +364,15 @@ const initBillTypePieChart = () => {
 
   billTypePieChartInstance = echarts.init(billTypePieChart.value)
   const option = {
-    tooltip: {
-      trigger: 'item',
-      formatter: '{a} <br/>{b}: {c} ({d}%)'
-    },
-    legend: {
-      orient: 'vertical',
-      left: 'left'
-    },
-    series: [
-      {
-        name: '账单类型',
-        type: 'pie',
-        radius: '50%',
-        data: data,
-        emphasis: {
-          itemStyle: {
-            shadowBlur: 10,
-            shadowOffsetX: 0,
-            shadowColor: 'rgba(0, 0, 0, 0.5)'
-          }
-        },
-        itemStyle: {
-          borderRadius: 8,
-          borderColor: '#fff',
-          borderWidth: 2
-        }
-      }
-    ],
+    tooltip: { trigger: 'item' },
+    legend: { orient: 'vertical', left: 'left' },
+    series: [{
+      name: '账单类型',
+      type: 'pie',
+      radius: '50%',
+      data: data,
+      itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 }
+    }],
     color: ['#fac858', '#ee6666', '#73c0de', '#3ba272']
   }
   billTypePieChartInstance.setOption(option)
@@ -397,61 +390,14 @@ const initOrderCompareBarChart = () => {
 
   orderCompareBarChartInstance = echarts.init(orderCompareBarChart.value)
   const option = {
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: {
-        type: 'cross',
-        crossStyle: {
-          color: '#999'
-        }
-      }
-    },
-    legend: {
-      data: ['订单金额', '卡商收益', '平台收益']
-    },
-    xAxis: [
-      {
-        type: 'category',
-        data: orderIds,
-        axisPointer: {
-          type: 'shadow'
-        }
-      }
-    ],
-    yAxis: [
-      {
-        type: 'value',
-        name: '金额(¥)',
-        axisLabel: {
-          formatter: '¥{value}'
-        }
-      }
-    ],
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['订单金额', '卡商收益', '平台收益'] },
+    xAxis: [{ type: 'category', data: orderIds }],
+    yAxis: [{ type: 'value', name: '金额(¥)' }],
     series: [
-      {
-        name: '订单金额',
-        type: 'bar',
-        data: orderMoney,
-        itemStyle: {
-          color: '#5470c6'
-        }
-      },
-      {
-        name: '卡商收益',
-        type: 'bar',
-        data: remainingAmount,
-        itemStyle: {
-          color: '#91cc75'
-        }
-      },
-      {
-        name: '平台收益',
-        type: 'bar',
-        data: commissionAmount,
-        itemStyle: {
-          color: '#fac858'
-        }
-      }
+      { name: '订单金额', type: 'bar', data: orderMoney, itemStyle: { color: '#5470c6' } },
+      { name: '卡商收益', type: 'bar', data: remainingAmount, itemStyle: { color: '#91cc75' } },
+      { name: '平台收益', type: 'bar', data: commissionAmount, itemStyle: { color: '#fac858' } }
     ]
   }
   orderCompareBarChartInstance.setOption(option)
@@ -500,11 +446,27 @@ onMounted(() => {
 // 组件卸载时清理
 onUnmounted(() => {
   window.removeEventListener('resize', resizeCharts)
-  profitPieChartInstance?.dispose()
-  billTypePieChartInstance?.dispose()
-  customerBillBarChartInstance?.dispose()
-  orderTrendLineChartInstance?.dispose()
-  orderCompareBarChartInstance?.dispose()
+  // 清理图表实例，防止内存泄漏
+  if (profitPieChartInstance) {
+    profitPieChartInstance.dispose()
+    profitPieChartInstance = null
+  }
+  if (billTypePieChartInstance) {
+    billTypePieChartInstance.dispose()
+    billTypePieChartInstance = null
+  }
+  if (orderCompareBarChartInstance) {
+    orderCompareBarChartInstance.dispose()
+    orderCompareBarChartInstance = null
+  }
+  if (customerBillBarChartInstance) {
+    customerBillBarChartInstance.dispose()
+    customerBillBarChartInstance = null
+  }
+  if (orderTrendLineChartInstance) {
+    orderTrendLineChartInstance.dispose()
+    orderTrendLineChartInstance = null
+  }
 })
 </script>
 
