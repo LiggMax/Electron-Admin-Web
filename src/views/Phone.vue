@@ -28,14 +28,6 @@
       >
         <el-table-column type="selection" width="55"/>
         <el-table-column prop="phoneNum" label="号码" width="180"/>
-        <el-table-column prop="money" label="价格" width="120">
-          <template #default="scope">
-            <span class="price-column">
-              <span class="currency-symbol">¥</span>
-              <span class="price-value">{{ formatPrice(scope.row.money) }}</span>
-            </span>
-          </template>
-        </el-table-column>
         <el-table-column prop="nickName" label="卡商" width="120">
           <template #default="scope">
            <span class="merchant-avatar">
@@ -177,12 +169,6 @@ const resetForm = () => {
   handleSearch()
 }
 
-// 添加号码
-const handleAdd = () => {
-  // TODO: 实现添加号码的逻辑
-  Message.success('添加号码功能待实现')
-}
-
 // 批量分配
 const batchOperation = () => {
   if (selectedItems.value.length === 0) {
@@ -295,23 +281,6 @@ const formatPrice = (price) => {
   vertical-align: middle;
 }
 
-/* 价格列样式 */
-.price-column {
-  display: flex;
-  align-items: center;
-  font-weight: bold;
-}
-
-.currency-symbol {
-  color: #f56c6c;
-  margin-right: 2px;
-  font-size: 14px;
-}
-
-.price-value {
-  color: #f56c6c;
-  font-size: 16px;
-}
 
 /* 项目列样式 */
 .projects-container {
