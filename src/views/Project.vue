@@ -152,7 +152,7 @@ const submitProject = async () => {
       const projectData = {
         projectId: projectForm.id,
         projectPrice: Number(projectForm.projectPrice),
-        projectName:  projectForm.projectName,
+        projectName: projectForm.projectName,
         keyword: projectForm.keyword,
         codeLength: Number(projectForm.codeLength)
       }
@@ -256,6 +256,7 @@ const handleResponseData = (data) => {
     hasPrice: item.projectPrice !== null,
     keyword: item.keyword || '',
     codeLength: item.codeLength || '',
+    icon: item.icon || '',
     createdAt: item.projectCreatedAt ? DateFormatter.format(item.projectCreatedAt) : '未知时间',
     updateAt: item.projectUpdateAt ? DateFormatter.format(item.projectUpdateAt) : '未知时间'
   }))
@@ -318,7 +319,14 @@ onMounted(() => {
       >
         <el-table-column type="selection" width="55"/>
         <el-table-column prop="id" label="项目ID" width="190" align="center"/>
-        <el-table-column prop="projectName" label="项目名称" min-width="150" align="center"/>
+        <el-table-column prop="projectName" label="项目名称" min-width="150" align="center">
+          <template #default="scope">
+            <div style="display: flex; align-items: center; justify-content: center ;font-weight: bold">
+              <span>{{ scope.row.projectName }}</span>
+              <img v-if="scope.row.icon" :src="scope.row.icon" style="width: 25px; margin-left: 4px" alt="图标"/>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="price" label="项目价格" width="120" align="center">
           <template #default="scope">
             <span v-if="scope.row.hasPrice" class="price">￥{{ scope.row.price.toFixed(2) }}</span>
@@ -327,9 +335,9 @@ onMounted(() => {
         </el-table-column>
         <el-table-column prop="keyword" label="关键字" width="120" align="center">
           <template #default="scope">
-            <el-tooltip 
-              :content="scope.row.keyword" 
-              placement="top" 
+            <el-tooltip
+                :content="scope.row.keyword"
+                placement="top"
             >
               <div class="keyword-cell">{{ scope.row.keyword }}</div>
             </el-tooltip>
