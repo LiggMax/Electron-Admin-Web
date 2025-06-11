@@ -43,3 +43,14 @@ export const editProjectService = (data) => {
         data
     });
 };
+
+/**
+ * 图标上传
+ */
+export const uploadIconService = (data) => {
+    return request({
+        url: "/adminWeb/project/uploadIcon",
+        method: "post",
+        data
+    })
+}
