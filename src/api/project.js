@@ -45,12 +45,16 @@ export const editProjectService = (data) => {
 };
 
 /**
- * 图标上传
+ * 上传项目图标
+ * @param {FormData} formData - 包含项目ID和图片文件的FormData
  */
-export const uploadIconService = (data) => {
+export const uploadIconService = (formData) => {
     return request({
-        url: "/adminWeb/project/uploadIcon",
+        url: "/adminWeb/project/upload_icon",
         method: "post",
-        data
-    })
-}
+        data: formData,
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+};

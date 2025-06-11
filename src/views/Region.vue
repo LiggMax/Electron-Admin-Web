@@ -5,7 +5,8 @@ import {ElMessageBox} from 'element-plus'
 import {
   getRegionListService,
   deleteRegionService,
-  saveOrUpdateRegion
+  saveOrUpdateRegion,
+  updateRegionIcon
 } from "../api/region.js";
 import DateFormatter from "../utils/DateFormatter.js";
 
@@ -56,6 +57,13 @@ const editRegionForm = reactive({
 })
 const editRegionLoading = ref(false)
 const editRegionFormRef = ref(null)
+
+// 图标上传相关
+const iconDialogVisible = ref(false)
+const currentRegion = ref(null)
+const iconLoading = ref(false)
+const imageUrl = ref('')
+const fileInput = ref(null)
 
 // 添加地区验证规则
 const addRegionRules = {
@@ -187,12 +195,100 @@ const handleDelete = async (row) => {
   }
 }
 
+// 打开上传图标弹窗
+const uploadIcon = (row) => {
+  currentRegion.value = row
+  imageUrl.value = row.icon || ''
+  iconDialogVisible.value = true
+}
+
+// 选择图片
+const handleSelectFile = () => {
+  fileInput.value.click()
+}
+
+// 图片变更处理
+const handleFileChange = (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+
+  // 验证文件大小（限制为10MB）
+  const isLt10M = file.size / 1024 / 1024 < 10
+  if (!isLt10M) {
+    ElMessage.error('图片大小不能超过10MB')
+    return
+  }
+
+  // 验证文件类型
+  const isImage = file.type.startsWith('image/')
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件')
+    return
+  }
+
+  // 预览图片
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    imageUrl.value = e.target.result
+  }
+  reader.readAsDataURL(file)
+}
+
+// 提交图标上传
+const submitIconUpload = async () => {
+  if (!imageUrl.value) {
+    ElMessage.warning('请先选择图片')
+    return
+  }
+
+  if (!currentRegion.value) {
+    ElMessage.error('地区信息获取失败')
+    return
+  }
+
+  if (!fileInput.value?.files[0]) {
+    ElMessage.error('请选择要上传的图片')
+    return
+  }
+
+  try {
+    iconLoading.value = true
+
+    // 创建FormData对象
+    const formData = new FormData()
+    formData.append('regionId', currentRegion.value.id)
+    formData.append('iconFile', fileInput.value.files[0])
+
+    // 调用上传API
+    await updateRegionIcon(formData)
+
+    ElMessage.success('图标上传成功')
+    iconDialogVisible.value = false
+    await fetchRegions() // 刷新数据
+  } catch (error) {
+    console.error('上传图标失败:', error)
+  } finally {
+    iconLoading.value = false
+  }
+}
+
+// 取消图标上传
+const cancelIconUpload = () => {
+  iconDialogVisible.value = false
+  imageUrl.value = ''
+  currentRegion.value = null
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+}
+
 // 处理API响应数据
 const handleResponseData = (data) => {
   return data.map(item => ({
     id: item.regionId,
     regionName: item.regionName,
     regionCode: item.regionCode,
+    icon: item.icon || '',
     createdAt: item.regionCreatedAt ? DateFormatter.format(item.regionCreatedAt) : '未知时间'
   }))
 }
@@ -238,8 +334,16 @@ onMounted(() => {
           highlight-current-row
       >
         <el-table-column type="selection" width="55"/>
-        <el-table-column prop="id" label="地区ID" width="190" align="center"/>
-        <el-table-column prop="regionName" label="地区名称" min-width="150" align="center"/>
+        <el-table-column prop="id" label="地区ID" width="80" align="center"/>
+        <el-table-column prop="regionName" label="地区名称" min-width="120" align="center">
+          <template #default="scope">
+            <div style="display: flex; align-items: center; justify-content: center; font-weight: bold">
+              <span>{{ scope.row.regionName }}</span>
+              <img v-if="scope.row.icon" :src="scope.row.icon "
+                   style="width: 28px; margin-left: 4px; border-radius: 4px;" alt="图标"/>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="createdAt" label="创建时间" width="180" align="center"/>
         <el-table-column label="操作" fixed="right" width="200" align="center">
           <template #default="scope">
@@ -248,7 +352,7 @@ onMounted(() => {
                   type="warning"
                   size="small"
                   @click="handleEdit(scope.row)"
-                  class="table-op-button edit-button"
+                  class="table-op-button"
               >修改
               </el-button>
 
@@ -256,8 +360,17 @@ onMounted(() => {
                   type="danger"
                   size="small"
                   @click="handleDelete(scope.row)"
-                  class="table-op-button delete-button"
+                  class="table-op-button"
               >删除
+              </el-button>
+            </div>
+            <div class="operation-buttons-group">
+              <el-button
+                  type="success"
+                  size="small"
+                  @click="uploadIcon(scope.row)"
+                  class="table-op-button"
+              >上传图标
               </el-button>
             </div>
           </template>
@@ -341,6 +454,48 @@ onMounted(() => {
         </div>
       </template>
     </el-dialog>
+
+    <!-- 图标上传弹窗 -->
+    <el-dialog
+        v-model="iconDialogVisible"
+        title="上传地区图标"
+        width="400px"
+        :close-on-click-modal="false"
+        :close-on-press-escape="false"
+        @closed="cancelIconUpload"
+    >
+      <div class="icon-upload-container">
+        <div class="region-info" v-if="currentRegion">
+          <span class="region-name">{{ currentRegion.regionName }}</span>
+        </div>
+
+        <div class="icon-preview">
+          <img v-if="imageUrl" :src="imageUrl" class="preview-image" alt="图标预览"/>
+          <div v-else class="empty-preview">
+            <i class="el-icon-picture-outline"></i>
+            <span>暂无图片</span>
+          </div>
+        </div>
+
+        <div class="upload-actions">
+          <input
+              ref="fileInput"
+              type="file"
+              accept="image/*"
+              style="display: none"
+              @change="handleFileChange"
+          />
+          <el-button type="primary" @click="handleSelectFile">选择图片</el-button>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="cancelIconUpload">取消</el-button>
+          <el-button type="primary" @click="submitIconUpload" :loading="iconLoading">上传</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -387,28 +542,16 @@ onMounted(() => {
 .operation-buttons-group {
   display: flex;
   flex-direction: row;
-  justify-content: center;
-  gap: 10px;
 }
 
 .table-op-button {
-  margin: 0;
+  margin: 5px;
   padding: 5px 0;
   height: 26px;
   line-height: 1;
   border-radius: 4px;
   font-size: 12px;
   width: 65px;
-}
-
-.edit-button {
-  background-color: #ff9900;
-  border-color: #ff9900;
-}
-
-.delete-button {
-  background-color: #ff4d4f;
-  border-color: #ff4d4f;
 }
 
 :deep(.el-table--striped .el-table__body tr.el-table__row--striped td) {
@@ -422,4 +565,58 @@ onMounted(() => {
 .dialog-footer {
   text-align: right;
 }
-</style> 
+
+/* 图标上传相关样式 */
+.icon-upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+}
+
+.region-info {
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.region-name {
+  font-weight: bold;
+  font-size: 16px;
+  color: #303133;
+}
+
+.icon-preview {
+  width: 150px;
+  height: 150px;
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+  overflow: hidden;
+  background-color: #f5f7fa;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.empty-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #909399;
+}
+
+.empty-preview i {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.upload-actions {
+  margin-top: 10px;
+}
+</style>

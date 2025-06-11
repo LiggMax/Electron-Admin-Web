@@ -18,7 +18,7 @@ export const deleteRegionService = (regionId) => {
     return request({
         url: "/adminWeb/region",
         method: "delete",
-        params: { regionId }
+        params: {regionId}
     });
 };
 
@@ -31,5 +31,16 @@ export function saveOrUpdateRegion(data) {
         url: "/adminWeb/region/saveOrUpdateRegion",
         method: "post",
         data
+    });
+}
+
+/**
+ * 更新地区图标
+ */
+export function updateRegionIcon(data) {
+    return request({
+        url: "/adminWeb/region/upload_region_icon",
+        method: "post",
+        data,
     });
 }

@@ -402,7 +402,8 @@ onMounted(() => {
           <template #default="scope">
             <div style="display: flex; align-items: center; justify-content: center ;font-weight: bold">
               <span>{{ scope.row.projectName }}</span>
-              <img v-if="scope.row.icon" :src="scope.row.icon" style="width: 25px; margin-left: 4px" alt="图标"/>
+              <img v-if="scope.row.icon" :src="scope.row.icon"
+                   style="width: 25px; margin-left: 4px; border-radius: 4px;" alt="图标"/>
             </div>
           </template>
         </el-table-column>
@@ -614,6 +615,7 @@ onMounted(() => {
   color: #409eff;
   cursor: pointer;
   margin-left: 10px;
+
 }
 
 .batch-delete-button {
