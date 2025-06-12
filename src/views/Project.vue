@@ -401,9 +401,9 @@ onMounted(() => {
         <el-table-column prop="projectName" label="项目名称" min-width="150" align="center">
           <template #default="scope">
             <div style="display: flex; align-items: center; justify-content: center ;font-weight: bold">
-              <span>{{ scope.row.projectName }}</span>
               <img v-if="scope.row.icon" :src="scope.row.icon"
-                   style="width: 25px; margin-left: 4px; border-radius: 4px;" alt="图标"/>
+                   style="width: 25px; margin-right: 5px; border-radius: 4px;" alt="图标"/>
+              <span style="font-weight: bold;font-size: 16px">{{ scope.row.projectName }}</span>
             </div>
           </template>
         </el-table-column>

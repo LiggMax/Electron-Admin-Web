@@ -65,3 +65,14 @@ export const deleteCustomerService = (userId) => {
     params: {userId}
   });
 };
+
+/**
+ * 余额修改
+ */
+export const updateBalanceService = (data) => {
+  return request({
+    url: "/customer/edit_balance",
+    method: "put",
+    params: data
+  })
+}

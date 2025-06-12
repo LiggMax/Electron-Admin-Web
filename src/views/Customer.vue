@@ -5,10 +5,11 @@ import {ElMessageBox} from 'element-plus'
 import {Wallet, Edit, Lock, Delete} from '@element-plus/icons-vue'
 import {
   addCustomerService, deleteCustomerService,
-  getCustomerList, resetPasswordService, updateCustomerInfo,
+  getCustomerList, resetPasswordService, updateBalanceService, updateCustomerInfo,
   updateCustomerStatus
 } from '../api/customer.js'
 import DateFormatter from '../utils/DateFormatter.js'
+import Message from "../utils/message.js";
 
 // 查询条件
 const queryForm = reactive({
@@ -588,13 +589,14 @@ const submitEditBalance = async () => {
     // 准备更新数据
     const updateData = {
       userId: editBalanceForm.userId,
-      money: parseFloat(newBalance)
+      balance: parseFloat(editBalanceForm.amount),
+      isType: editBalanceForm.operationType === 'add'
     }
 
     // 调用API更新余额
-    await updateCustomerInfo(updateData)
+    await updateBalanceService(updateData)
 
-    ElMessage.success(`${operationText}成功！${operationText}金额：￥${editBalanceForm.amount}，新余额：￥${newBalance}`)
+    Message.success(`${operationText}成功！${operationText}金额：￥${editBalanceForm.amount}，新余额：￥${newBalance}`)
     editBalanceVisible.value = false
     await fetchCustomers() // 刷新数据
   } catch (error) {
@@ -1106,8 +1108,16 @@ onMounted(() => {
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="editBalanceVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitEditBalance" :loading="editBalanceLoading">
-            确认充值
+          <el-button 
+            type="primary" 
+            @click="submitEditBalance" 
+            :loading="editBalanceLoading"
+            :disabled="editBalanceForm.amount <= 0"
+          >
+            <span v-if="editBalanceForm.amount <= 0">请选择金额</span>
+            <span v-else-if="editBalanceForm.operationType === 'add'">确认充值</span>
+            <span v-else-if="editBalanceForm.operationType === 'subtract'">确认扣款</span>
+            <span v-else>确认操作</span>
           </el-button>
         </div>
       </template>

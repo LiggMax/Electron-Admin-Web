@@ -5,7 +5,7 @@ import request from "../utils/request.js";
  */
 export const getProjectListService = () => {
     return request({
-        url: "/adminWeb/project",
+        url: "/admin_web/project",
         method: "get",
     });
 };
@@ -15,7 +15,7 @@ export const getProjectListService = () => {
  */
 export const addProjectService = (data) => {
     return request({
-        url: "/adminWeb/project/add",
+        url: "/admin_web/project/add",
         method: "post",
         data
     });
@@ -27,7 +27,7 @@ export const addProjectService = (data) => {
  */
 export const deleteProjectService = (projectId) => {
     return request({
-        url: "/adminWeb/project",
+        url: "/admin_web/project",
         method: "delete",
         params: {projectId}
     });
@@ -38,7 +38,7 @@ export const deleteProjectService = (projectId) => {
  */
 export const editProjectService = (data) => {
     return request({
-        url: "/adminWeb/project/edit",
+        url: "/admin_web/project/edit",
         method: "put",
         data
     });
@@ -50,7 +50,7 @@ export const editProjectService = (data) => {
  */
 export const uploadIconService = (formData) => {
     return request({
-        url: "/adminWeb/project/upload_icon",
+        url: "/admin_web/project/upload_icon",
         method: "post",
         data: formData,
         headers: {

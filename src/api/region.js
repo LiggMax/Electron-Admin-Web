@@ -5,7 +5,7 @@ import request from "../utils/request.js";
  */
 export const getRegionListService = () => {
     return request({
-        url: "/adminWeb/region",
+        url: "/admin_web/region",
         method: "get",
     });
 };
@@ -16,7 +16,7 @@ export const getRegionListService = () => {
  */
 export const deleteRegionService = (regionId) => {
     return request({
-        url: "/adminWeb/region",
+        url: "/admin_web/region",
         method: "delete",
         params: {regionId}
     });
@@ -28,7 +28,7 @@ export const deleteRegionService = (regionId) => {
  */
 export function saveOrUpdateRegion(data) {
     return request({
-        url: "/adminWeb/region/saveOrUpdateRegion",
+        url: "/admin_web/region/save_or_update_region",
         method: "post",
         data
     });
@@ -39,7 +39,7 @@ export function saveOrUpdateRegion(data) {
  */
 export function updateRegionIcon(data) {
     return request({
-        url: "/adminWeb/region/upload_region_icon",
+        url: "/admin_web/region/upload_region_icon",
         method: "post",
         data,
     });

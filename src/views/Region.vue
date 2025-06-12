@@ -1,6 +1,5 @@
 <script setup>
 import {ref, reactive, onMounted, computed, nextTick} from 'vue'
-import ElMessage from '../utils/message.js'
 import {ElMessageBox} from 'element-plus'
 import {
   getRegionListService,
@@ -9,6 +8,7 @@ import {
   updateRegionIcon
 } from "../api/region.js";
 import DateFormatter from "../utils/DateFormatter.js";
+import Message from "../utils/message.js";
 
 // 查询条件
 const queryForm = reactive({
@@ -123,13 +123,13 @@ const submitAddRegion = async () => {
     // 调用API
     await saveOrUpdateRegion(regionData)
 
-    ElMessage.success('地区添加成功')
+    Message.success('地区添加成功')
     addRegionVisible.value = false
     await fetchRegions() // 刷新数据
   } catch (error) {
     if (error.message && !error.message.includes('验证未通过')) {
       console.error('添加地区失败:', error)
-      ElMessage.error('添加地区失败: ' + error.message)
+      Message.error('添加地区失败: ' + error.message)
     }
   } finally {
     addRegionLoading.value = false
@@ -163,7 +163,7 @@ const submitEditRegion = async () => {
     // 调用API
     await saveOrUpdateRegion(regionData)
 
-    ElMessage.success('地区更新成功')
+    Message.success('地区更新成功')
     editRegionVisible.value = false
     await fetchRegions() // 刷新数据
   } finally {
@@ -185,12 +185,12 @@ const handleDelete = async (row) => {
 
     // 调用删除API
     await deleteRegionService(regionId)
-    ElMessage.success('删除成功')
+    Message.success('删除成功')
     await fetchRegions() // 重新获取数据
   } catch (error) {
     // 用户取消删除
     if (error !== 'cancel' && !error.toString().includes('cancel')) {
-      ElMessage.error('删除失败：' + (error.message || '未知错误'))
+      Message.error('删除失败：' + (error.message || '未知错误'))
     }
   }
 }
@@ -215,14 +215,14 @@ const handleFileChange = (e) => {
   // 验证文件大小（限制为10MB）
   const isLt10M = file.size / 1024 / 1024 < 10
   if (!isLt10M) {
-    ElMessage.error('图片大小不能超过10MB')
+    Message.error('图片大小不能超过10MB')
     return
   }
 
   // 验证文件类型
   const isImage = file.type.startsWith('image/')
   if (!isImage) {
-    ElMessage.error('只能上传图片文件')
+    Message.error('只能上传图片文件')
     return
   }
 
@@ -237,17 +237,17 @@ const handleFileChange = (e) => {
 // 提交图标上传
 const submitIconUpload = async () => {
   if (!imageUrl.value) {
-    ElMessage.warning('请先选择图片')
+    Message.warning('请先选择图片')
     return
   }
 
   if (!currentRegion.value) {
-    ElMessage.error('地区信息获取失败')
+    Message.error('地区信息获取失败')
     return
   }
 
   if (!fileInput.value?.files[0]) {
-    ElMessage.error('请选择要上传的图片')
+    Message.error('请选择要上传的图片')
     return
   }
 
@@ -262,7 +262,7 @@ const submitIconUpload = async () => {
     // 调用上传API
     await updateRegionIcon(formData)
 
-    ElMessage.success('图标上传成功')
+    Message.success('图标上传成功')
     iconDialogVisible.value = false
     await fetchRegions() // 刷新数据
   } catch (error) {
@@ -338,9 +338,9 @@ onMounted(() => {
         <el-table-column prop="regionName" label="地区名称" min-width="120" align="center">
           <template #default="scope">
             <div style="display: flex; align-items: center; justify-content: center; font-weight: bold">
-              <span>{{ scope.row.regionName }}</span>
               <img v-if="scope.row.icon" :src="scope.row.icon "
-                   style="width: 28px; margin-left: 4px; border-radius: 4px;" alt="图标"/>
+                   style="width: 28px; margin-right: 5px; border-radius: 4px;" alt="图标"/>
+              <span style="font-size: 17px;font-weight: bold">{{ scope.row.regionName }}</span>
             </div>
           </template>
         </el-table-column>
