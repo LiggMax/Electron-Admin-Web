@@ -1,9 +1,10 @@
-<script setup>
+<script setup lang="ts">
 import {ref, reactive, onMounted} from 'vue'
 import {getOrderList, orderSettlementService} from '../api/order.js'
 import Message from '../utils/message.js'
 import DateFormatter from '../utils/DateFormatter.js'
 import {ElMessageBox} from 'element-plus'
+import formatId from '../utils/formatId.js'
 
 // 订单数据
 const tableData = ref([])
@@ -109,14 +110,6 @@ const truncateText = (text, length = 15) => {
   return text.length > length ? text.substring(0, length) + '...' : text;
 }
 
-// 格式化订单ID显示
-const formatOrderId = (id) => {
-  if (!id) return '';
-  if (id.length <= 12) return id;
-  // 显示前8位...后4位
-  return `${id.substring(0, 8)}...${id.substring(id.length - 4)}`;
-}
-
 // 页面加载时获取订单列表
 onMounted(() => {
   fetchOrders()
@@ -147,10 +140,8 @@ onMounted(() => {
                 :content="scope.row.id"
                 placement="top"
             >
-              <span
-                  class="order-id-text"
-              >
-                {{ formatOrderId(scope.row.id) }}
+              <span class="order-id-text">
+                {{ formatId(scope.row.id,7,4) }}
               </span>
             </el-tooltip>
           </template>

@@ -98,23 +98,6 @@
           </el-card>
         </el-col>
       </el-row>
-
-      <!-- 订单金额对比图 -->
-      <el-row :gutter="20" style="margin-top: 20px;">
-        <el-col :span="24">
-          <el-card class="chart-card">
-            <template #header>
-              <div class="chart-header">
-                <el-icon>
-                  <Promotion/>
-                </el-icon>
-                <span>订单金额详细对比</span>
-              </div>
-            </template>
-            <div ref="orderCompareBarChart" class="chart-container-large"></div>
-          </el-card>
-        </el-col>
-      </el-row>
     </div>
 
     <!-- 数据表格 -->
@@ -132,9 +115,12 @@
               </div>
             </template>
             <el-table :data="customerBillList" style="width: 100%" stripe size="small" height="400">
-              <el-table-column prop="id" label="账单ID" width="120" show-overflow-tooltip>
+              <el-table-column prop="nickName" label="客户" width="120" show-overflow-tooltip>
                 <template #default="scope">
-                  <el-tag type="primary" size="small">{{ scope.row.id.slice(-8) }}</el-tag>
+                  <div class="user-info">
+                    <img :src="scope.row.userAvatar" alt="">
+                    <el-tag type="primary" size="small">{{ scope.row.nickName }}</el-tag>
+                  </div>
                 </template>
               </el-table-column>
               <el-table-column prop="billType" label="类型" width="80" align="center">
@@ -153,7 +139,7 @@
               <el-table-column prop="remark" label="订单备注" align="center"/>
               <el-table-column prop="purchaseTime" label="时间" align="center">
                 <template #default="scope">
-                  <div class="time-info">
+                  <div class="time-info-container">
                     <el-icon>
                       <Clock/>
                     </el-icon>
@@ -177,7 +163,15 @@
               </div>
             </template>
             <el-table :data="orderBill?.orderBills" style="width: 100%" stripe size="small" height="400">
-              <el-table-column prop="id" label="ID" width="60" align="center"/>
+              <el-table-column prop="orderId" label="ID" width="120" align="center">
+                <template #default="scope">
+                  <el-tooltip
+                      :content="scope.row.orderId"
+                      placement="top">
+                    <span>{{ formatId(scope.row.orderId,8,4) }}</span>
+                  </el-tooltip>
+                </template>
+              </el-table-column>
               <el-table-column prop="orderMoney" label="订单金额" width="100" align="center">
                 <template #default="scope">
                   <span class="money-text order-money">¥{{ scope.row.orderMoney }}</span>
@@ -193,9 +187,12 @@
                   <span class="money-text commission">¥{{ scope.row.commissionAmount }}</span>
                 </template>
               </el-table-column>
-              <el-table-column prop="startTime" label="时间" align="center">
+              <el-table-column prop="startTime" label="时间"  align="center">
                 <template #default="scope">
-                  <div class="time-info">
+                  <div class="time-info-container">
+                    <el-icon>
+                      <Clock/>
+                    </el-icon>
                     {{ format(scope.row.startTime) }}
                   </div>
                 </template>
@@ -205,6 +202,23 @@
         </el-col>
       </el-row>
     </div>
+
+    <!-- 订单金额对比图 -->
+    <el-row :gutter="20" style="margin-top: 20px;">
+      <el-col :span="24">
+        <el-card class="chart-card">
+          <template #header>
+            <div class="chart-header">
+              <el-icon>
+                <Promotion/>
+              </el-icon>
+              <span>订单金额详细对比</span>
+            </div>
+          </template>
+          <div ref="orderCompareBarChart" class="chart-container-large"></div>
+        </el-card>
+      </el-col>
+    </el-row>
 
     <!-- 数据为空时的提示 -->
     <div v-if="!loading && (!customerBillList || customerBillList.length === 0) && !orderBill" class="empty-data">
@@ -255,6 +269,7 @@ import {
   CanvasRenderer
 } from 'echarts/renderers'
 import {format} from '../utils/DateFormatter.js'
+import formatId from '../utils/formatId.js'
 
 // 注册必须的组件
 echarts.use([
@@ -316,7 +331,7 @@ const fetchBillData = async () => {
 // 初始化所有图表
 const initAllCharts = () => {
   if (chartsLoaded.value) return
-  
+
   // 使用 requestAnimationFrame 优化渲染性能
   requestAnimationFrame(() => {
     initProfitPieChart()
@@ -332,8 +347,8 @@ const initProfitPieChart = () => {
 
   profitPieChartInstance = echarts.init(profitPieChart.value)
   const option = {
-    tooltip: { trigger: 'item' },
-    legend: { orient: 'vertical', left: 'left' },
+    tooltip: {trigger: 'item'},
+    legend: {orient: 'vertical', left: 'left'},
     series: [{
       name: '收益分布',
       type: 'pie',
@@ -342,7 +357,7 @@ const initProfitPieChart = () => {
         {value: orderBill.value.merchantProfit, name: '卡商收益'},
         {value: orderBill.value.platformProfit, name: '平台收益'}
       ],
-      itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 }
+      itemStyle: {borderRadius: 8, borderColor: '#fff', borderWidth: 2}
     }],
     color: ['#5470c6', '#91cc75']
   }
@@ -364,14 +379,14 @@ const initBillTypePieChart = () => {
 
   billTypePieChartInstance = echarts.init(billTypePieChart.value)
   const option = {
-    tooltip: { trigger: 'item' },
-    legend: { orient: 'vertical', left: 'left' },
+    tooltip: {trigger: 'item'},
+    legend: {orient: 'vertical', left: 'left'},
     series: [{
       name: '账单类型',
       type: 'pie',
       radius: '50%',
       data: data,
-      itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 }
+      itemStyle: {borderRadius: 8, borderColor: '#fff', borderWidth: 2}
     }],
     color: ['#fac858', '#ee6666', '#73c0de', '#3ba272']
   }
@@ -390,14 +405,14 @@ const initOrderCompareBarChart = () => {
 
   orderCompareBarChartInstance = echarts.init(orderCompareBarChart.value)
   const option = {
-    tooltip: { trigger: 'axis' },
-    legend: { data: ['订单金额', '卡商收益', '平台收益'] },
-    xAxis: [{ type: 'category', data: orderIds }],
-    yAxis: [{ type: 'value', name: '金额(¥)' }],
+    tooltip: {trigger: 'axis'},
+    legend: {data: ['订单金额', '卡商收益', '平台收益']},
+    xAxis: [{type: 'category', data: orderIds}],
+    yAxis: [{type: 'value', name: '金额(¥)'}],
     series: [
-      { name: '订单金额', type: 'bar', data: orderMoney, itemStyle: { color: '#5470c6' } },
-      { name: '卡商收益', type: 'bar', data: remainingAmount, itemStyle: { color: '#91cc75' } },
-      { name: '平台收益', type: 'bar', data: commissionAmount, itemStyle: { color: '#fac858' } }
+      {name: '订单金额', type: 'bar', data: orderMoney, itemStyle: {color: '#5470c6'}},
+      {name: '卡商收益', type: 'bar', data: remainingAmount, itemStyle: {color: '#91cc75'}},
+      {name: '平台收益', type: 'bar', data: commissionAmount, itemStyle: {color: '#fac858'}}
     ]
   }
   orderCompareBarChartInstance.setOption(option)
@@ -486,6 +501,16 @@ onUnmounted(() => {
   backdrop-filter: blur(10px);
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.user-info {
+  display: flex;
+  border-radius: 5px;
+}
+
+.user-info img {
+  width: 23px;
+  margin-right: 3px;
 }
 
 .page-title {
@@ -605,7 +630,7 @@ onUnmounted(() => {
 }
 
 .money-text.order-money {
-  color: #409eff;
+  color: #fa1b1b;
 }
 
 .money-text.remaining {
@@ -614,14 +639,6 @@ onUnmounted(() => {
 
 .money-text.commission {
   color: #e6a23c;
-}
-
-.time-info {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  color: #666;
 }
 
 .empty-data {
@@ -684,5 +701,4 @@ onUnmounted(() => {
 :deep(.el-table .el-table__row:hover > td) {
   background-color: #f5f7fa !important;
 }
-
 </style>
