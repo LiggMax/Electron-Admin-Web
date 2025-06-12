@@ -2,6 +2,7 @@
 import {ref, reactive, onMounted, nextTick} from 'vue'
 import ElMessage from '../utils/message.js'
 import {ElMessageBox} from 'element-plus'
+import {Wallet, Edit, Lock, Delete} from '@element-plus/icons-vue'
 import {
   addCustomerService, deleteCustomerService,
   getCustomerList, resetPasswordService, updateCustomerInfo,
@@ -61,6 +62,46 @@ const addCustomerForm = reactive({
 })
 const addCustomerLoading = ref(false)
 const addCustomerFormRef = ref(null)
+
+// 余额修改弹窗相关
+const editBalanceVisible = ref(false)
+const editBalanceForm = reactive({
+  userId: '',
+  username: '',
+  currentBalance: 0,
+  newBalance: 0,
+  userAvatar: '',
+  amount: 0,
+  remark: '',
+  customAmount: '', // 添加自定义金额字段
+  showCustomInput: false, // 控制自定义金额输入框显示
+  operationType: 'add' // 操作类型：'add' 充值, 'subtract' 扣款
+})
+const editBalanceLoading = ref(false)
+const editBalanceFormRef = ref(null)
+
+// 添加金额选项数据模型
+const addAmountOptions = [
+  {value: 5, label: '￥5'},
+  {value: 10, label: '￥10'},
+  {value: 20, label: '￥20'},
+  {value: 30, label: '￥30'},
+  {value: 50, label: '￥50'},
+  {value: 100, label: '￥100'},
+  {value: 200, label: '￥200'},
+  {value: 300, label: '￥300'},
+]
+//减少金额选项数据模型
+const subtractAmountOptions = [
+  {value: 5, label: '￥5'},
+  {value: 10, label: '￥10'},
+  {value: 20, label: '￥20'},
+  {value: 30, label: '￥30'},
+  {value: 50, label: '￥50'},
+  {value: 100, label: '￥100'},
+  {value: 200, label: '￥200'},
+  {value: 300, label: '￥300'},
+]
 
 // 重置密码表单验证规则
 const resetPasswordRules = {
@@ -158,6 +199,26 @@ const handleSelectionChange = (selection) => {
   selectedRows.value = selection
 }
 
+// 处理下拉菜单命令
+const handleCommand = (command, row) => {
+  switch (command) {
+    case 'editBalance':
+      handleEditBalance(row)
+      break
+    case 'edit':
+      handleEdit(row)
+      break
+    case 'resetPassword':
+      handleResetPassword(row)
+      break
+    case 'delete':
+      handleDelete(row)
+      break
+    default:
+      break
+  }
+}
+
 // 搜索方法
 const handleSearch = () => {
   pagination.currentPage = 1
@@ -208,6 +269,62 @@ const handleEdit = (row) => {
 
   // 显示编辑弹窗
   editDialogVisible.value = true
+}
+
+// 处理余额修改
+const handleEditBalance = (row) => {
+  // 填充表单数据
+  editBalanceForm.userId = row.id
+  editBalanceForm.username = row.name
+  editBalanceForm.currentBalance = row.money
+  editBalanceForm.newBalance = row.money
+  editBalanceForm.userAvatar = row.avatar
+  editBalanceForm.amount = 0
+  editBalanceForm.remark = ''
+  editBalanceForm.customAmount = '' // 重置自定义金额
+  editBalanceForm.showCustomInput = false // 隐藏自定义输入框
+  editBalanceForm.operationType = 'add' // 默认为充值
+
+  // 显示余额修改弹窗
+  editBalanceVisible.value = true
+
+  // 下一帧后重置表单校验结果
+  nextTick(() => {
+    editBalanceFormRef.value?.resetFields()
+  })
+}
+
+// 设置快速金额 - 修改为支持操作类型
+const setQuickAmount = (amount, type = 'add') => {
+  editBalanceForm.amount = amount
+  editBalanceForm.operationType = type
+  editBalanceForm.customAmount = '' // 清空自定义金额
+  editBalanceForm.showCustomInput = false // 隐藏自定义输入框
+}
+
+// 显示自定义金额输入框 - 修改为支持操作类型
+const showCustomAmountInput = (type = 'add') => {
+  editBalanceForm.showCustomInput = true
+  editBalanceForm.operationType = type
+  editBalanceForm.amount = 0 // 清空快速选择的金额
+  nextTick(() => {
+    // 聚焦到自定义金额输入框
+    const customInput = document.querySelector('.custom-amount-input input')
+    if (customInput) {
+      customInput.focus()
+    }
+  })
+}
+
+// 设置自定义金额
+const setCustomAmount = () => {
+  const customValue = parseFloat(editBalanceForm.customAmount)
+  if (!isNaN(customValue) && customValue > 0) {
+    editBalanceForm.amount = customValue
+    ElMessage.success(`已设置自定义金额：￥${customValue}`)
+  } else {
+    ElMessage.warning('请输入有效的金额')
+  }
 }
 
 // 提交编辑表单
@@ -388,7 +505,6 @@ const submitResetPassword = async () => {
 
     resetPasswordLoading.value = true
 
-    // TODO: 调用API重置密码
     const resetPassword = {
       userId: resetPasswordForm.userId,
       password: resetPasswordForm.password
@@ -433,6 +549,61 @@ const submitAddCustomer = async () => {
     }
   } finally {
     addCustomerLoading.value = false
+  }
+}
+
+// 提交余额修改表单
+const submitEditBalance = async () => {
+  if (!editBalanceFormRef.value) return
+
+  // 检查是否选择了金额
+  if (editBalanceForm.amount <= 0) {
+    ElMessage.warning('请选择或输入金额')
+    return
+  }
+
+  try {
+    // 表单校验
+    await editBalanceFormRef.value.validate()
+
+    editBalanceLoading.value = true
+
+    // 根据操作类型计算新余额
+    let newBalance
+    let operationText
+    if (editBalanceForm.operationType === 'add') {
+      newBalance = editBalanceForm.currentBalance + editBalanceForm.amount
+      operationText = '充值'
+    } else {
+      newBalance = editBalanceForm.currentBalance - editBalanceForm.amount
+      operationText = '扣款'
+      
+      // 检查余额是否足够
+      if (newBalance < 0) {
+        ElMessage.error('余额不足，无法进行扣款操作')
+        return
+      }
+    }
+
+    // 准备更新数据
+    const updateData = {
+      userId: editBalanceForm.userId,
+      money: parseFloat(newBalance)
+    }
+
+    // 调用API更新余额
+    await updateCustomerInfo(updateData)
+
+    ElMessage.success(`${operationText}成功！${operationText}金额：￥${editBalanceForm.amount}，新余额：￥${newBalance}`)
+    editBalanceVisible.value = false
+    await fetchCustomers() // 刷新数据
+  } catch (error) {
+    if (error.message && !error.message.includes('验证未通过')) {
+      console.error('修改余额失败:', error)
+      ElMessage.error('修改余额失败: ' + (error.message || '未知错误'))
+    }
+  } finally {
+    editBalanceLoading.value = false
   }
 }
 
@@ -549,33 +720,44 @@ onMounted(() => {
             {{ scope.row.updatedAt || '暂无更新' }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" fixed="right" width="220" align="center">
+        <el-table-column label="操作" fixed="right" width="90" align="center">
           <template #default="scope">
-            <div class="operation-buttons-group">
-              <el-button
-                  type="warning"
-                  size="small"
-                  @click="handleEdit(scope.row)"
-                  class="table-op-button edit-button"
-              >修改
+            <el-dropdown @command="(command) => handleCommand(command, scope.row)" trigger="hover">
+              <el-button type="primary" size="small">
+                <el-icon>
+                  <Edit/>
+                </el-icon>
+                操作
               </el-button>
-
-              <el-button
-                  type="primary"
-                  size="small"
-                  @click="handleResetPassword(scope.row)"
-                  class="table-op-button status-button"
-              >重置密码
-              </el-button>
-
-              <el-button
-                  type="danger"
-                  size="small"
-                  @click="handleDelete(scope.row)"
-                  class="table-op-button delete-button"
-              >删除
-              </el-button>
-            </div>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="editBalance">
+                    <el-icon>
+                      <Wallet/>
+                    </el-icon>
+                    <span>余额修改</span>
+                  </el-dropdown-item>
+                  <el-dropdown-item command="edit">
+                    <el-icon>
+                      <Edit/>
+                    </el-icon>
+                    <span>信息修改</span>
+                  </el-dropdown-item>
+                  <el-dropdown-item command="resetPassword">
+                    <el-icon>
+                      <Lock/>
+                    </el-icon>
+                    <span>重置密码</span>
+                  </el-dropdown-item>
+                  <el-dropdown-item command="delete" divided>
+                    <el-icon>
+                      <Delete/>
+                    </el-icon>
+                    <span>删除</span>
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
           </template>
         </el-table-column>
       </el-table>
@@ -748,6 +930,188 @@ onMounted(() => {
         </div>
       </template>
     </el-dialog>
+
+    <!-- 余额修改弹窗 -->
+    <el-dialog
+        v-model="editBalanceVisible"
+        title="余额修改"
+        width="520px"
+        :close-on-click-modal="false"
+        :close-on-press-escape="false"
+    >
+      <div class="balance-dialog-header">
+        <div class="user-info-card">
+          <el-icon class="user-icon">
+            <Wallet/>
+          </el-icon>
+          <div class="user-details">
+            <div class="username">
+              <img :src="editBalanceForm.userAvatar" style="width: 25px;border-radius: 50px" alt="">
+              {{ editBalanceForm.username }}
+            </div>
+            <div class="user-id">用户ID: {{ editBalanceForm.userId }}</div>
+          </div>
+          <div class="current-balance">
+            <div class="balance-label">
+              <span v-if="editBalanceForm.amount > 0">
+                {{ editBalanceForm.operationType === 'add' ? '充值后余额' : '扣款后余额' }}
+              </span>
+              <span v-else>当前余额</span>
+            </div>
+            <div class="balance-amount">
+              <span v-if="editBalanceForm.amount > 0" class="original-balance">
+                ￥{{ editBalanceForm.currentBalance }}
+              </span>
+              <span v-if="editBalanceForm.amount > 0" class="operation-arrow">
+                {{ editBalanceForm.operationType === 'add' ? '+' : '-' }}{{ editBalanceForm.amount }}
+              </span>
+              <span v-if="editBalanceForm.amount > 0" class="arrow-symbol">→</span>
+              <span class="new-balance" :class="{ 
+                'text-success': editBalanceForm.amount > 0 && editBalanceForm.operationType === 'add', 
+                'text-danger': editBalanceForm.amount > 0 && editBalanceForm.operationType === 'subtract',
+                'current-only': editBalanceForm.amount === 0
+              }">
+                ￥{{ editBalanceForm.amount > 0 ? 
+                  (editBalanceForm.operationType === 'add' ? 
+                    (editBalanceForm.currentBalance + editBalanceForm.amount) : 
+                    (editBalanceForm.currentBalance - editBalanceForm.amount)
+                  ) : editBalanceForm.currentBalance }}
+              </span>
+            </div>
+            <div v-if="editBalanceForm.amount > 0" class="operation-tag">
+              <el-tag :type="editBalanceForm.operationType === 'add' ? 'success' : 'danger'" size="small">
+                {{ editBalanceForm.operationType === 'add' ? '充值' : '扣款' }} ￥{{ editBalanceForm.amount }}
+              </el-tag>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <el-form
+          ref="editBalanceFormRef"
+          :model="editBalanceForm"
+          :rules="editRules"
+          label-width="100px"
+          label-position="right"
+          status-icon
+      >
+        <el-form-item label="充值" prop="amount">
+          <!-- 快速充值选项 -->
+          <div class="quick-amount-buttons">
+            <el-button
+                v-for="option in addAmountOptions"
+                :key="option.value"
+                size="small"
+                type="primary"
+                plain
+                @click="setQuickAmount(option.value, 'add')"
+                :class="{ 'is-active': editBalanceForm.amount === option.value && editBalanceForm.operationType === 'add' }"
+            >
+              +{{ option.label }}
+            </el-button>
+            <!-- 自定义金额按钮 -->
+            <el-button
+                size="small"
+                type="primary"
+                plain
+                @click="showCustomAmountInput('add')"
+                :class="{ 'is-active': editBalanceForm.showCustomInput && editBalanceForm.operationType === 'add' }"
+            >
+              自定义金额
+            </el-button>
+          </div>
+
+          <!-- 自定义金额输入区域 -->
+          <div v-if="editBalanceForm.showCustomInput && editBalanceForm.operationType === 'add'" class="custom-amount-section">
+            <div class="custom-amount-input-wrapper">
+              <el-input
+                  v-model="editBalanceForm.customAmount"
+                  placeholder="请输入自定义金额"
+                  type="number"
+                  class="custom-amount-input"
+                  size="small"
+                  :min="0.01"
+                  :step="0.01"
+                  @keyup.enter="setCustomAmount"
+              >
+                <template #prepend>￥</template>
+              </el-input>
+              <el-button
+                  type="primary"
+                  size="small"
+                  @click="setCustomAmount"
+                  class="confirm-custom-btn"
+              >
+                确认
+              </el-button>
+            </div>
+          </div>
+        </el-form-item>
+
+        <!--扣款-->
+        <el-form-item label="扣款" prop="amount">
+          <!-- 快速扣款选项 -->
+          <div class="quick-amount-buttons">
+            <el-button
+                v-for="option in subtractAmountOptions"
+                :key="option.value"
+                size="small"
+                type="danger"
+                plain
+                @click="setQuickAmount(option.value, 'subtract')"
+                :class="{ 'is-active': editBalanceForm.amount === option.value && editBalanceForm.operationType === 'subtract' }"
+            >
+              -{{ option.label }}
+            </el-button>
+            <!-- 自定义金额按钮 -->
+            <el-button
+                size="small"
+                type="danger"
+                plain
+                @click="showCustomAmountInput('subtract')"
+                :class="{ 'is-active': editBalanceForm.showCustomInput && editBalanceForm.operationType === 'subtract' }"
+            >
+              自定义金额
+            </el-button>
+          </div>
+
+          <!-- 自定义金额输入区域 -->
+          <div v-if="editBalanceForm.showCustomInput && editBalanceForm.operationType === 'subtract'" class="custom-amount-section">
+            <div class="custom-amount-input-wrapper">
+              <el-input
+                  v-model="editBalanceForm.customAmount"
+                  placeholder="请输入自定义金额"
+                  type="number"
+                  class="custom-amount-input"
+                  size="small"
+                  :min="0.01"
+                  :step="0.01"
+                  @keyup.enter="setCustomAmount"
+              >
+                <template #prepend>￥</template>
+              </el-input>
+              <el-button
+                  type="primary"
+                  size="small"
+                  @click="setCustomAmount"
+                  class="confirm-custom-btn"
+              >
+                确认
+              </el-button>
+            </div>
+          </div>
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="editBalanceVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitEditBalance" :loading="editBalanceLoading">
+            确认充值
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -883,39 +1247,6 @@ onMounted(() => {
   padding: 10px 0;
 }
 
-.operation-buttons-group {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  gap: 5px;
-}
-
-.table-op-button {
-  margin: 0;
-  padding: 5px 0;
-  height: 26px;
-  line-height: 1;
-  border-radius: 4px;
-  font-size: 12px;
-  width: 65px;
-}
-
-.edit-button {
-  background-color: #ff9900;
-  border-color: #ff9900;
-}
-
-.status-button {
-  background-color: #2db7f5;
-  border-color: #2db7f5;
-  color: white;
-}
-
-.delete-button {
-  background-color: #ff4d4f;
-  border-color: #ff4d4f;
-}
-
 :deep(.el-table--striped .el-table__body tr.el-table__row--striped td) {
   background-color: #fafafa;
 }
@@ -943,4 +1274,118 @@ onMounted(() => {
 .money-input {
   width: 100%;
 }
-</style> 
+
+/* 余额修改弹窗样式 */
+.balance-dialog-header {
+  margin-bottom: 20px;
+}
+
+.user-info-card {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 8px;
+  border: 1px solid #e4e7ed;
+}
+
+.user-icon {
+  font-size: 24px;
+  color: #409eff;
+  margin-right: 12px;
+}
+
+.user-details {
+  flex: 1;
+}
+
+.username {
+  font-size: 16px;
+  font-weight: bold;
+  color: #303133;
+  margin-bottom: 4px;
+}
+
+.user-id {
+  color: #909399;
+  font-size: 12px;
+}
+
+.current-balance {
+  text-align: right;
+}
+
+.balance-label {
+  color: #909399;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.balance-amount {
+  font-size: 18px;
+  font-weight: bold;
+  color: #67c23a;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.original-balance {
+  color: #909399;
+  font-size: 14px;
+  text-decoration: line-through;
+}
+
+.operation-arrow {
+  color: #409eff;
+  font-size: 14px;
+  font-weight: normal;
+}
+
+.arrow-symbol {
+  color: #909399;
+  font-size: 14px;
+}
+
+.new-balance {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.current-only {
+  color: #67c23a;
+}
+
+.operation-tag {
+  margin-top: 8px;
+}
+
+/* 余额修改弹窗样式 */
+.custom-amount-section {
+  margin-bottom: 10px;
+}
+
+.custom-amount-input-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.custom-amount-input {
+  width: 100%;
+}
+
+.confirm-custom-btn {
+  margin-left: 5px;
+}
+
+.text-success {
+  color: #67c23a;
+}
+
+.text-danger {
+  color: #f56c6c;
+}
+
+</style>
