@@ -513,7 +513,6 @@ onMounted(() => {
           </template>
         </el-table-column>
         <el-table-column prop="account" label="账号" width="120" align="center"/>
-        <el-table-column prop="email" label="邮箱" width="150" align="center"/>
         <el-table-column prop="money" label="余额" width="100" align="center">
           <template #default="scope">
             <span class="money-value">￥{{ scope.row.money }} </span>
@@ -533,6 +532,7 @@ onMounted(() => {
             />
           </template>
         </el-table-column>
+        <el-table-column prop="email" label="邮箱" width="150" align="center"/>
         <el-table-column prop="loginTime" label="登录时间" width="180" align="center">
           <template #default="scope">
             <span :class="{'no-login': scope.row.loginTime === '暂无登录'}">

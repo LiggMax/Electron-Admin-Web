@@ -1,6 +1,7 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { Bell } from '@element-plus/icons-vue'
+import {format} from '../utils/DateFormatter'
 
 // 定义props
 const props = defineProps({
@@ -19,15 +20,34 @@ const fullTitle = computed(() => {
   return props.title;
 })
 
-// 获取当前时间
-const currentTime = computed(() => {
-  return new Date().toLocaleString('zh-CN', {
+// 实时时间
+const currentTime = ref('')
+let timer = null
+
+// 更新时间函数
+const updateTime = () => {
+  currentTime.value = new Date().toLocaleString('zh-CN', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    second: '2-digit'
   })
+}
+
+// 组件挂载时启动定时器
+onMounted(() => {
+  updateTime() // 立即更新一次
+  timer = setInterval(updateTime, 1000) // 每秒更新一次
+})
+
+// 组件卸载时清理定时器
+onUnmounted(() => {
+  if (timer) {
+    clearInterval(timer)
+    timer = null
+  }
 })
 </script>
 
@@ -42,7 +62,7 @@ const currentTime = computed(() => {
     <div class="header-right">
       <div class="time-display">
         <el-icon class="time-icon"><Bell /></el-icon>
-        <span class="time-text">{{ currentTime }}</span>
+        <span class="time-text">{{ format(currentTime) }}</span>
       </div>
     </div>
   </div>
