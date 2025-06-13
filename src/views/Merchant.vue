@@ -1,7 +1,8 @@
 <script setup>
 import {ref, reactive, onMounted, computed, nextTick} from 'vue'
 import ElMessage from '../utils/message.js'
-import {ElMessageBox} from 'element-plus'
+import {ElMessageBox, ElDropdown, ElDropdownMenu, ElDropdownItem} from 'element-plus'
+import {Edit, Lock, Phone, Delete, ArrowDown, Wallet} from '@element-plus/icons-vue'
 import {getCardList, editCard, resetPassword, addCard, deleteCardService} from "../api/card.js";
 import DateFormatter from "../utils/DateFormatter.js";
 
@@ -21,7 +22,7 @@ const filteredData = computed(() => {
   if (!queryForm.userId && !queryForm.account) {
     return originalData.value
   }
-  
+
   return originalData.value.filter(item => {
     const idMatch = !queryForm.userId || String(item.id).includes(queryForm.userId)
     const accountMatch = !queryForm.account || item.account.toLowerCase().includes(queryForm.account.toLowerCase())
@@ -58,10 +59,10 @@ const handleAddMerchant = () => {
   addCardForm.email = ''
   addCardForm.password = ''
   addCardForm.confirmPassword = ''
-  
+
   // 显示添加卡商弹窗
   addCardVisible.value = true
-  
+
   // 下一帧后重置表单校验结果
   nextTick(() => {
     addCardFormRef.value?.resetFields()
@@ -111,11 +112,11 @@ const addCardFormRef = ref(null)
 // 重置密码表单验证规则
 const resetPasswordRules = {
   password: [
-    { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, max: 16, message: '密码长度需在6到16个字符之间', trigger: 'blur' }
+    {required: true, message: '请输入新密码', trigger: 'blur'},
+    {min: 6, max: 16, message: '密码长度需在6到16个字符之间', trigger: 'blur'}
   ],
   confirmPassword: [
-    { required: true, message: '请确认新密码', trigger: 'blur' },
+    {required: true, message: '请确认新密码', trigger: 'blur'},
     {
       validator: (rule, value, callback) => {
         if (value !== resetPasswordForm.password) {
@@ -132,16 +133,16 @@ const resetPasswordRules = {
 // 表单验证规则
 const editRules = {
   name: [
-    { required: true, message: '请输入卡商名称', trigger: 'blur' },
-    { min: 1, max: 20, message: '名称长度需在1到20个字符之间', trigger: 'blur' }
+    {required: true, message: '请输入卡商名称', trigger: 'blur'},
+    {min: 1, max: 20, message: '名称长度需在1到20个字符之间', trigger: 'blur'}
   ],
   email: [
-    { required: false, message: '请输入邮箱地址', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+    {required: false, message: '请输入邮箱地址', trigger: 'blur'},
+    {type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur'}
   ],
   divideInto: [
-    { required: true, message: '请输入分成比例', trigger: 'blur' },
-    { 
+    {required: true, message: '请输入分成比例', trigger: 'blur'},
+    {
       validator: (rule, value, callback) => {
         if (value === null || value === undefined || value === '') {
           callback(new Error('请输入分成比例'))
@@ -154,8 +155,8 @@ const editRules = {
         } else {
           callback()
         }
-      }, 
-      trigger: 'blur' 
+      },
+      trigger: 'blur'
     }
   ]
 }
@@ -163,26 +164,26 @@ const editRules = {
 // 添加卡商表单验证规则
 const addCardRules = {
   account: [
-    { required: true, message: '请输入账号', trigger: 'blur' },
-    { min: 6, max: 20, message: '账号长度需在6到20个字符之间', trigger: 'blur' },
-    { pattern: /^[a-zA-Z\d]{6,20}$/, message: '账号只能包含字母和数字', trigger: 'blur' }
+    {required: true, message: '请输入账号', trigger: 'blur'},
+    {min: 6, max: 20, message: '账号长度需在6到20个字符之间', trigger: 'blur'},
+    {pattern: /^[a-zA-Z\d]{6,20}$/, message: '账号只能包含字母和数字', trigger: 'blur'}
   ],
   nickName: [
-    { required: true, message: '请输入昵称', trigger: 'blur' },
-    { min: 1, max: 20, message: '昵称长度需在1到20个字符之间', trigger: 'blur' },
-    { pattern: /^[a-zA-Z\d]{1,20}$/, message: '昵称只能包含字母和数字', trigger: 'blur' }
+    {required: true, message: '请输入昵称', trigger: 'blur'},
+    {min: 1, max: 20, message: '昵称长度需在1到20个字符之间', trigger: 'blur'},
+    {pattern: /^[a-zA-Z\d]{1,20}$/, message: '昵称只能包含字母和数字', trigger: 'blur'}
   ],
   email: [
-    { required: false, message: '请输入邮箱地址', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+    {required: false, message: '请输入邮箱地址', trigger: 'blur'},
+    {type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur'}
   ],
   password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '密码长度需在6到20个字符之间', trigger: 'blur' },
-    { pattern: /^[a-zA-Z\d]{6,20}$/, message: '密码只能包含字母和数字', trigger: 'blur' }
+    {required: true, message: '请输入密码', trigger: 'blur'},
+    {min: 6, max: 20, message: '密码长度需在6到20个字符之间', trigger: 'blur'},
+    {pattern: /^[a-zA-Z\d]{6,20}$/, message: '密码只能包含字母和数字', trigger: 'blur'}
   ],
   confirmPassword: [
-    { required: true, message: '请确认密码', trigger: 'blur' },
+    {required: true, message: '请确认密码', trigger: 'blur'},
     {
       validator: (rule, value, callback) => {
         if (value !== addCardForm.password) {
@@ -204,7 +205,7 @@ const handleEdit = (row) => {
   editForm.account = row.account
   editForm.email = row.email
   editForm.divideInto = row.divideInto
-  
+
   // 显示编辑弹窗
   editDialogVisible.value = true
 }
@@ -212,13 +213,13 @@ const handleEdit = (row) => {
 // 提交编辑表单
 const submitEditForm = async () => {
   if (!editFormRef.value) return
-  
+
   try {
     // 表单校验
     await editFormRef.value.validate()
-    
+
     editFormLoading.value = true
-    
+
     // 准备请求数据
     const cardInfo = {
       userId: editForm.id,
@@ -226,12 +227,12 @@ const submitEditForm = async () => {
       email: editForm.email,
       divideInto: editForm.divideInto
     }
-    
+
     // 调用API
     await editCard(cardInfo);
     ElMessage.success('卡商信息更新成功')
-      editDialogVisible.value = false
-      await fetchMerchants() // 刷新数据
+    editDialogVisible.value = false
+    await fetchMerchants() // 刷新数据
   } catch (error) {
     if (error.message && !error.message.includes('验证未通过')) {
       console.error('更新卡商信息失败:', error)
@@ -264,14 +265,14 @@ const handleBatchDelete = async () => {
     ElMessage.warning('请先选择要删除的卡商')
     return
   }
-  
+
   try {
     await ElMessageBox.confirm(`确定要删除选中的 ${selectedRows.value.length} 个卡商吗？`, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
     })
-    
+
     console.log('批量删除卡商:', selectedRows.value)
     ElMessage.success('批量删除成功')
     selectedRows.value = []
@@ -333,9 +334,9 @@ const fetchMerchants = async () => {
 
   try {
     const response = await getCardList()
-      const processedData = handleResponseData(response.data)
-      originalData.value = processedData // 保存原始数据
-      tableData.value = processedData
+    const processedData = handleResponseData(response.data)
+    originalData.value = processedData // 保存原始数据
+    tableData.value = processedData
   } finally {
     tableLoading.value = false
   }
@@ -353,23 +354,23 @@ const handleResetPassword = (row) => {
 // 提交重置密码
 const submitResetPassword = async () => {
   if (!resetPasswordFormRef.value) return
-  
+
   try {
     // 表单校验
     await resetPasswordFormRef.value.validate()
-    
+
     resetPasswordLoading.value = true
-    
+
     // 准备请求数据
     const data = {
       userId: resetPasswordForm.userId,
       password: resetPasswordForm.password
     }
-    
+
     // 调用API
     await resetPassword(data);
     ElMessage.success('密码重置成功')
-      resetPasswordVisible.value = false
+    resetPasswordVisible.value = false
   } catch (error) {
     if (error.message && !error.message.includes('验证未通过')) {
       console.error('重置密码失败:', error)
@@ -383,13 +384,13 @@ const submitResetPassword = async () => {
 // 提交添加卡商表单
 const submitAddCard = async () => {
   if (!addCardFormRef.value) return
-  
+
   try {
     // 表单校验
     await addCardFormRef.value.validate()
-    
+
     addCardLoading.value = true
-    
+
     // 准备请求数据 - 确保参数名符合后端接口
     const cardData = {
       account: addCardForm.account,
@@ -397,10 +398,10 @@ const submitAddCard = async () => {
       nickName: addCardForm.nickName,
       email: addCardForm.email || '' // 确保即使email为空也传递空字符串
     }
-    
+
     // 调用API
     await addCard(cardData)
-    
+
     ElMessage.success('卡商添加成功')
     addCardVisible.value = false
     await fetchMerchants() // 刷新数据
@@ -434,10 +435,10 @@ const handleAddPhone = (row) => {
   currentCard.name = row.name
   currentCard.account = row.account
   currentCard.phoneNumber = row.phoneNumber
-  
+
   // 如果已有号码，则预填充到表单
   phoneForm.phoneNumber = row.phoneNumber !== '未设置' ? row.phoneNumber : ''
-  
+
   // 显示添加号码弹窗
   addPhoneVisible.value = true
 }
@@ -450,7 +451,7 @@ const submitPhoneForm = async () => {
       ElMessage.warning('请输入有效的号码')
       return
     }
-    
+
     phoneFormLoading.value = true
     const cardInfo = {
       userId: currentCard.id,
@@ -463,6 +464,28 @@ const submitPhoneForm = async () => {
     console.error('添加号码失败:', error)
   } finally {
     phoneFormLoading.value = false
+  }
+}
+
+// 处理dropdown命令
+const handleCommand = (command, row) => {
+  switch (command) {
+    case 'edit':
+      handleEdit(row)
+      break
+    case 'resetPassword':
+      handleResetPassword(row)
+      break
+    case 'addPhone':
+      handleAddPhone(row)
+      break
+    case 'delete':
+      handleDelete(row)
+      break
+    case 'payouts':
+      break
+    default:
+      break
   }
 }
 
@@ -485,18 +508,18 @@ onMounted(() => {
           <label>账号:</label>
           <el-input v-model="queryForm.account" placeholder="请输入账号" class="account-input" clearable/>
         </div>
-        
+
         <div class="form-item">
           <el-button type="primary" @click="handleSearch" class="search-button">查询</el-button>
           <el-button @click="handleReset" class="reset-button">重置</el-button>
         </div>
       </div>
-      
+
       <div class="operation-buttons">
         <el-button type="primary" @click="handleAddMerchant" class="add-button">添加卡商</el-button>
       </div>
     </div>
-    
+
     <!-- 表格区域 -->
     <div class="table-container">
       <div class="selected-info" v-if="selectedRows.length > 0">
@@ -529,7 +552,7 @@ onMounted(() => {
           <template #default="scope">
             <div class="merchant-avatar-name">
               <span class="merchant-avatar">
-                <img v-if="scope.row.avatar" :src="scope.row.avatar" class="avatar-img" alt="头像" />
+                <img v-if="scope.row.avatar" :src="scope.row.avatar" class="avatar-img" alt="头像"/>
                 <span v-else class="default-avatar">{{ scope.row.name?.charAt(0)?.toUpperCase() || 'M' }}</span>
               </span>
               <span>{{ scope.row.name }}</span>
@@ -542,25 +565,25 @@ onMounted(() => {
           <template #default="scope">
             <div class="divide-ratio-cell">
               <el-progress
-                :percentage="scope.row.divideInto || 0"
-                :color="getRatioColor(scope.row.divideInto)"
-                :stroke-width="17"
-                :show-text="true"
-                :format="() => formatDivideRatio(scope.row.divideInto)"
-                class="ratio-progress"
+                  :percentage="scope.row.divideInto || 0"
+                  :color="getRatioColor(scope.row.divideInto)"
+                  :stroke-width="17"
+                  :show-text="true"
+                  :format="() => formatDivideRatio(scope.row.divideInto)"
+                  class="ratio-progress"
               />
             </div>
           </template>
         </el-table-column>
         <!--余额-->
         <el-table-column prop="money" label="余额" width="120" align="center">
-            <template #default="scope">
-              <span class="money-value">￥{{ scope.row.money }} </span>
-            </template>
+          <template #default="scope">
+            <span class="money-value">￥{{ scope.row.money }} </span>
+          </template>
         </el-table-column>
         <el-table-column prop="email" label="邮箱" width="180" align="center">
           <template #default="scope">
-            <span class="email-value">{{ scope.row.email ? scope.row.email : '未设置邮箱'}}</span>
+            <span class="email-value">{{ scope.row.email ? scope.row.email : '未设置邮箱' }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="loginTime" label="登录时间" width="180" align="center">
@@ -580,44 +603,58 @@ onMounted(() => {
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" fixed="right" width="150" align="center">
+        <el-table-column label="操作" fixed="right" width="120" align="center">
           <template #default="scope">
-            <div class="operation-buttons-group">
-              <div class="button-row">
-                <el-button
-                    type="warning"
-                    size="small"
-                    @click="handleEdit(scope.row)"
-                    class="table-op-button edit-button"
-                >修改</el-button>
-                
-                <el-button
-                    type="primary"
-                    size="small"
-                    @click="handleResetPassword(scope.row)"
-                    class="table-op-button reset-button"
-                >密码重置</el-button>
-              </div>
-              <div class="button-row">
-                <el-button
-                    type="success"
-                    size="small"
-                    @click="handleAddPhone(scope.row)"
-                    class="table-op-button add-phone-button"
-                >添加号码</el-button>
-                <el-button
-                    type="danger"
-                    size="small"
-                    @click="handleDelete(scope.row)"
-                    class="table-op-button delete-button"
-                >删除</el-button>
-              </div>
-            </div>
+            <el-dropdown
+                @command="(command) => handleCommand(command, scope.row)"
+                size="large"
+            >
+              <el-button type="primary" size="small">
+                操作
+                <el-icon class="el-icon--right">
+                  <ArrowDown/>
+                </el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="payouts">
+                    <el-icon>
+                      <Wallet/>
+                    </el-icon>
+                    余额提现
+                  </el-dropdown-item>
+                  <el-dropdown-item command="edit">
+                    <el-icon>
+                      <Edit/>
+                    </el-icon>
+                    修改
+                  </el-dropdown-item>
+                  <el-dropdown-item command="resetPassword">
+                    <el-icon>
+                      <Lock/>
+                    </el-icon>
+                    密码重置
+                  </el-dropdown-item>
+                  <el-dropdown-item command="addPhone">
+                    <el-icon>
+                      <Phone/>
+                    </el-icon>
+                    添加号码
+                  </el-dropdown-item>
+                  <el-dropdown-item command="delete" divided>
+                    <el-icon>
+                      <Delete/>
+                    </el-icon>
+                    删除
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
           </template>
         </el-table-column>
       </el-table>
     </div>
-    
+
     <!-- 编辑卡商弹窗 -->
     <el-dialog
         v-model="editDialogVisible"
@@ -626,56 +663,56 @@ onMounted(() => {
         :close-on-click-modal="false"
         :close-on-press-escape="false"
     >
-      <el-form 
+      <el-form
           ref="editFormRef"
-          :model="editForm" 
+          :model="editForm"
           :rules="editRules"
-          label-width="80px" 
+          label-width="80px"
           label-position="right"
           status-icon
       >
         <el-form-item label="卡商ID">
-          <el-input v-model="editForm.id" disabled />
+          <el-input v-model="editForm.id" disabled/>
         </el-form-item>
         <el-form-item label="账号">
-          <el-input v-model="editForm.account" disabled />
+          <el-input v-model="editForm.account" disabled/>
         </el-form-item>
         <el-form-item label="名称" prop="name">
-          <el-input v-model="editForm.name" placeholder="请输入卡商名称" />
+          <el-input v-model="editForm.name" placeholder="请输入卡商名称"/>
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
-          <el-input v-model="editForm.email" placeholder="请输入邮箱" />
+          <el-input v-model="editForm.email" placeholder="请输入邮箱"/>
         </el-form-item>
         <el-form-item label="抽成比例" prop="divideInto">
           <div class="divide-ratio-input">
             <div class="ratio-input-group">
               <el-input-number
-                v-model="editForm.divideInto"
-                :min="0"
-                :max="100"
-                :precision="0"
-                :step="1"
-                placeholder="请输入分成比例"
-                class="ratio-number-input"
+                  v-model="editForm.divideInto"
+                  :min="0"
+                  :max="100"
+                  :precision="0"
+                  :step="1"
+                  placeholder="请输入分成比例"
+                  class="ratio-number-input"
               />
             </div>
-            
+
             <div class="ratio-slider-container">
               <el-slider
-                v-model="editForm.divideInto"
-                :min="0"
-                :max="100"
-                :step="1"
-                :format-tooltip="(val) => `${val}%`"
-                show-stops
-                :marks="{
+                  v-model="editForm.divideInto"
+                  :min="0"
+                  :max="100"
+                  :step="1"
+                  :format-tooltip="(val) => `${val}%`"
+                  show-stops
+                  :marks="{
                   0: '0%',
                   25: '25%',
                   50: '50%',
                   75: '75%',
                   100: '100%'
                 }"
-                class="ratio-slider"
+                  class="ratio-slider"
               />
             </div>
           </div>
@@ -688,7 +725,7 @@ onMounted(() => {
         </div>
       </template>
     </el-dialog>
-    
+
     <!-- 重置密码弹窗 -->
     <el-dialog
         v-model="resetPasswordVisible"
@@ -697,33 +734,33 @@ onMounted(() => {
         :close-on-click-modal="false"
         :close-on-press-escape="false"
     >
-      <el-form 
+      <el-form
           ref="resetPasswordFormRef"
-          :model="resetPasswordForm" 
+          :model="resetPasswordForm"
           :rules="resetPasswordRules"
-          label-width="100px" 
+          label-width="100px"
           label-position="right"
           status-icon
       >
         <el-form-item label="卡商ID">
-          <el-input v-model="resetPasswordForm.userId" disabled />
+          <el-input v-model="resetPasswordForm.userId" disabled/>
         </el-form-item>
         <el-form-item label="卡商名称">
-          <el-input v-model="resetPasswordForm.username" disabled />
+          <el-input v-model="resetPasswordForm.username" disabled/>
         </el-form-item>
         <el-form-item label="新密码" prop="password">
-          <el-input 
-              v-model="resetPasswordForm.password" 
-              placeholder="请输入新密码，6-16个字符" 
-              show-password 
+          <el-input
+              v-model="resetPasswordForm.password"
+              placeholder="请输入新密码，6-16个字符"
+              show-password
               autocomplete="new-password"
           />
         </el-form-item>
         <el-form-item label="确认新密码" prop="confirmPassword">
-          <el-input 
-              v-model="resetPasswordForm.confirmPassword" 
-              placeholder="请再次输入新密码" 
-              show-password 
+          <el-input
+              v-model="resetPasswordForm.confirmPassword"
+              placeholder="请再次输入新密码"
+              show-password
               autocomplete="new-password"
           />
         </el-form-item>
@@ -735,7 +772,7 @@ onMounted(() => {
         </div>
       </template>
     </el-dialog>
-    
+
     <!-- 添加卡商弹窗 -->
     <el-dialog
         v-model="addCardVisible"
@@ -744,17 +781,17 @@ onMounted(() => {
         :close-on-click-modal="false"
         :close-on-press-escape="false"
     >
-      <el-form 
+      <el-form
           ref="addCardFormRef"
-          :model="addCardForm" 
+          :model="addCardForm"
           :rules="addCardRules"
-          label-width="100px" 
+          label-width="100px"
           label-position="right"
           status-icon
       >
         <el-form-item label="昵称" prop="nickName">
-          <el-input 
-              v-model="addCardForm.nickName" 
+          <el-input
+              v-model="addCardForm.nickName"
               placeholder="请输入昵称，1-20个字符"
           />
         </el-form-item>
@@ -767,18 +804,18 @@ onMounted(() => {
           />
         </el-form-item>
         <el-form-item label="密码" prop="password">
-          <el-input 
-              v-model="addCardForm.password" 
-              placeholder="请输入密码，6-20个字符" 
-              show-password 
+          <el-input
+              v-model="addCardForm.password"
+              placeholder="请输入密码，6-20个字符"
+              show-password
               autocomplete="new-password"
           />
         </el-form-item>
         <el-form-item label="确认密码" prop="confirmPassword">
-          <el-input 
-              v-model="addCardForm.confirmPassword" 
-              placeholder="请再次输入密码" 
-              show-password 
+          <el-input
+              v-model="addCardForm.confirmPassword"
+              placeholder="请再次输入密码"
+              show-password
               autocomplete="new-password"
           />
         </el-form-item>
@@ -796,7 +833,7 @@ onMounted(() => {
         </div>
       </template>
     </el-dialog>
-    
+
     <!-- 添加号码弹窗 -->
     <el-dialog
         v-model="addPhoneVisible"
@@ -825,19 +862,19 @@ onMounted(() => {
           </span>
         </div>
       </div>
-      
+
       <div class="phone-form">
         <el-form label-width="80px">
           <el-form-item label="号码">
-            <el-input 
-                v-model="phoneForm.phoneNumber" 
-                placeholder="请输入号码" 
+            <el-input
+                v-model="phoneForm.phoneNumber"
+                placeholder="请输入号码"
                 maxlength="11"
             />
           </el-form-item>
         </el-form>
       </div>
-      
+
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="addPhoneVisible = false">取消</el-button>
@@ -967,47 +1004,9 @@ onMounted(() => {
   font-size: 16px;
 }
 
-.operation-buttons-group {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 5px;
-}
-
-.button-row {
-  display: flex;
-  justify-content: center;
-  gap: 5px;
-}
-
-.table-op-button {
-  margin: 0;
-  padding: 2px 0;
-  height: 24px;
-  line-height: 1;
-  border-radius: 4px;
-  font-size: 12px;
-  width: 65px;
-}
-
-.edit-button {
-  background-color: #ff9900;
-  border-color: #ff9900;
-}
-
 .reset-button {
   background-color: #409eff;
   border-color: #409eff;
-}
-
-.add-phone-button {
-  background-color: #67c23a;
-  border-color: #67c23a;
-}
-
-.delete-button {
-  background-color: #ff4d4f;
-  border-color: #ff4d4f;
 }
 
 :deep(.el-table--striped .el-table__body tr.el-table__row--striped td) {

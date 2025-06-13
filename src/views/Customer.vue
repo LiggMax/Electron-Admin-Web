@@ -2,7 +2,7 @@
 import {ref, reactive, onMounted, nextTick} from 'vue'
 import ElMessage from '../utils/message.js'
 import {ElMessageBox} from 'element-plus'
-import {Wallet, Edit, Lock, Delete} from '@element-plus/icons-vue'
+import {ArrowDown,Wallet, Edit, Lock, Delete} from '@element-plus/icons-vue'
 import {
   addCustomerService, deleteCustomerService,
   getCustomerList, resetPasswordService, updateBalanceService, updateCustomerInfo,
@@ -726,10 +726,10 @@ onMounted(() => {
           <template #default="scope">
             <el-dropdown @command="(command) => handleCommand(command, scope.row)" trigger="hover">
               <el-button type="primary" size="small">
-                <el-icon>
-                  <Edit/>
-                </el-icon>
                 操作
+                <el-icon>
+                  <ArrowDown/>
+                </el-icon>
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>

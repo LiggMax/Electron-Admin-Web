@@ -5,7 +5,7 @@ import request from "../utils/request.js";
  */
 export const getCardList = () => {
     return request({
-        url: "/card",
+        url: "/admin_web/card",
         method: "get",
     });
 };
@@ -15,7 +15,7 @@ export const getCardList = () => {
  */
 export const editCard = (data) => {
     return request({
-        url: "/card/edit",
+        url: "/admin_web/card/edit",
         method: "put",
         data
     });
@@ -26,7 +26,7 @@ export const editCard = (data) => {
  */
 export const resetPassword = (data) => {
     return request({
-        url: "/card/reset",
+        url: "/admin_web/card/reset",
         method: "put",
         params: data
     });
@@ -37,7 +37,7 @@ export const resetPassword = (data) => {
  */
 export const addCard = (data) => {
     return request({
-        url: "/card/add",
+        url: "/admin_web/card/add",
         method: "post",
         params: data
     });
@@ -48,8 +48,19 @@ export const addCard = (data) => {
  */
 export const deleteCardService = (userId) => {
     return request({
-        url: `/card/deleteCard`,
+        url: `/admin_web/card/deleteCard`,
         method: "delete",
         params: {userId}
     });
 };
+
+/**
+ * 更新卡商余额
+ */
+export const updateCardBalance = (data) => {
+    return request({
+        url: "/admin_web/card/payouts",
+        method: "put",
+        data
+    })
+}
