@@ -2,13 +2,17 @@
 import {ref, reactive, onMounted, computed, nextTick} from 'vue'
 import Message from '../utils/message.js'
 import {ElMessageBox, ElDropdown, ElDropdownMenu, ElDropdownItem} from 'element-plus'
-import {Edit, Delete, Upload, ArrowDown, Postcard} from '@element-plus/icons-vue'
+import {Edit, Delete, Upload, ArrowDown, Postcard, Clock} from '@element-plus/icons-vue'
 import {
   getProjectListService,
   addProjectService,
   deleteProjectService,
   editProjectService,
-  uploadIconService
+  uploadIconService,
+  setProjectKeywordService,
+  getProjectKeywordListService,
+  deleteProjectKeywordService,
+  editProjectKeywordService
 } from "../api/project.js";
 import DateFormatter from "../utils/DateFormatter.js";
 // 查询条件
@@ -266,15 +270,7 @@ const newKeyword = reactive({
 })
 const newKeywordRef = ref(null)
 
-// 关键词表单验证规则
-const keywordRules = {
-  keyword: [
-    {required: true, message: '请输入关键字', trigger: 'blur'},
-    {min: 1, max: 50, message: '关键字长度需在1到50个字符之间', trigger: 'blur'}
-  ]
-}
-
-// 新增关键词验证规则
+// 关键词验证规则
 const newKeywordRules = {
   keyword: [
     {required: true, message: '请输入关键字', trigger: 'blur'},
@@ -365,25 +361,29 @@ const cancelIconUpload = () => {
 }
 
 // 打开关键词编辑弹窗
-const handleEditKeyword = (row) => {
+const handleEditKeyword = async (row) => {
   keywordForm.id = row.id
   keywordForm.projectName = row.projectName
   
-  // 处理关键词数据，确保是数组格式
-  if (row.keyword && row.codeLength) {
-    // 如果是单个关键词，转换为数组格式
-    keywordForm.keywords = [{
-      keyword: row.keyword,
-      codeLength: row.codeLength
-    }]
-  } else if (row.keywords && Array.isArray(row.keywords)) {
-    // 如果已经是数组格式，直接复制
-    keywordForm.keywords = row.keywords.map(item => ({
-      keyword: item.keyword,
-      codeLength: item.codeLength
-    }))
-  } else {
-    // 默认空数组
+  try {
+    // 从API获取项目的关键词数据
+    const response = await getProjectKeywordListService(row.id)
+    
+    if (response.data && Array.isArray(response.data)) {
+      // 将API返回的数据转换为弹窗需要的格式
+      keywordForm.keywords = response.data.map(item => ({
+        id: item.id,
+        keyword: item.keyword,
+        codeLength: item.codeLength.toString(),
+        updateAt: item.updateAt
+      }))
+    } else {
+      // 如果没有数据，初始化为空数组
+      keywordForm.keywords = []
+    }
+  } catch (error) {
+    console.error('获取关键词数据失败:', error)
+    Message.error('获取关键词数据失败')
     keywordForm.keywords = []
   }
   
@@ -396,39 +396,6 @@ const handleEditKeyword = (row) => {
     newKeywordRef.value?.resetFields()
     newKeywordRef.value?.clearValidate()
   })
-}
-
-// 提交关键词编辑
-const submitKeywordEdit = async () => {
-  if (keywordForm.keywords.length === 0) {
-    Message.warning('请至少添加一个关键词')
-    return
-  }
-
-  try {
-    keywordLoading.value = true
-
-    // 准备请求数据 - 目前API可能只支持单个关键词，取第一个
-    const firstKeyword = keywordForm.keywords[0]
-    const projectData = {
-      projectId: keywordForm.id,
-      keyword: firstKeyword.keyword,
-      codeLength: Number(firstKeyword.codeLength)
-    }
-
-    // 调用编辑API（复用现有的editProjectService）
-    await editProjectService(projectData)
-    Message.success('关键词更新成功')
-    keywordDialogVisible.value = false
-    await fetchProjects() // 刷新数据
-  } catch (error) {
-    if (error.message && !error.message.includes('验证未通过')) {
-      console.error('更新关键词失败:', error)
-      Message.error('更新关键词失败: ' + error.message)
-    }
-  } finally {
-    keywordLoading.value = false
-  }
 }
 
 // 取消关键词编辑
@@ -457,11 +424,24 @@ const addNewKeyword = async () => {
       return
     }
     
-    // 添加到列表
-    keywordForm.keywords.push({
+    // 调用API添加关键词
+    const projectData = {
+      projectId: keywordForm.id,
       keyword: newKeyword.keyword,
-      codeLength: newKeyword.codeLength
-    })
+      codeLength: Number(newKeyword.codeLength)
+    }
+    await setProjectKeywordService(projectData)
+    
+    // 重新获取关键词列表
+    const response = await getProjectKeywordListService(keywordForm.id)
+    if (response.data && Array.isArray(response.data)) {
+      keywordForm.keywords = response.data.map(item => ({
+        id: item.id,
+        keyword: item.keyword,
+        codeLength: item.codeLength.toString(),
+        updateAt: item.updateAt
+      }))
+    }
     
     // 重置表单
     newKeyword.keyword = ''
@@ -470,19 +450,90 @@ const addNewKeyword = async () => {
     
     Message.success('关键词添加成功')
   } catch (error) {
-    // 表单验证失败
+    console.error('添加关键词失败:', error)
+    if (error.message && !error.message.includes('验证未通过')) {
+      Message.error('添加关键词失败: ' + error.message)
+    }
   }
 }
 
 // 删除关键词
-const removeKeyword = (index) => {
-  keywordForm.keywords.splice(index, 1)
-  Message.success('关键词删除成功')
+const removeKeyword = async (index) => {
+  const keywordItem = keywordForm.keywords[index]
+  
+  try {
+    await ElMessageBox.confirm('确定要删除该关键词吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+
+    // 调用API删除关键词
+    await deleteProjectKeywordService(keywordItem.id)
+    
+    // 重新获取关键词列表
+    const response = await getProjectKeywordListService(keywordForm.id)
+    if (response.data && Array.isArray(response.data)) {
+      keywordForm.keywords = response.data.map(item => ({
+        id: item.id,
+        keyword: item.keyword,
+        codeLength: item.codeLength.toString(),
+        updateAt: item.updateAt
+      }))
+    }
+    
+    Message.success('关键词删除成功')
+  } catch (error) {
+    // 用户取消删除
+    if (error !== 'cancel' && !error.toString().includes('cancel')) {
+      console.error('删除关键词失败:', error)
+      Message.error('删除关键词失败：' + (error.message || '未知错误'))
+    }
+  }
 }
 
 // 编辑关键词
-const editKeywordItem = (index, field, value) => {
-  keywordForm.keywords[index][field] = value
+const editKeywordItem = async (index, field, value) => {
+  const keywordItem = keywordForm.keywords[index]
+  
+  // 如果值没有变化，不需要更新
+  if (keywordItem[field] === value) {
+    return
+  }
+  
+  try {
+    // 准备更新数据
+    const updateData = {
+      keywordId: keywordItem.id,
+      [field]: field === 'codeLength' ? Number(value) : value
+    }
+    
+    // 调用API更新关键词
+    await editProjectKeywordService(updateData)
+    
+    // 更新本地数据
+    keywordForm.keywords[index][field] = value
+    
+    Message.success('关键词更新成功')
+  } catch (error) {
+    console.error('更新关键词失败:', error)
+    Message.error('更新关键词失败: ' + (error.message || '未知错误'))
+    
+    // 重新获取数据以恢复原始值
+    try {
+      const response = await getProjectKeywordListService(keywordForm.id)
+      if (response.data && Array.isArray(response.data)) {
+        keywordForm.keywords = response.data.map(item => ({
+          id: item.id,
+          keyword: item.keyword,
+          codeLength: item.codeLength.toString(),
+          updateAt: item.updateAt
+        }))
+      }
+    } catch (refreshError) {
+      console.error('刷新数据失败:', refreshError)
+    }
+  }
 }
 
 // 处理API响应数据
@@ -754,10 +805,14 @@ onMounted(() => {
     <el-dialog
         v-model="keywordDialogVisible"
         title="编辑关键词"
-        width="700px"
+        width="650px"
         :close-on-click-modal="false"
         :close-on-press-escape="false"
         @closed="cancelKeywordEdit"
+        class="compact-keyword-dialog"
+        :modal-append-to-body="false"
+        :append-to-body="true"
+        top="5vh"
     >
       <div class="keyword-info">
         <div class="info-item">
@@ -768,80 +823,113 @@ onMounted(() => {
 
       <!-- 已有关键词列表 -->
       <div class="keyword-list-section" v-if="keywordForm.keywords.length > 0">
-        <h4 class="section-title">已添加的关键词</h4>
-        <div class="keyword-list">
-          <div 
-            v-for="(item, index) in keywordForm.keywords" 
-            :key="index" 
-            class="keyword-item"
-          >
-            <div class="keyword-content">
-              <div class="keyword-field">
-                <label>关键词:</label>
-                <el-input 
-                  v-model="item.keyword" 
-                  size="small"
-                  style="width: 300px"
-                  @blur="editKeywordItem(index, 'keyword', item.keyword)"
-                />
+        <div class="section-header">
+          <h4 class="section-title">已添加的关键词</h4>
+          <el-tag type="primary" size="small">{{ keywordForm.keywords.length }} 个</el-tag>
+        </div>
+        <div class="keyword-scroll-container">
+          <div class="keyword-list">
+            <div 
+              v-for="(item, index) in keywordForm.keywords" 
+              :key="item.id" 
+              class="keyword-item-card"
+            >
+              <div class="keyword-index">{{ index + 1 }}</div>
+              <div class="keyword-content">
+                <div class="keyword-row">
+                  <div class="keyword-field">
+                    <label class="field-label">关键词</label>
+                    <el-input 
+                      v-model="item.keyword" 
+                      size="small"
+                      placeholder="请输入关键词"
+                      @blur="editKeywordItem(index, 'keyword', item.keyword)"
+                      class="field-input"
+                      style="width: 240px;"
+                    />
+                  </div>
+                  <div class="keyword-field">
+                    <label class="field-label">验证码位数</label>
+                    <el-input 
+                      v-model="item.codeLength" 
+                      size="small"
+                      placeholder="位数"
+                      @blur="editKeywordItem(index, 'codeLength', item.codeLength)"
+                      class="field-input-short"
+                      style="width: 80px;"
+                    />
+                  </div>
+                </div>
+                <div class="keyword-meta">
+                  <div class="keyword-time">
+                    <el-icon class="time-icon"><Clock /></el-icon>
+                    <span class="time-text">{{ DateFormatter.format(item.updateAt) }}</span>
+                  </div>
+                </div>
               </div>
-              <div class="keyword-field">
-                <label>验证码位数:</label>
-                <el-input 
-                  v-model="item.codeLength" 
-                  size="small"
-                  @blur="editKeywordItem(index, 'codeLength', item.codeLength)"
+              <div class="keyword-actions">
+                <el-button 
+                  type="danger" 
+                  size="small" 
+                  @click="removeKeyword(index)"
+                  class="remove-btn"
+                  :icon="Delete"
+                  circle
                 />
               </div>
             </div>
-            <el-button 
-              type="danger" 
-              size="small" 
-              @click="removeKeyword(index)"
-              class="remove-btn"
-            >
-              删除
-            </el-button>
           </div>
+        </div>
+      </div>
+
+      <!-- 空状态提示 -->
+      <div v-else class="empty-keywords">
+        <div class="empty-content">
+          <el-icon class="empty-icon"><Postcard /></el-icon>
+          <h4 class="empty-title">暂无关键词</h4>
+          <p class="empty-description">该项目还没有添加任何关键词，请在下方添加新的关键词</p>
         </div>
       </div>
 
       <!-- 添加新关键词 -->
       <div class="add-keyword-section">
         <h4 class="section-title">添加新关键词</h4>
-        <el-form
-            ref="newKeywordRef"
-            :model="newKeyword"
-            :rules="newKeywordRules"
-            label-width="100px"
-            label-position="right"
-            status-icon
-        >
-          <el-form-item label="关键词" prop="keyword">
-            <el-input 
-                v-model="newKeyword.keyword" 
-                placeholder="请输入关键词"
-                maxlength="50"
-                show-word-limit
-            />
-          </el-form-item>
-          <el-form-item label="验证码位数" prop="codeLength">
-            <el-input 
-                v-model="newKeyword.codeLength" 
-                placeholder="请输入验证码位数"
-                maxlength="2"
-            />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="addNewKeyword">添加关键词</el-button>
-          </el-form-item>
-        </el-form>
+        <div class="add-form-container">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label">关键词</label>
+              <el-input 
+                  v-model="newKeyword.keyword" 
+                  placeholder="请输入关键词"
+                  maxlength="50"
+                  show-word-limit
+                  size="small"
+                  class="form-input"
+                  style="width: 240px;"
+              />
+            </div>
+            <div class="form-field">
+              <label class="form-label">验证码位数</label>
+              <el-input 
+                  v-model="newKeyword.codeLength" 
+                  placeholder="请输入验证码位数"
+                  maxlength="2"
+                  size="small"
+                  class="form-input-short"
+                  style="width: 120px;"
+              />
+            </div>
+            <div class="form-field-btn">
+              <el-button type="primary" @click="addNewKeyword" size="small">添加关键词</el-button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="cancelKeywordEdit">取消</el-button>
-          <el-button type="primary" @click="submitKeywordEdit" :loading="keywordLoading">确定</el-button>
+          <el-button type="primary" @click="cancelKeywordEdit">完成</el-button>
         </div>
       </template>
     </el-dialog>
@@ -1048,6 +1136,13 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
 .section-title {
   font-weight: bold;
   margin-bottom: 15px;
@@ -1057,50 +1152,154 @@ onMounted(() => {
   padding-bottom: 8px;
 }
 
+.keyword-scroll-container {
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.keyword-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.keyword-scroll-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.keyword-scroll-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.keyword-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
 .keyword-list {
-  margin-bottom: 10px;
+  margin-bottom: 0;
 }
 
-.keyword-item {
+.keyword-item-card {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
-  margin-bottom: 10px;
-  background-color: #f8f9fa;
-  border: 1px solid #ebeef5;
-  border-radius: 6px;
+  align-items: flex-start;
+  padding: 16px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.keyword-item:hover {
-  background-color: #f0f2f5;
-  border-color: #d9d9d9;
+.keyword-item-card:hover {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-color: #0ea5e9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+}
+
+.keyword-item-card:last-child {
+  margin-bottom: 0;
+}
+
+.keyword-index {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 13px;
+  margin-right: 16px;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .keyword-content {
-  display: flex;
-  align-items: center;
   flex: 1;
+  min-width: 0;
+}
+
+.keyword-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
 }
 
 .keyword-field {
-  margin-right: 20px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.keyword-field label {
+.field-label {
   font-weight: 500;
-  color: #606266;
-  margin-right: 8px;
-  white-space: nowrap;
-  min-width: 80px;
+  color: #374151;
+  font-size: 12px;
+  margin: 0;
+}
+
+.field-input {
+  width: 180px;
+}
+
+.field-input-short {
+  width: 100px;
+}
+
+.keyword-meta {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.keyword-time {
+  display: flex;
+  align-items: center;
+  background: #f1f5f9;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.time-icon {
+  margin-right: 4px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.time-text {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.keyword-actions {
+  margin-left: 16px;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 2px;
 }
 
 .remove-btn {
-  margin-left: 10px;
-  padding: 5px 10px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.remove-btn:hover {
+  background: #fecaca;
+  border-color: #f87171;
+  color: #b91c1c;
+  transform: scale(1.05);
 }
 
 .add-keyword-section {
@@ -1115,5 +1314,278 @@ onMounted(() => {
   margin-bottom: 15px;
   border-bottom: none;
   padding-bottom: 0;
+}
+
+.empty-keywords {
+  text-align: center;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.empty-content {
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: #94a3b8;
+  margin-bottom: 16px;
+}
+
+.empty-title {
+  color: #475569;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+.empty-description {
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .keyword-scroll-container {
+    max-height: 250px;
+  }
+  
+  .keyword-item-card {
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+  
+  .keyword-row {
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  
+  .keyword-field {
+    width: 100%;
+  }
+  
+  .field-input,
+  .field-input-short {
+    width: 100%;
+  }
+  
+  .keyword-index {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    margin-right: 12px;
+  }
+  
+  .keyword-actions {
+    margin-left: 12px;
+  }
+  
+  .remove-btn {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .keyword-scroll-container {
+    max-height: 200px;
+  }
+  
+  .keyword-item-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .keyword-index {
+    align-self: flex-start;
+    margin-bottom: 8px;
+    margin-right: 0;
+  }
+  
+  .keyword-actions {
+    margin-left: 0;
+    margin-top: 8px;
+    justify-content: flex-end;
+  }
+}
+
+.compact-keyword-dialog .keyword-info {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #ebeef5;
+}
+
+.compact-keyword-dialog .keyword-info .info-item {
+  margin-bottom: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.compact-keyword-dialog .section-header {
+  margin-bottom: 8px;
+}
+
+.compact-keyword-dialog .section-title {
+  font-size: 14px;
+  margin-bottom: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.compact-keyword-dialog .keyword-list-section {
+  margin-bottom: 12px;
+}
+
+.compact-keyword-dialog .keyword-scroll-container {
+  max-height: 200px;
+}
+
+.compact-keyword-dialog .keyword-item-card {
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.compact-keyword-dialog .keyword-row {
+  margin-bottom: 4px;
+  gap: 16px;
+}
+
+.compact-keyword-dialog .keyword-meta {
+  margin-top: 2px;
+}
+
+.compact-keyword-dialog .keyword-time {
+  padding: 2px 6px;
+}
+
+.compact-keyword-dialog .time-text {
+  font-size: 10px;
+}
+
+.compact-keyword-dialog .keyword-index {
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  margin-right: 12px;
+}
+
+.compact-keyword-dialog .remove-btn {
+  width: 24px;
+  height: 24px;
+}
+
+.compact-keyword-dialog .add-keyword-section {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #fafbfc;
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+}
+
+.compact-keyword-dialog .add-keyword-section .section-title {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.compact-keyword-dialog .form-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+
+.compact-keyword-dialog .empty-keywords {
+  padding: 20px 15px;
+  margin-bottom: 12px;
+}
+
+.compact-keyword-dialog .empty-icon {
+  font-size: 36px;
+  margin-bottom: 8px;
+}
+
+.compact-keyword-dialog .empty-title {
+  font-size: 14px;
+  margin: 0 0 4px 0;
+}
+
+.compact-keyword-dialog .empty-description {
+  font-size: 12px;
+}
+
+.compact-keyword-dialog .dialog-footer {
+  padding: 12px 0 0;
+  margin-top: 12px;
+}
+
+.compact-keyword-dialog .field-input {
+  width: 200px;
+}
+
+.compact-keyword-dialog .field-input-short {
+  width: 100px;
+}
+
+.compact-keyword-dialog .keyword-row {
+  margin-bottom: 4px;
+  gap: 20px;
+}
+
+.compact-keyword-dialog .keyword-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.compact-keyword-dialog .field-label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 12px;
+  margin: 0;
+}
+
+.compact-keyword-dialog .add-form-container {
+  margin-top: 8px;
+}
+
+.compact-keyword-dialog .form-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.compact-keyword-dialog .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.compact-keyword-dialog .form-label {
+  font-size: 12px;
+  color: #374151;
+  font-weight: 500;
+  margin: 0;
+}
+
+.compact-keyword-dialog .form-input {
+  width: 200px;
+}
+
+.compact-keyword-dialog .form-input-short {
+  width: 120px;
+}
+
+.compact-keyword-dialog .form-field-btn {
+  margin-top: 16px;
 }
 </style>
