@@ -3,8 +3,9 @@ import {ref, reactive, onMounted, computed, nextTick} from 'vue'
 import ElMessage from '../utils/message.js'
 import {ElMessageBox, ElDropdown, ElDropdownMenu, ElDropdownItem} from 'element-plus'
 import {Edit, Lock, Phone, Delete, ArrowDown, Wallet} from '@element-plus/icons-vue'
-import {getCardList, editCard, resetPassword, addCard, deleteCardService} from "../api/card.js";
+import {getCardList, editCard, resetPassword, addCard, deleteCardService, updateCardBalance} from "../api/card.js";
 import DateFormatter from "../utils/DateFormatter.js";
+import Message from "../utils/message.js";
 
 // 查询条件
 const queryForm = reactive({
@@ -428,6 +429,50 @@ const phoneForm = reactive({
   phoneNumber: '' // 单个号码输入
 })
 
+// 提现弹窗相关
+const payoutsVisible = ref(false)
+const payoutsForm = reactive({
+  userId: '',
+  username: '',
+  currentBalance: 0,
+  payoutAmount: '',
+  bankInfo: {
+    bankName: '',
+    bankAccount: '',
+    accountHolder: ''
+  },
+  alipayAccount: '',
+  wechatAccount: '',
+  remark: ''
+})
+const payoutsLoading = ref(false)
+const payoutsFormRef = ref(null)
+
+// 提现表单验证规则
+const payoutsRules = {
+  payoutAmount: [
+    {required: true, message: '请输入提现金额', trigger: 'blur'},
+    {
+      validator: (rule, value, callback) => {
+        if (payoutsForm.currentBalance <= 0) {
+          callback(new Error('当前余额不足，无法提现'))
+        } else if (value === null || value === undefined || value === '') {
+          callback(new Error('请输入提现金额'))
+        } else if (isNaN(Number(value))) {
+          callback(new Error('提现金额必须是数字'))
+        } else if (Number(value) <= 0) {
+          callback(new Error('提现金额必须大于0'))
+        } else if (Number(value) > payoutsForm.currentBalance) {
+          callback(new Error('提现金额不能大于当前余额'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ]
+}
+
 // 添加号码
 const handleAddPhone = (row) => {
   // 保存当前卡商信息
@@ -483,10 +528,77 @@ const handleCommand = (command, row) => {
       handleDelete(row)
       break
     case 'payouts':
+      handlePayouts(row)
       break
     default:
       break
   }
+}
+
+// 处理提现
+const handlePayouts = (row) => {
+  // 检查余额是否足够
+  if (row.money <= 0) {
+    ElMessage.warning('该卡商余额不足，无法进行提现操作')
+    return
+  }
+  
+  // 填充提现表单数据
+  payoutsForm.userId = row.id
+  payoutsForm.username = row.name
+  payoutsForm.currentBalance = row.money || 0
+  payoutsForm.payoutAmount = ''
+  payoutsForm.bankInfo.bankName = ''
+  payoutsForm.bankInfo.bankAccount = ''
+  payoutsForm.bankInfo.accountHolder = ''
+  payoutsForm.alipayAccount = ''
+  payoutsForm.wechatAccount = ''
+  payoutsForm.remark = ''
+  
+  // 显示提现弹窗
+  payoutsVisible.value = true
+  
+  // 下一帧后重置表单校验结果
+  nextTick(() => {
+    payoutsFormRef.value?.resetFields()
+  })
+}
+
+// 提交提现表单
+const submitPayouts = async () => {
+  if (!payoutsFormRef.value) return
+  
+  try {
+    // 表单校验
+    await payoutsFormRef.value.validate()
+    
+    payoutsLoading.value = true
+    
+    // 准备请求数据
+    const payoutData = {
+      userId: payoutsForm.userId,
+      balance: payoutsForm.payoutAmount,
+      isType: true
+    }
+    
+    await updateCardBalance(payoutData)
+    
+    Message.success('提现成功')
+    payoutsVisible.value = false
+    await fetchMerchants() // 刷新数据
+  } finally {
+    payoutsLoading.value = false
+  }
+}
+
+// 设置提现金额（固定金额）
+const setPayoutAmount = (amount) => {
+  payoutsForm.payoutAmount = amount
+}
+
+// 判断是否选中了指定金额
+const isSelectedAmount = (amount) => {
+  return payoutsForm.payoutAmount === amount
 }
 
 onMounted(() => {
@@ -862,23 +974,96 @@ onMounted(() => {
           </span>
         </div>
       </div>
-
+      
       <div class="phone-form">
         <el-form label-width="80px">
           <el-form-item label="号码">
-            <el-input
-                v-model="phoneForm.phoneNumber"
-                placeholder="请输入号码"
+            <el-input 
+                v-model="phoneForm.phoneNumber" 
+                placeholder="请输入号码" 
                 maxlength="11"
             />
           </el-form-item>
         </el-form>
       </div>
-
+      
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="addPhoneVisible = false">取消</el-button>
           <el-button type="primary" @click="submitPhoneForm" :loading="phoneFormLoading">确定</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 提现弹窗 -->
+    <el-dialog
+        v-model="payoutsVisible"
+        title="余额提现"
+        width="600px"
+        :close-on-click-modal="false"
+        :close-on-press-escape="false"
+    >
+      <div class="payout-info">
+        <div class="info-item">
+          <span class="label">卡商ID:</span>
+          <span class="value">{{ payoutsForm.userId }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">卡商名称:</span>
+          <span class="value">{{ payoutsForm.username }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">当前余额:</span>
+          <span class="value balance-value">￥{{ payoutsForm.currentBalance.toFixed(2) }}</span>
+          <span v-if="payoutsForm.payoutAmount > 0" class="remaining-balance">
+            → 提现后余额: ￥{{ (payoutsForm.currentBalance - (payoutsForm.payoutAmount || 0)).toFixed(2) }}
+          </span>
+        </div>
+      </div>
+
+      <el-form 
+          ref="payoutsFormRef"
+          :model="payoutsForm" 
+          :rules="payoutsRules"
+          label-width="100px" 
+          label-position="right"
+          status-icon
+      >
+        <el-form-item label="提现金额" prop="payoutAmount">
+          <el-input-number
+              v-model="payoutsForm.payoutAmount"
+              :min="Math.min(0, payoutsForm.currentBalance)"
+              :max="payoutsForm.currentBalance"
+              :precision="2"
+              :step="1"
+              placeholder="请输入提现金额"
+              style="width: 100%"
+              :disabled="payoutsForm.currentBalance <= 0"
+          />
+          
+          <!-- 固定金额选项按钮 -->
+          <div class="amount-options">
+            <span class="options-label">快速选择:</span>
+            <div class="amount-buttons">
+              <el-button 
+                v-for="amount in [10, 30, 50, 100, 200, 500]"
+                :key="amount"
+                size="small" 
+                @click="setPayoutAmount(amount)"
+                :type="isSelectedAmount(amount) ? 'primary' : 'default'"
+                :disabled="amount > payoutsForm.currentBalance"
+              >
+                ￥{{ amount }}
+              </el-button>
+            </div>
+          </div>
+        </el-form-item>
+      </el-form>
+      
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="payoutsVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitPayouts" :loading="payoutsLoading">确定提现</el-button>
         </div>
       </template>
     </el-dialog>
@@ -1069,6 +1254,43 @@ onMounted(() => {
 .no-data {
   color: #909399;
   font-style: italic;
+}
+
+.payout-info {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f8f8f8;
+  border-radius: 4px;
+}
+
+.balance-value {
+  color: #f56c6c;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.remaining-balance {
+  color: #409eff;
+  font-size: 14px;
+  margin-left: 10px;
+  font-weight: normal;
+}
+
+.amount-options {
+  margin-top: 10px;
+}
+
+.options-label {
+  font-size: 14px;
+  color: #606266;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.amount-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .divide-ratio-cell {

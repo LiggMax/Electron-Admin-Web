@@ -61,6 +61,6 @@ export const updateCardBalance = (data) => {
     return request({
         url: "/admin_web/card/payouts",
         method: "put",
-        data
+        params: data
     })
 }

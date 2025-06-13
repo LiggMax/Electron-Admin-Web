@@ -724,7 +724,9 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="操作" fixed="right" width="90" align="center">
           <template #default="scope">
-            <el-dropdown @command="(command) => handleCommand(command, scope.row)" trigger="hover">
+            <el-dropdown @command="(command) => handleCommand(command, scope.row)"
+                         trigger="hover"
+                          size="large">
               <el-button type="primary" size="small">
                 操作
                 <el-icon>
@@ -801,12 +803,6 @@ onMounted(() => {
         </el-form-item>
         <el-form-item label="账号">
           <el-input v-model="editForm.account" disabled/>
-        </el-form-item>
-        <el-form-item label="余额" prop="money">
-          <div class="edit-money-field">
-            <span class="money-prefix">￥</span>
-            <el-input v-model="editForm.money" placeholder="请输入余额" type="number" class="money-input"/>
-          </div>
         </el-form-item>
         <el-form-item label="用户名" prop="name">
           <el-input v-model="editForm.name" placeholder="请输入用户名"/>
