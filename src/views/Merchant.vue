@@ -578,7 +578,7 @@ const submitPayouts = async () => {
     const payoutData = {
       userId: payoutsForm.userId,
       balance: payoutsForm.payoutAmount,
-      isType: true
+      isType: false
     }
     
     await updateCardBalance(payoutData)
@@ -1273,7 +1273,7 @@ onMounted(() => {
   color: #409eff;
   font-size: 14px;
   margin-left: 10px;
-  font-weight: normal;
+  font-weight: bold;
 }
 
 .amount-options {

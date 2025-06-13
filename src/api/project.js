@@ -45,6 +45,17 @@ export const editProjectService = (data) => {
 };
 
 /**
+ * 添加项目关键词
+ */
+export const setProjectKeywordService = (data) => {
+    return request({
+        url: "/admin_web/project/set_keywords",
+        method: "post",
+        data
+    });
+}
+
+/**
  * 上传项目图标
  * @param {FormData} formData - 包含项目ID和图片文件的FormData
  */

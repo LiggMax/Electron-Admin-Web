@@ -1266,21 +1266,6 @@ onMounted(() => {
   color: #f56c6c;
 }
 
-.edit-money-field {
-  display: flex;
-  align-items: center;
-}
-
-.money-prefix {
-  margin-right: 8px;
-  font-size: 16px;
-  color: #909399;
-}
-
-.money-input {
-  width: 100%;
-}
-
 /* 余额修改弹窗样式 */
 .balance-dialog-header {
   margin-bottom: 20px;
