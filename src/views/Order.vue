@@ -72,7 +72,7 @@ const getStateTagType = (state) => {
     case 0:
       return 'info';
     case 1:
-      return 'danger';
+      return 'warning';
     case 2:
       return 'primary';
     case 3:
@@ -186,7 +186,7 @@ onMounted(() => {
             <span class="money">￥{{ scope.row.projectMoney }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="state" label="状态" width="100" align="center">
+        <el-table-column prop="state" label="状态" width="110" align="center">
           <template #default="scope">
             <el-tag :type="getStateTagType(scope.row.state)">
               {{ getStateText(scope.row.state) }}
