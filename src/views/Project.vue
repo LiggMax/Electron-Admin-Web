@@ -51,6 +51,7 @@ const projectForm = reactive({
   id: '',
   projectName: '',
   projectPrice: '',
+  expirationTime: '',
   keyword: '',
   codeLength: '',
 })
@@ -72,13 +73,9 @@ const projectRules = {
     {required: true, message: '请输入项目价格', trigger: 'blur'},
     {pattern: /^(0|[1-9]\d*)(\.\d{1,2})?$/, message: '价格必须是有效的金额，最多两位小数', trigger: 'blur'}
   ],
-  keyword: [
-    {required: true, message: '请输入验证码参数', trigger: 'blur'},
-    {min: 1, max: 50, message: '关键字长度需在1到50个字符之间', trigger: 'blur'}
-  ],
-  codeLength: [
-    {required: true, message: '请输入验证码位数', trigger: 'blur'},
-    {pattern: /^([1-9]|1[0-9]|20)$/, message: '验证码位数必须是1到20之间的整数', trigger: 'blur'}
+  expirationTime: [
+    {required: true, message: '请输入过期时间', trigger: 'blur'},
+    {pattern: /^(1[5-9]|[2-9]\d|[1-9]\d{2}|1[0-3]\d{2}|14[0-3]\d|1440)$/, message: '过期时间必须是15-1440分钟之间的整数', trigger: 'blur'}
   ]
 }
 
@@ -89,6 +86,7 @@ const handleAddProject = () => {
   projectForm.id = ''
   projectForm.projectName = ''
   projectForm.projectPrice = ''
+  projectForm.expirationTime = ''
   projectForm.keyword = ''
   projectForm.codeLength = ''
 
@@ -109,8 +107,7 @@ const handleEdit = (row) => {
   projectForm.id = row.id
   projectForm.projectName = row.projectName
   projectForm.projectPrice = row.hasPrice ? row.price : ''
-  projectForm.keyword = row.keyword
-  projectForm.codeLength = row.codeLength
+  projectForm.expirationTime = row.expirationTime
   // 显示弹窗
   projectDialogVisible.value = true
 }
@@ -122,6 +119,7 @@ const cancelProject = () => {
   projectForm.id = ''
   projectForm.projectName = ''
   projectForm.projectPrice = ''
+  projectForm.expirationTime = ''
   projectForm.keyword = ''
   projectForm.codeLength = ''
 }
@@ -141,6 +139,7 @@ const submitProject = async () => {
       const projectData = {
         projectName: projectForm.projectName,
         projectPrice: Number(projectForm.projectPrice),
+        expirationTime: Number(projectForm.expirationTime),
         keyword: projectForm.keyword,
         codeLength: Number(projectForm.codeLength)
       }
@@ -152,6 +151,7 @@ const submitProject = async () => {
         projectId: projectForm.id,
         projectPrice: Number(projectForm.projectPrice),
         projectName: projectForm.projectName,
+        expirationTime: Number(projectForm.expirationTime),
         keyword: projectForm.keyword,
         codeLength: Number(projectForm.codeLength)
       }
@@ -260,7 +260,6 @@ const keywordForm = reactive({
   projectName: '',
   keywords: [] // 改为数组存储多个关键词，每项包含 {keyword: '', codeLength: ''}
 })
-const keywordLoading = ref(false)
 const keywordFormRef = ref(null)
 
 // 新增关键词临时数据
@@ -269,18 +268,6 @@ const newKeyword = reactive({
   codeLength: ''
 })
 const newKeywordRef = ref(null)
-
-// 关键词验证规则
-const newKeywordRules = {
-  keyword: [
-    {required: true, message: '请输入关键字', trigger: 'blur'},
-    {min: 1, max: 50, message: '关键字长度需在1到50个字符之间', trigger: 'blur'}
-  ],
-  codeLength: [
-    {required: true, message: '请输入验证码位数', trigger: 'blur'},
-    {pattern: /^([1-9]|1[0-9]|20)$/, message: '验证码位数必须是1到20之间的整数', trigger: 'blur'}
-  ]
-}
 
 // 打开上传图标弹窗
 const uploadIcon = (row) => {
@@ -364,11 +351,11 @@ const cancelIconUpload = () => {
 const handleEditKeyword = async (row) => {
   keywordForm.id = row.id
   keywordForm.projectName = row.projectName
-  
+
   try {
     // 从API获取项目的关键词数据
     const response = await getProjectKeywordListService(row.id)
-    
+
     if (response.data && Array.isArray(response.data)) {
       // 将API返回的数据转换为弹窗需要的格式
       keywordForm.keywords = response.data.map(item => ({
@@ -386,9 +373,9 @@ const handleEditKeyword = async (row) => {
     Message.error('获取关键词数据失败')
     keywordForm.keywords = []
   }
-  
+
   keywordDialogVisible.value = true
-  
+
   // 下一帧后重置表单校验结果
   nextTick(() => {
     keywordFormRef.value?.resetFields()
@@ -428,7 +415,7 @@ const addNewKeyword = async () => {
       codeLength: Number(newKeyword.codeLength)
     }
     await setProjectKeywordService(projectData)
-    
+
     // 重新获取关键词列表
     const response = await getProjectKeywordListService(keywordForm.id)
     if (response.data && Array.isArray(response.data)) {
@@ -439,12 +426,12 @@ const addNewKeyword = async () => {
         updateAt: item.updateAt
       }))
     }
-    
+
     // 重置表单
     newKeyword.keyword = ''
     newKeyword.codeLength = ''
     newKeywordRef.value?.resetFields()
-    
+
     Message.success('关键词添加成功')
   } catch (error) {
     console.error('添加关键词失败:', error)
@@ -457,18 +444,18 @@ const addNewKeyword = async () => {
 // 删除关键词
 const removeKeyword = async (index) => {
   const keywordItem = keywordForm.keywords[index]
-  
+
   try {
     await ElMessageBox.confirm('确定要删除该关键词吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
     })
-    const projectIds = [ keywordItem.id]
+    const projectIds = [keywordItem.id]
 
     // 调用API删除关键词
     await deleteProjectKeywordService(projectIds)
-    
+
     // 重新获取关键词列表
     const response = await getProjectKeywordListService(keywordForm.id)
     if (response.data && Array.isArray(response.data)) {
@@ -479,7 +466,7 @@ const removeKeyword = async (index) => {
         updateAt: item.updateAt
       }))
     }
-    
+
     Message.success('关键词删除成功')
   } catch (error) {
     // 用户取消删除
@@ -493,30 +480,30 @@ const removeKeyword = async (index) => {
 // 编辑关键词
 const editKeywordItem = async (index, field, value) => {
   const keywordItem = keywordForm.keywords[index]
-  
+
   // 如果值没有变化，不需要更新
   if (keywordItem[field] === value) {
     return
   }
-  
+
   try {
     // 准备更新数据
     const updateData = {
       keywordId: keywordItem.id,
       [field]: field === 'codeLength' ? Number(value) : value
     }
-    
+
     // 调用API更新关键词
     await editProjectKeywordService(updateData)
-    
+
     // 更新本地数据
     keywordForm.keywords[index][field] = value
-    
+
     Message.success('关键词更新成功')
   } catch (error) {
     console.error('更新关键词失败:', error)
     Message.error('更新关键词失败: ' + (error.message || '未知错误'))
-    
+
     // 重新获取数据以恢复原始值
     try {
       const response = await getProjectKeywordListService(keywordForm.id)
@@ -541,8 +528,7 @@ const handleResponseData = (data) => {
     projectName: item.projectName,
     price: item.projectPrice !== null ? Number(item.projectPrice) : 0,
     hasPrice: item.projectPrice !== null,
-    keyword: item.keyword || '',
-    codeLength: item.codeLength || '',
+    expirationTime: item.expirationTime,
     icon: item.icon || '',
     createdAt: item.projectCreatedAt ? DateFormatter.format(item.projectCreatedAt) : '未知时间',
     updateAt: item.projectUpdateAt ? DateFormatter.format(item.projectUpdateAt) : '未知时间'
@@ -640,6 +626,11 @@ onMounted(() => {
             <span v-else class="no-price">未设置</span>
           </template>
         </el-table-column>
+        <el-table-column prop="expirationTime" label="设置过期时间" min-width="160" align="center">
+          <template #default="scope">
+            <span class="expiration-time">{{ scope.row.expirationTime }}分钟</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="createdAt" label="创建时间" min-width="180" align="center"/>
         <el-table-column prop="updateAt" label="更新时间" min-width="180" align="center"/>
 
@@ -724,17 +715,20 @@ onMounted(() => {
             <template #prefix>￥</template>
           </el-input>
         </el-form-item>
-        <el-form-item label="输入关键字" prop="keyword">
+        <el-form-item label="过期时间" prop="expirationTime">
           <el-input
-              v-model="projectForm.keyword"
-              placeholder="请输入关键字"
-          />
-        </el-form-item>
-        <el-form-item label="验证码数" prop="codeLength">
-          <el-input
-              v-model="projectForm.codeLength"
-              placeholder="关键字后多少位是验证码"
-          />
+              v-model="projectForm.expirationTime"
+              placeholder="最少15分钟，最多1440分钟"
+              type="number"
+              :min="15"
+              :max="1440"
+              class="expiration-input"
+          >
+            <template #suffix>分钟</template>
+          </el-input>
+          <div class="form-tip">
+            <span class="tip-text">建议设置范围：15-1440分钟（24小时内）</span>
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -815,52 +809,54 @@ onMounted(() => {
         </div>
         <div class="keyword-scroll-container">
           <div class="keyword-list">
-            <div 
-              v-for="(item, index) in keywordForm.keywords" 
-              :key="item.id" 
-              class="keyword-item-card"
+            <div
+                v-for="(item, index) in keywordForm.keywords"
+                :key="item.id"
+                class="keyword-item-card"
             >
               <div class="keyword-index">{{ index + 1 }}</div>
               <div class="keyword-content">
                 <div class="keyword-row">
                   <div class="keyword-field">
                     <label class="field-label">关键词</label>
-                    <el-input 
-                      v-model="item.keyword" 
-                      size="small"
-                      placeholder="请输入关键词"
-                      @blur="editKeywordItem(index, 'keyword', item.keyword)"
-                      class="field-input"
-                      style="width: 240px;"
+                    <el-input
+                        v-model="item.keyword"
+                        size="small"
+                        placeholder="请输入关键词"
+                        @blur="editKeywordItem(index, 'keyword', item.keyword)"
+                        class="field-input"
+                        style="width: 240px;"
                     />
                   </div>
                   <div class="keyword-field">
                     <label class="field-label">验证码位数</label>
-                    <el-input 
-                      v-model="item.codeLength" 
-                      size="small"
-                      placeholder="位数"
-                      @blur="editKeywordItem(index, 'codeLength', item.codeLength)"
-                      class="field-input-short"
-                      style="width: 80px;"
+                    <el-input
+                        v-model="item.codeLength"
+                        size="small"
+                        placeholder="位数"
+                        @blur="editKeywordItem(index, 'codeLength', item.codeLength)"
+                        class="field-input-short"
+                        style="width: 80px;"
                     />
                   </div>
                 </div>
                 <div class="keyword-meta">
                   <div class="keyword-time">
-                    <el-icon class="time-icon"><Clock /></el-icon>
+                    <el-icon class="time-icon">
+                      <Clock/>
+                    </el-icon>
                     <span class="time-text">{{ DateFormatter.format(item.updateAt) }}</span>
                   </div>
                 </div>
               </div>
               <div class="keyword-actions">
-                <el-button 
-                  type="danger" 
-                  size="small" 
-                  @click="removeKeyword(index)"
-                  class="remove-btn"
-                  :icon="Delete"
-                  circle
+                <el-button
+                    type="danger"
+                    size="small"
+                    @click="removeKeyword(index)"
+                    class="remove-btn"
+                    :icon="Delete"
+                    circle
                 />
               </div>
             </div>
@@ -871,7 +867,9 @@ onMounted(() => {
       <!-- 空状态提示 -->
       <div v-else class="empty-keywords">
         <div class="empty-content">
-          <el-icon class="empty-icon"><Postcard /></el-icon>
+          <el-icon class="empty-icon">
+            <Postcard/>
+          </el-icon>
           <h4 class="empty-title">暂无关键词</h4>
           <p class="empty-description">该项目还没有添加任何关键词，请在下方添加新的关键词</p>
         </div>
@@ -884,8 +882,8 @@ onMounted(() => {
           <div class="form-row">
             <div class="form-field">
               <label class="form-label">关键词</label>
-              <el-input 
-                  v-model="newKeyword.keyword" 
+              <el-input
+                  v-model="newKeyword.keyword"
                   placeholder="请输入关键词"
                   maxlength="50"
                   show-word-limit
@@ -896,8 +894,8 @@ onMounted(() => {
             </div>
             <div class="form-field">
               <label class="form-label">验证码位数</label>
-              <el-input 
-                  v-model="newKeyword.codeLength" 
+              <el-input
+                  v-model="newKeyword.codeLength"
                   placeholder="请输入验证码位数"
                   maxlength="2"
                   size="small"
@@ -1018,15 +1016,21 @@ onMounted(() => {
   color: #909399;
 }
 
-.keyword-cell {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  word-break: break-word;
-  line-height: 1.2;
-  max-height: 2.4em;
+/* 过期时间输入框样式 */
+.expiration-input :deep(.el-input__suffix) {
+  color: #606266;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.form-tip {
+  margin-top: 4px;
+}
+
+.tip-text {
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.4;
 }
 
 /* 图标上传相关样式 */
@@ -1059,6 +1063,10 @@ onMounted(() => {
   margin-bottom: 20px;
   overflow: hidden;
   background-color: #f5f7fa;
+}
+
+.expiration-time{
+ font-weight: bold;
 }
 
 .preview-image {
@@ -1341,38 +1349,38 @@ onMounted(() => {
   .keyword-scroll-container {
     max-height: 250px;
   }
-  
+
   .keyword-item-card {
     padding: 12px;
     margin-bottom: 8px;
   }
-  
+
   .keyword-row {
     flex-direction: column;
     gap: 12px;
     margin-bottom: 12px;
   }
-  
+
   .keyword-field {
     width: 100%;
   }
-  
+
   .field-input,
   .field-input-short {
     width: 100%;
   }
-  
+
   .keyword-index {
     width: 24px;
     height: 24px;
     font-size: 12px;
     margin-right: 12px;
   }
-  
+
   .keyword-actions {
     margin-left: 12px;
   }
-  
+
   .remove-btn {
     width: 24px;
     height: 24px;
@@ -1383,18 +1391,18 @@ onMounted(() => {
   .keyword-scroll-container {
     max-height: 200px;
   }
-  
+
   .keyword-item-card {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .keyword-index {
     align-self: flex-start;
     margin-bottom: 8px;
     margin-right: 0;
   }
-  
+
   .keyword-actions {
     margin-left: 0;
     margin-top: 8px;
