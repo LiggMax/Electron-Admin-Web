@@ -52,8 +52,6 @@ const projectForm = reactive({
   projectName: '',
   projectPrice: '',
   expirationTime: '',
-  keyword: '',
-  codeLength: '',
 })
 const projectLoading = ref(false)
 const projectFormRef = ref(null)
@@ -64,20 +62,28 @@ const dialogTitle = computed(() => {
 })
 
 // 项目验证规则
-const projectRules = {
-  projectName: [
-    {required: true, message: '请输入项目名称', trigger: 'blur'},
-    {min: 1, max: 50, message: '项目名称长度需在1到50个字符之间', trigger: 'blur'}
-  ],
-  projectPrice: [
-    {required: true, message: '请输入项目价格', trigger: 'blur'},
-    {pattern: /^(0|[1-9]\d*)(\.\d{1,2})?$/, message: '价格必须是有效的金额，最多两位小数', trigger: 'blur'}
-  ],
-  expirationTime: [
-    {required: true, message: '请输入过期时间', trigger: 'blur'},
-    {pattern: /^(1[5-9]|[2-9]\d|[1-9]\d{2}|1[0-3]\d{2}|14[0-3]\d|1440)$/, message: '过期时间必须是15-1440分钟之间的整数', trigger: 'blur'}
-  ]
-}
+const projectRules = computed(() => {
+  const baseRules = {
+    projectName: [
+      {required: true, message: '请输入项目名称', trigger: 'blur'},
+      {min: 1, max: 50, message: '项目名称长度需在1到50个字符之间', trigger: 'blur'}
+    ],
+    projectPrice: [
+      {required: true, message: '请输入项目价格', trigger: 'blur'},
+      {pattern: /^(0|[1-9]\d*)(\.\d{1,2})?$/, message: '价格必须是有效的金额，最多两位小数', trigger: 'blur'}
+    ]
+  }
+  
+  // 只在编辑模式下添加过期时间验证
+  if (dialogMode.value === 'edit') {
+    baseRules.expirationTime = [
+      {required: true, message: '请输入过期时间', trigger: 'blur'},
+      {pattern: /^(1[5-9]|[2-9]\d|[1-9]\d{2}|1[0-3]\d{2}|14[0-3]\d|1440)$/, message: '过期时间必须是15-1440分钟之间的整数', trigger: 'blur'}
+    ]
+  }
+  
+  return baseRules
+})
 
 // 添加项目
 const handleAddProject = () => {
@@ -86,15 +92,15 @@ const handleAddProject = () => {
   projectForm.id = ''
   projectForm.projectName = ''
   projectForm.projectPrice = ''
-  projectForm.expirationTime = ''
-  projectForm.keyword = ''
-  projectForm.codeLength = ''
 
   // 显示弹窗
   projectDialogVisible.value = true
 
   // 下一帧后重置表单校验结果
   nextTick(() => {
+    pprojectForm.id = ''
+    projectForm.projectName = ''
+    projectForm.projectPrice = ''
     projectFormRef.value?.resetFields()
     projectFormRef.value?.clearValidate()
   })
@@ -120,8 +126,6 @@ const cancelProject = () => {
   projectForm.projectName = ''
   projectForm.projectPrice = ''
   projectForm.expirationTime = ''
-  projectForm.keyword = ''
-  projectForm.codeLength = ''
 }
 
 // 提交表单
@@ -138,10 +142,7 @@ const submitProject = async () => {
       // 添加项目
       const projectData = {
         projectName: projectForm.projectName,
-        projectPrice: Number(projectForm.projectPrice),
-        expirationTime: Number(projectForm.expirationTime),
-        keyword: projectForm.keyword,
-        codeLength: Number(projectForm.codeLength)
+        projectPrice: Number(projectForm.projectPrice)
       }
       await addProjectService(projectData)
       Message.success('项目添加成功')
@@ -151,9 +152,7 @@ const submitProject = async () => {
         projectId: projectForm.id,
         projectPrice: Number(projectForm.projectPrice),
         projectName: projectForm.projectName,
-        expirationTime: Number(projectForm.expirationTime),
-        keyword: projectForm.keyword,
-        codeLength: Number(projectForm.codeLength)
+        expirationTime: Number(projectForm.expirationTime)
       }
       await editProjectService(projectData)
       Message.success('项目更新成功')
@@ -715,7 +714,7 @@ onMounted(() => {
             <template #prefix>￥</template>
           </el-input>
         </el-form-item>
-        <el-form-item label="过期时间" prop="expirationTime">
+        <el-form-item v-if="dialogMode === 'edit'" label="过期时间" prop="expirationTime">
           <el-input
               v-model="projectForm.expirationTime"
               placeholder="最少15分钟，最多1440分钟"
