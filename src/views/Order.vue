@@ -41,20 +41,6 @@ const fetchOrders = async () => {
   }
 }
 
-// 格式化订单状态
-const formatOrderStatus = (row) => {
-  if (row.state === 0) {
-    return '未使用'
-  } else if (row.state === 1) {
-    return '已使用'
-  } else if (row.state === 2) {
-    return '已结算'
-  } else {
-    return '未知状态'
-  }
-}
-
-
 // 处理分页变化
 const handleSizeChange = (val) => {
   pagination.pageSize = val
@@ -65,6 +51,36 @@ const handleCurrentChange = (val) => {
   pagination.currentPage = val
   fetchOrders()
 }
+
+//订单状态
+const getStateText = (state) => {
+  switch (state) {
+    case 0:
+      return '未使用';
+    case 1:
+      return '订单进行中';
+    case 2:
+      return '待结算';
+    case 3:
+      return '已结算';
+    default:
+      return '未知状态';
+  }
+};
+const getStateTagType = (state) => {
+  switch (state) {
+    case 0:
+      return 'info';
+    case 1:
+      return 'danger';
+    case 2:
+      return 'primary';
+    case 3:
+      return 'success';
+    default:
+      return 'warning';
+  }
+};
 
 //订单姐结算
 const handleOrderDetail = async (row) => {
@@ -170,24 +186,10 @@ onMounted(() => {
             <span class="money">￥{{ scope.row.projectMoney }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="code" label="验证码" width="150" align="center">
-          <template #default="scope">
-            <el-tooltip
-                v-if="scope.row.code"
-                :content="scope.row.code"
-                placement="top"
-                :hide-after="100"
-            >
-              <span class="truncated-text">{{ truncateText(scope.row.code) }}</span>
-            </el-tooltip>
-            <span v-else>暂无</span>
-          </template>
-        </el-table-column>
         <el-table-column prop="state" label="状态" width="100" align="center">
           <template #default="scope">
-            <el-tag
-                :type="scope.row.state === 0 ? 'danger' : (scope.row.state === 1 ? 'info' : (scope.row.state === 2 ? 'success' : ''))">
-              {{ formatOrderStatus(scope.row) }}
+            <el-tag :type="getStateTagType(scope.row.state)">
+              {{ getStateText(scope.row.state) }}
             </el-tag>
           </template>
         </el-table-column>

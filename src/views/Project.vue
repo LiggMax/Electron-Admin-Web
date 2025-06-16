@@ -411,19 +411,16 @@ const cancelKeywordEdit = () => {
 
 // 添加新关键词
 const addNewKeyword = async () => {
-  if (!newKeywordRef.value) return
-  
+  // if (!newKeywordRef.value) return
+
   try {
-    // 表单校验
-    await newKeywordRef.value.validate()
-    
     // 检查关键词是否已存在
     const exists = keywordForm.keywords.some(item => item.keyword === newKeyword.keyword)
     if (exists) {
       Message.warning('关键词已存在')
       return
     }
-    
+
     // 调用API添加关键词
     const projectData = {
       projectId: keywordForm.id,
@@ -467,9 +464,10 @@ const removeKeyword = async (index) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
+    const projectIds = [ keywordItem.id]
 
     // 调用API删除关键词
-    await deleteProjectKeywordService(keywordItem.id)
+    await deleteProjectKeywordService(projectIds)
     
     // 重新获取关键词列表
     const response = await getProjectKeywordListService(keywordForm.id)
@@ -627,8 +625,7 @@ onMounted(() => {
           highlight-current-row
       >
         <el-table-column type="selection" width="55"/>
-        <el-table-column prop="id" label="项目ID" width="190" align="center"/>
-        <el-table-column prop="projectName" label="项目名称" min-width="150" align="center">
+        <el-table-column prop="projectName" label="项目名称" width="150" align="center">
           <template #default="scope">
             <div style="display: flex; align-items: center; justify-content: center ;font-weight: bold">
               <img v-if="scope.row.icon" :src="scope.row.icon"
@@ -643,19 +640,8 @@ onMounted(() => {
             <span v-else class="no-price">未设置</span>
           </template>
         </el-table-column>
-        <el-table-column prop="keyword" label="关键字" width="120" align="center">
-          <template #default="scope">
-            <el-tooltip
-                :content="scope.row.keyword"
-                placement="top"
-            >
-              <div class="keyword-cell">{{ scope.row.keyword }}</div>
-            </el-tooltip>
-          </template>
-        </el-table-column>
-        <el-table-column prop="codeLength" label="验证码参数" width="110" align="center"/>
-        <el-table-column prop="createdAt" label="创建时间" width="180" align="center"/>
-        <el-table-column prop="updateAt" label="更新时间" width="180" align="center"/>
+        <el-table-column prop="createdAt" label="创建时间" min-width="180" align="center"/>
+        <el-table-column prop="updateAt" label="更新时间" min-width="180" align="center"/>
 
         <el-table-column label="操作" fixed="right" width="120" align="center">
           <template #default="scope">

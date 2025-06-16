@@ -64,7 +64,7 @@ export const uploadIconService = (formData) => {
  */
 export const setProjectKeywordService = (data) => {
     return request({
-        url: "/admin_web/project/set_keywords",
+        url: "/admin_web/project/keywords",
         method: "post",
         data
     });
@@ -88,11 +88,9 @@ export const getProjectKeywordListService = (projectId) => {
  */
 export const deleteProjectKeywordService = (keywordId) => {
     return request({
-        url: "/admin_web/project/delete_keyword",
+        url: "/admin_web/project/keywords",
         method: "delete",
-        params: {
-            keywordId
-        }
+        data: keywordId
     });
 }
 
