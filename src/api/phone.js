@@ -3,10 +3,11 @@ import request from "../utils/request.js";
 /**
  * 获取号码列表
  */
-export const getPhoneList = () => {
+export const getPhoneList = (data) => {
   return request({
     url: "/phone",
     method: "get",
+    params: data
   });
 };
 

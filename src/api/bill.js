@@ -21,3 +21,16 @@ export const getOrderBillList = (data) => {
         params: data
     })
 }
+
+/**
+ * 账单详情
+ */
+export const getBillDetail = (purchaseTime) => {
+    return request({
+        url: '/bill/order_detail',
+        method: 'get',
+        params: {
+            purchaseTime: purchaseTime
+        }
+    })
+}

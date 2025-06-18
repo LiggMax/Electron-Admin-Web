@@ -2,8 +2,8 @@
   <div class="phone-container">
     <div class="search-bar">
       <el-form :inline="true" class="form-inline">
-        <el-form-item label="卡商ID:">
-          <el-input v-model="searchForm.merchantId" placeholder="请输入卡商ID"></el-input>
+        <el-form-item label="号码搜索:">
+          <el-input v-model="searchForm.phoneNumber" placeholder="请输入号码，支持模糊搜索"></el-input>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">查询</el-button>
@@ -34,6 +34,16 @@
                 <img v-if="scope.row.avatar" :src="scope.row.avatar" alt="头像"/>
            </span>
             <span>{{ scope.row.nickName }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="isAvailable" label="状态" width="100" align="center">
+          <template #default="scope">
+            <el-tag 
+              :type="scope.row.isAvailable ? 'success' : 'danger'" 
+              size="small"
+            >
+              {{ scope.row.isAvailable ? '在售' : '售完' }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="country" label="国家/地区" width="120"/>
@@ -107,9 +117,7 @@ import DateFormatter from '../utils/DateFormatter.js'
 import Message from  '../utils/message.js'
 // 搜索表单
 const searchForm = reactive({
-  country: '',
-  project: '',
-  merchantId: ''
+  phoneNumber: ''
 })
 
 // 表格数据
@@ -132,24 +140,33 @@ onMounted(() => {
 // 加载数据
 const loadData = async () => {
   try {
-    const res = await getPhoneList()
-    // 处理数据映射
-    tableData.value = res.data.map(item => {
-      return {
-        phoneId: item.phoneId,
-        phoneNum: item.phoneNumber,
-        country: item.regionName,
-        projects: item.projects || [], // 直接使用projects数组
-        usage: item.usageStatus,
-        money: item.money,
-        nickName: item.adminNickName,
-        avatar: item.adminAvatar,
-        createTime: DateFormatter.format(item.registrationTime)
-      }
-    })
-    total.value = res.data.length
+    const query = {
+      pageNum: currentPage.value,
+      pageSize: pageSize.value,
+      phoneNumber: searchForm.phoneNumber
+    }
+    const res = await getPhoneList(query)
+    
+      // 处理数据映射
+      tableData.value = (res.data.list || []).map(item => {
+        return {
+          phoneId: item.phoneId,
+          phoneNum: item.phoneNumber,
+          country: item.regionName,
+          projects: item.projects || [],
+          usage: item.usageStatus,
+          money: item.money,
+          nickName: item.adminNickName,
+          avatar: item.adminAvatar,
+          createTime: DateFormatter.format(item.registrationTime),
+          isAvailable: item.isAvailable
+        }
+      })
+      total.value = res.data.total || 0
   } catch (error) {
     console.error('加载数据出错:', error)
+    tableData.value = []
+    total.value = 0
   }
 }
 
@@ -157,26 +174,14 @@ const loadData = async () => {
 const handleSearch = () => {
   console.log('搜索条件：', searchForm)
   currentPage.value = 1
-  // 此处可以添加搜索过滤逻辑，当接口支持时更新
   loadData()
 }
 
 // 重置表单
 const resetForm = () => {
-  Object.keys(searchForm).forEach(key => {
-    searchForm[key] = ''
-  })
-  handleSearch()
-}
-
-// 批量分配
-const batchOperation = () => {
-  if (selectedItems.value.length === 0) {
-    Message.warning('请先选择号码')
-    return
-  }
-  // TODO: 实现批量分配的逻辑
-  Message.success(`已选择${selectedItems.value.length}项进行批量操作`)
+  searchForm.phoneNumber = ''
+  currentPage.value = 1
+  loadData()
 }
 
 // 处理选择变化
@@ -218,6 +223,7 @@ const handleDelete = (row) => {
 // 处理每页显示数量变化
 const handleSizeChange = (size) => {
   pageSize.value = size
+  currentPage.value = 1 // 重置到第一页
   loadData()
 }
 

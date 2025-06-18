@@ -8,13 +8,22 @@
         </el-icon>
         账单数据分析
       </h2>
-      <el-button type="primary" @click="refreshData" :loading="loading" :icon="Refresh">
-        刷新
-      </el-button>
+      <div class="header-controls">
+        <el-date-picker
+            v-model="billDetailDate"
+            type="month"
+            placeholder="选择月份"
+            format="YYYY-MM"
+            value-format="YYYY-MM"
+            clearable
+            style="width: 150px; margin-right: 10px"
+            @change="handleDateChange"
+        />
+      </div>
     </div>
 
     <!-- 数据统计卡片 -->
-    <div class="statistics-section" v-if="orderBill">
+    <div class="statistics-section" v-if="billDetailData">
       <el-row :gutter="20" class="stats-cards">
         <el-col :span="8">
           <el-card class="stat-card total-amount">
@@ -25,7 +34,7 @@
                 </el-icon>
               </div>
               <div class="stat-info">
-                <div class="stat-value">¥{{ orderBill.amount }}</div>
+                <div class="stat-value">¥{{ billDetailData.amount }}</div>
                 <div class="stat-label">总流水</div>
               </div>
             </div>
@@ -40,7 +49,7 @@
                 </el-icon>
               </div>
               <div class="stat-info">
-                <div class="stat-value">¥{{ orderBill.platformProfit }}</div>
+                <div class="stat-value">¥{{ billDetailData.platformProfit }}</div>
                 <div class="stat-label">平台收益</div>
               </div>
             </div>
@@ -55,50 +64,49 @@
                 </el-icon>
               </div>
               <div class="stat-info">
-                <div class="stat-value">¥{{ orderBill.merchantProfit }}</div>
+                <div class="stat-value">¥{{ billDetailData.merchantProfit }}</div>
                 <div class="stat-label">卡商收益</div>
               </div>
             </div>
           </el-card>
         </el-col>
-
       </el-row>
     </div>
 
     <!-- 图表展示区域 -->
-    <div class="charts-section">
-      <el-row :gutter="20">
-        <!-- 收益分布饼图 -->
-        <el-col :span="12">
-          <el-card class="chart-card">
-            <template #header>
-              <div class="chart-header">
-                <el-icon>
-                  <DataAnalysis/>
-                </el-icon>
-                <span>收益分布</span>
-              </div>
-            </template>
-            <div ref="profitPieChart" class="chart-container"></div>
-          </el-card>
-        </el-col>
+<!--    <div class="charts-section">-->
+<!--      <el-row :gutter="20">-->
+<!--        &lt;!&ndash; 收益分布饼图 &ndash;&gt;-->
+<!--        <el-col :span="12">-->
+<!--          <el-card class="chart-card">-->
+<!--            <template #header>-->
+<!--              <div class="chart-header">-->
+<!--                <el-icon>-->
+<!--                  <DataAnalysis/>-->
+<!--                </el-icon>-->
+<!--                <span>收益分布</span>-->
+<!--              </div>-->
+<!--            </template>-->
+<!--            <div ref="profitPieChart" class="chart-container"></div>-->
+<!--          </el-card>-->
+<!--        </el-col>-->
 
-        <!-- 账单类型分布饼图 -->
-        <el-col :span="12">
-          <el-card class="chart-card">
-            <template #header>
-              <div class="chart-header">
-                <el-icon>
-                  <TrendCharts/>
-                </el-icon>
-                <span>账单类型分布</span>
-              </div>
-            </template>
-            <div ref="billTypePieChart" class="chart-container"></div>
-          </el-card>
-        </el-col>
-      </el-row>
-    </div>
+<!--        &lt;!&ndash; 账单类型分布饼图 &ndash;&gt;-->
+<!--        <el-col :span="12">-->
+<!--          <el-card class="chart-card">-->
+<!--            <template #header>-->
+<!--              <div class="chart-header">-->
+<!--                <el-icon>-->
+<!--                  <TrendCharts/>-->
+<!--                </el-icon>-->
+<!--                <span>账单类型分布</span>-->
+<!--              </div>-->
+<!--            </template>-->
+<!--            <div ref="billTypePieChart" class="chart-container"></div>-->
+<!--          </el-card>-->
+<!--        </el-col>-->
+<!--      </el-row>-->
+<!--    </div>-->
 
     <!-- 数据表格 -->
     <div class="tables-section">
@@ -121,13 +129,13 @@
               <el-form :model="orderFilterForm" inline size="small">
                 <el-form-item label="时间">
                   <el-date-picker
-                    v-model="orderFilterForm.purchaseTime"
-                    type="month"
-                    placeholder="选择月份"
-                    format="YYYY-MM"
-                    value-format="YYYY-MM"
-                    clearable
-                    style="width: 150px"
+                      v-model="orderFilterForm.purchaseTime"
+                      type="month"
+                      placeholder="选择月份"
+                      format="YYYY-MM"
+                      value-format="YYYY-MM"
+                      clearable
+                      style="width: 150px"
                   />
                 </el-form-item>
                 <el-form-item>
@@ -177,14 +185,14 @@
             <!-- 订单账单分页栏 -->
             <div class="pagination-container">
               <el-pagination
-                v-model:current-page="orderCurrentPage"
-                v-model:page-size="orderPageSize"
-                :page-sizes="[10, 20, 50, 100]"
-                :total="orderTotalCount"
-                layout="total, sizes, prev, pager, next, jumper"
-                @size-change="handleOrderSizeChange"
-                @current-change="handleOrderCurrentChange"
-                background
+                  v-model:current-page="orderCurrentPage"
+                  v-model:page-size="orderPageSize"
+                  :page-sizes="[10, 20, 50, 100]"
+                  :total="orderTotalCount"
+                  layout="total, sizes, prev, pager, next, jumper"
+                  @size-change="handleOrderSizeChange"
+                  @current-change="handleOrderCurrentChange"
+                  background
               />
             </div>
           </el-card>
@@ -339,7 +347,7 @@ import {
   Search
 } from '@element-plus/icons-vue'
 import {ElNotification} from 'element-plus'
-import {getBillList, getOrderBillList} from '../api/bill.js'
+import {getBillDetail, getBillList, getOrderBillList} from '../api/bill.js'
 // 按需导入 ECharts
 import * as echarts from 'echarts/core'
 import {
@@ -372,6 +380,10 @@ const loading = ref(false)
 const customerBillList = ref([])
 const orderBill = ref(null)
 const chartsLoaded = ref(false)
+
+// 账单详情数据
+const billDetailData = ref(null)
+const billDetailDate = ref('')
 
 // 分页相关数据
 const currentPage = ref(1)
@@ -467,12 +479,12 @@ const fetchOrderBillData = async () => {
       purchaseTime: orderFilterForm.value.purchaseTime,//账单时间（年月）
     }
     const response = await getOrderBillList(queryData)
-    
-      // 根据API响应格式处理数据
-      orderBill.value = {
-        orderBills: response.data.list || []
-      }
-      orderTotalCount.value = response.data.total || 0
+
+    // 根据API响应格式处理数据
+    orderBill.value = {
+      orderBills: response.data.list || []
+    }
+    orderTotalCount.value = response.data.total || 0
   } catch (error) {
     console.error('获取订单账单数据失败:', error)
     ElNotification.error({
@@ -486,6 +498,39 @@ const fetchOrderBillData = async () => {
   } finally {
     loading.value = false
   }
+}
+
+//账单详情
+const billDetail = async () => {
+  try {
+    const response = await getBillDetail(billDetailDate.value)
+    console.log('账单详情响应:', response) // 调试日志
+    
+    if (response && response.code === 200 && response.data) {
+      billDetailData.value = response.data
+    } else {
+      // 如果数据为空，显示零值
+      billDetailData.value = {
+        amount: 0,
+        merchantProfit: 0,
+        platformProfit: 0
+      }
+    }
+  } catch (error) {
+    console.error('获取账单详情失败:', error)
+    // 出错时也显示零值
+    billDetailData.value = {
+      amount: 0,
+      merchantProfit: 0,
+      platformProfit: 0
+    }
+  }
+}
+
+// 日期变化处理
+const handleDateChange = (date) => {
+  billDetailDate.value = date
+  billDetail()
 }
 
 // 初始化所有图表
@@ -503,7 +548,7 @@ const initAllCharts = () => {
 
 // 收益分布饼图
 const initProfitPieChart = () => {
-  if (!orderBill.value || !profitPieChart.value) return
+  if (!billDetailData.value || !profitPieChart.value) return
 
   profitPieChartInstance = echarts.init(profitPieChart.value)
   const option = {
@@ -514,8 +559,8 @@ const initProfitPieChart = () => {
       type: 'pie',
       radius: '50%',
       data: [
-        {value: orderBill.value.merchantProfit, name: '卡商收益'},
-        {value: orderBill.value.platformProfit, name: '平台收益'}
+        {value: billDetailData.value.merchantProfit, name: '卡商收益'},
+        {value: billDetailData.value.platformProfit, name: '平台收益'}
       ],
       itemStyle: {borderRadius: 8, borderColor: '#fff', borderWidth: 2}
     }],
@@ -576,11 +621,6 @@ const initOrderCompareBarChart = () => {
     ]
   }
   orderCompareBarChartInstance.setOption(option)
-}
-
-// 刷新数据
-const refreshData = () => {
-  fetchBillData()
 }
 
 // 获取账单类型名称
@@ -694,6 +734,7 @@ const handleReset = () => {
 
 // 组件挂载时获取数据
 onMounted(() => {
+  billDetail() // 自动调用账单详情
   fetchBillData()
   fetchOrderBillData()
   window.addEventListener('resize', resizeCharts)
@@ -717,6 +758,11 @@ onMounted(() => {
   backdrop-filter: blur(10px);
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
 }
 
 .user-info {
