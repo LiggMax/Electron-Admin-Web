@@ -102,6 +102,95 @@
 
     <!-- 数据表格 -->
     <div class="tables-section">
+
+      <!-- 订单账单表格 -->
+      <el-row :gutter="20" style="margin-bottom: 20px;">
+        <el-col :span="24">
+          <el-card class="table-card">
+            <template #header>
+              <div class="table-header">
+                <el-icon>
+                  <List/>
+                </el-icon>
+                <span>订单账单记录</span>
+              </div>
+            </template>
+
+            <!-- 订单账单筛选表单 -->
+            <div class="filter-form">
+              <el-form :model="orderFilterForm" inline size="small">
+                <el-form-item label="时间">
+                  <el-date-picker
+                    v-model="orderFilterForm.purchaseTime"
+                    type="month"
+                    placeholder="选择月份"
+                    format="YYYY-MM"
+                    value-format="YYYY-MM"
+                    clearable
+                    style="width: 150px"
+                  />
+                </el-form-item>
+                <el-form-item>
+                  <el-button type="primary" @click="handleOrderSearch" :icon="Search">搜索</el-button>
+                  <el-button @click="handleOrderReset" :icon="Refresh">重置</el-button>
+                </el-form-item>
+              </el-form>
+            </div>
+
+            <el-table :data="orderBill?.orderBills" style="width: 100%" stripe size="small" height="400">
+              <el-table-column prop="orderId" label="ID" width="120" align="center">
+                <template #default="scope">
+                  <el-tooltip
+                      :content="scope.row.orderId"
+                      placement="top">
+                    <span>{{ formatId(scope.row.orderId, 8, 4) }}</span>
+                  </el-tooltip>
+                </template>
+              </el-table-column>
+              <el-table-column prop="orderMoney" label="订单金额" min-width="100" align="center">
+                <template #default="scope">
+                  <span class="money-text order-money">¥{{ scope.row.orderMoney }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="remainingAmount" label="卡商收益" min-width="80" align="center">
+                <template #default="scope">
+                  <span class="money-text remaining">¥{{ scope.row.remainingAmount }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="commissionAmount" label="平台收益" min-width="80" align="center">
+                <template #default="scope">
+                  <span class="money-text commission">¥{{ scope.row.commissionAmount }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="startTime" label="时间" min-width="160" align="center">
+                <template #default="scope">
+                  <div class="time-info-container">
+                    <el-icon>
+                      <Clock/>
+                    </el-icon>
+                    {{ format(scope.row.startTime) }}
+                  </div>
+                </template>
+              </el-table-column>
+            </el-table>
+
+            <!-- 订单账单分页栏 -->
+            <div class="pagination-container">
+              <el-pagination
+                v-model:current-page="orderCurrentPage"
+                v-model:page-size="orderPageSize"
+                :page-sizes="[10, 20, 50, 100]"
+                :total="orderTotalCount"
+                layout="total, sizes, prev, pager, next, jumper"
+                @size-change="handleOrderSizeChange"
+                @current-change="handleOrderCurrentChange"
+                background
+              />
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+
       <!-- 用户账单表格 -->
       <el-row :gutter="20" style="margin-bottom: 20px;">
         <el-col :span="24">
@@ -215,112 +304,7 @@
           </el-card>
         </el-col>
       </el-row>
-
-      <!-- 订单账单表格 -->
-      <el-row :gutter="20">
-        <el-col :span="24">
-          <el-card class="table-card">
-            <template #header>
-              <div class="table-header">
-                <el-icon>
-                  <List/>
-                </el-icon>
-                <span>订单账单记录</span>
-              </div>
-            </template>
-
-            <!-- 订单账单筛选表单 -->
-            <div class="filter-form">
-              <el-form :model="orderFilterForm" inline size="small">
-                <el-form-item label="时间">
-                  <el-date-picker
-                      v-model="orderFilterForm.purchaseTime"
-                      type="month"
-                      placeholder="选择月份"
-                      format="YYYY-MM"
-                      value-format="YYYY-MM"
-                      clearable
-                      style="width: 150px"
-                  />
-                </el-form-item>
-                <el-form-item>
-                  <el-button type="primary" @click="handleOrderSearch" :icon="Search">搜索</el-button>
-                  <el-button @click="handleOrderReset" :icon="Refresh">重置</el-button>
-                </el-form-item>
-              </el-form>
-            </div>
-
-            <el-table :data="orderBill?.orderBills" style="width: 100%" stripe size="small" height="400">
-              <el-table-column prop="orderId" label="ID" width="120" align="center">
-                <template #default="scope">
-                  <el-tooltip
-                      :content="scope.row.orderId"
-                      placement="top">
-                    <span>{{ formatId(scope.row.orderId, 8, 4) }}</span>
-                  </el-tooltip>
-                </template>
-              </el-table-column>
-              <el-table-column prop="orderMoney" label="订单金额" width="100" align="center">
-                <template #default="scope">
-                  <span class="money-text order-money">¥{{ scope.row.orderMoney }}</span>
-                </template>
-              </el-table-column>
-              <el-table-column prop="remainingAmount" label="卡商收益" width="80" align="center">
-                <template #default="scope">
-                  <span class="money-text remaining">¥{{ scope.row.remainingAmount }}</span>
-                </template>
-              </el-table-column>
-              <el-table-column prop="commissionAmount" label="平台收益" width="80" align="center">
-                <template #default="scope">
-                  <span class="money-text commission">¥{{ scope.row.commissionAmount }}</span>
-                </template>
-              </el-table-column>
-              <el-table-column prop="startTime" label="时间" align="center">
-                <template #default="scope">
-                  <div class="time-info-container">
-                    <el-icon>
-                      <Clock/>
-                    </el-icon>
-                    {{ format(scope.row.startTime) }}
-                  </div>
-                </template>
-              </el-table-column>
-            </el-table>
-
-            <!-- 订单账单分页栏 -->
-            <div class="pagination-container">
-              <el-pagination
-                  v-model:current-page="orderCurrentPage"
-                  v-model:page-size="orderPageSize"
-                  :page-sizes="[10, 20, 50, 100]"
-                  :total="orderTotalCount"
-                  layout="total, sizes, prev, pager, next, jumper"
-                  @size-change="handleOrderSizeChange"
-                  @current-change="handleOrderCurrentChange"
-                  background
-              />
-            </div>
-          </el-card>
-        </el-col>
-      </el-row>
     </div>
-
-    <!-- 订单金额对比图 -->
-    <el-row :gutter="20" style="margin-top: 20px;">
-      <el-col :span="24">
-        <el-card class="chart-card">
-          <template #header>
-            <div class="chart-header">
-              <el-icon>
-                <Promotion/>
-              </el-icon>
-              <span>订单金额详细对比</span>
-            </div>
-          </template>
-          <div ref="orderCompareBarChart" class="chart-container-large"></div>
-        </el-card>
-      </el-col>
-    </el-row>
 
     <!-- 数据为空时的提示 -->
     <div v-if="!loading && (!customerBillList || customerBillList.length === 0) && !orderBill" class="empty-data">
@@ -347,7 +331,6 @@ import {
   Money,
   Wallet,
   DataAnalysis,
-  Promotion,
   User,
   List,
   Clock,
@@ -484,12 +467,12 @@ const fetchOrderBillData = async () => {
       purchaseTime: orderFilterForm.value.purchaseTime,//账单时间（年月）
     }
     const response = await getOrderBillList(queryData)
-
-    // 根据API响应格式处理数据
-    orderBill.value = {
-      orderBills: response.data.list || [],
-    }
-
+    
+      // 根据API响应格式处理数据
+      orderBill.value = {
+        orderBills: response.data.list || []
+      }
+      orderTotalCount.value = response.data.total || 0
   } catch (error) {
     console.error('获取订单账单数据失败:', error)
     ElNotification.error({
