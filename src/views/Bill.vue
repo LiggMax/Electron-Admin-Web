@@ -120,35 +120,35 @@
               <el-form :model="filterForm" inline size="small">
                 <el-form-item label="账单类型">
                   <el-select
-                    v-model="filterForm.billType"
-                    placeholder="请选择账单类型"
-                    clearable
-                    style="width: 120px"
+                      v-model="filterForm.billType"
+                      placeholder="请选择账单类型"
+                      clearable
+                      style="width: 120px"
                   >
-                    <el-option label="充值" :value="1" />
-                    <el-option label="消费" :value="2" />
+                    <el-option label="充值" :value="1"/>
+                    <el-option label="消费" :value="2"/>
                   </el-select>
                 </el-form-item>
                 <el-form-item label="用户类型">
                   <el-select
-                    v-model="filterForm.isUserType"
-                    placeholder="请选择用户类型"
-                    clearable
-                    style="width: 120px"
+                      v-model="filterForm.isUserType"
+                      placeholder="请选择用户类型"
+                      clearable
+                      style="width: 120px"
                   >
-                    <el-option label="客户" :value="0" />
-                    <el-option label="卡商" :value="1" />
+                    <el-option label="客户" :value="0"/>
+                    <el-option label="卡商" :value="1"/>
                   </el-select>
                 </el-form-item>
                 <el-form-item label="时间">
                   <el-date-picker
-                    v-model="filterForm.purchaseTime"
-                    type="month"
-                    placeholder="选择月份"
-                    format="YYYY-MM"
-                    value-format="YYYY-MM"
-                    clearable
-                    style="width: 150px"
+                      v-model="filterForm.purchaseTime"
+                      type="month"
+                      placeholder="选择月份"
+                      format="YYYY-MM"
+                      value-format="YYYY-MM"
+                      clearable
+                      style="width: 150px"
                   />
                 </el-form-item>
                 <el-form-item>
@@ -202,14 +202,14 @@
             <!-- 分页栏 -->
             <div class="pagination-container">
               <el-pagination
-                v-model:current-page="currentPage"
-                v-model:page-size="pageSize"
-                :page-sizes="[10, 20, 50, 100]"
-                :total="totalCount"
-                layout="total, sizes, prev, pager, next, jumper"
-                @size-change="handleSizeChange"
-                @current-change="handleCurrentChange"
-                background
+                  v-model:current-page="currentPage"
+                  v-model:page-size="pageSize"
+                  :page-sizes="[10, 20, 50, 100]"
+                  :total="totalCount"
+                  layout="total, sizes, prev, pager, next, jumper"
+                  @size-change="handleSizeChange"
+                  @current-change="handleCurrentChange"
+                  background
               />
             </div>
           </el-card>
@@ -228,6 +228,28 @@
                 <span>订单账单记录</span>
               </div>
             </template>
+
+            <!-- 订单账单筛选表单 -->
+            <div class="filter-form">
+              <el-form :model="orderFilterForm" inline size="small">
+                <el-form-item label="时间">
+                  <el-date-picker
+                      v-model="orderFilterForm.purchaseTime"
+                      type="month"
+                      placeholder="选择月份"
+                      format="YYYY-MM"
+                      value-format="YYYY-MM"
+                      clearable
+                      style="width: 150px"
+                  />
+                </el-form-item>
+                <el-form-item>
+                  <el-button type="primary" @click="handleOrderSearch" :icon="Search">搜索</el-button>
+                  <el-button @click="handleOrderReset" :icon="Refresh">重置</el-button>
+                </el-form-item>
+              </el-form>
+            </div>
+
             <el-table :data="orderBill?.orderBills" style="width: 100%" stripe size="small" height="400">
               <el-table-column prop="orderId" label="ID" width="120" align="center">
                 <template #default="scope">
@@ -264,6 +286,20 @@
                 </template>
               </el-table-column>
             </el-table>
+
+            <!-- 订单账单分页栏 -->
+            <div class="pagination-container">
+              <el-pagination
+                  v-model:current-page="orderCurrentPage"
+                  v-model:page-size="orderPageSize"
+                  :page-sizes="[10, 20, 50, 100]"
+                  :total="orderTotalCount"
+                  layout="total, sizes, prev, pager, next, jumper"
+                  @size-change="handleOrderSizeChange"
+                  @current-change="handleOrderCurrentChange"
+                  background
+              />
+            </div>
           </el-card>
         </el-col>
       </el-row>
@@ -320,7 +356,7 @@ import {
   Search
 } from '@element-plus/icons-vue'
 import {ElNotification} from 'element-plus'
-import {getBillList} from '../api/bill.js'
+import {getBillList, getOrderBillList} from '../api/bill.js'
 // 按需导入 ECharts
 import * as echarts from 'echarts/core'
 import {
@@ -358,6 +394,10 @@ const chartsLoaded = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(10)
 
+// 订单账单分页相关数据
+const orderCurrentPage = ref(1)
+const orderPageSize = ref(10)
+
 // 筛选条件
 const filterForm = ref({
   billType: '', // 账单类型
@@ -365,8 +405,16 @@ const filterForm = ref({
   purchaseTime: '' // 账单时间（年月）
 })
 
+// 订单账单筛选条件
+const orderFilterForm = ref({
+  purchaseTime: '' // 订单时间（年月）
+})
+
 // 总数据量（用于分页）
 const totalCount = ref(0)
+
+// 订单账单总数据量
+const orderTotalCount = ref(0)
 
 // 图表引用
 const profitPieChart = ref(null)
@@ -399,9 +447,9 @@ const fetchBillData = async () => {
     }
     const response = await getBillList(queryData)
 
-      // 根据实际API响应格式处理数据
-      customerBillList.value = response.data.list || []
-      totalCount.value = response.data.total || 0
+    // 根据实际API响应格式处理数据
+    customerBillList.value = response.data.list || []
+    totalCount.value = response.data.total || 0
     // 数据加载完成后初始化图表
     await nextTick()
     initAllCharts()
@@ -422,6 +470,36 @@ const fetchBillData = async () => {
     })
     customerBillList.value = []
     totalCount.value = 0
+  } finally {
+    loading.value = false
+  }
+}
+//获取订单账单数据
+const fetchOrderBillData = async () => {
+  loading.value = true
+  try {
+    const queryData = {
+      pageNum: orderCurrentPage.value,// 页码
+      pageSize: orderPageSize.value,// 每页数量
+      purchaseTime: orderFilterForm.value.purchaseTime,//账单时间（年月）
+    }
+    const response = await getOrderBillList(queryData)
+
+    // 根据API响应格式处理数据
+    orderBill.value = {
+      orderBills: response.data.list || [],
+    }
+
+  } catch (error) {
+    console.error('获取订单账单数据失败:', error)
+    ElNotification.error({
+      title: '错误',
+      message: '获取订单账单数据失败，请稍后重试',
+      showClose: false,
+      duration: 2000
+    })
+    orderBill.value = null
+    orderTotalCount.value = 0
   } finally {
     loading.value = false
   }
@@ -563,11 +641,31 @@ const resizeCharts = () => {
   orderCompareBarChartInstance?.resize()
 }
 
-// 组件挂载时获取数据
-onMounted(() => {
-  fetchBillData()
-  window.addEventListener('resize', resizeCharts)
-})
+// 订单账单分页事件处理
+const handleOrderSizeChange = (val) => {
+  orderPageSize.value = val
+  orderCurrentPage.value = 1 // 重置到第一页
+  fetchOrderBillData() // 重新获取数据
+}
+
+const handleOrderCurrentChange = (val) => {
+  orderCurrentPage.value = val
+  fetchOrderBillData() // 重新获取数据
+}
+
+// 订单账单搜索和重置方法
+const handleOrderSearch = () => {
+  orderCurrentPage.value = 1 // 重置到第一页
+  fetchOrderBillData() // 重新获取数据
+}
+
+const handleOrderReset = () => {
+  orderFilterForm.value = {
+    purchaseTime: ''
+  }
+  orderCurrentPage.value = 1 // 重置到第一页
+  fetchOrderBillData() // 重新获取数据
+}
 
 // 组件卸载时清理
 onUnmounted(() => {
@@ -610,6 +708,14 @@ const handleReset = () => {
   currentPage.value = 1 // 重置到第一页
   fetchBillData() // 重新获取数据
 }
+
+// 组件挂载时获取数据
+onMounted(() => {
+  fetchBillData()
+  fetchOrderBillData()
+  window.addEventListener('resize', resizeCharts)
+})
+
 </script>
 
 <style scoped>
@@ -844,7 +950,4 @@ const handleReset = () => {
   font-weight: 600;
 }
 
-:deep(.el-table .el-table__row:hover > td) {
-  background-color: #f5f7fa !important;
-}
 </style>
