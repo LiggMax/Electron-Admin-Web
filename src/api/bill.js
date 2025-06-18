@@ -10,3 +10,14 @@ export const getBillList = (data) => {
         params: data
     })
 }
+
+/**
+ * 订单账单
+ */
+export const getOrderBillList = (data) => {
+    return request({
+        url: '/bill/order_bill',
+        method: 'get',
+        params: data
+    })
+}

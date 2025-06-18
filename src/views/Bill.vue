@@ -114,14 +114,14 @@
                 <span>用户账单记录</span>
               </div>
             </template>
-            
+
             <!-- 筛选表单 -->
             <div class="filter-form">
               <el-form :model="filterForm" inline size="small">
                 <el-form-item label="账单类型">
-                  <el-select 
-                    v-model="filterForm.billType" 
-                    placeholder="请选择账单类型" 
+                  <el-select
+                    v-model="filterForm.billType"
+                    placeholder="请选择账单类型"
                     clearable
                     style="width: 120px"
                   >
@@ -130,9 +130,9 @@
                   </el-select>
                 </el-form-item>
                 <el-form-item label="用户类型">
-                  <el-select 
-                    v-model="filterForm.isUserType" 
-                    placeholder="请选择用户类型" 
+                  <el-select
+                    v-model="filterForm.isUserType"
+                    placeholder="请选择用户类型"
                     clearable
                     style="width: 120px"
                   >
@@ -399,15 +399,9 @@ const fetchBillData = async () => {
     }
     const response = await getBillList(queryData)
 
-    if (response && response.code === 200 && response.data) {
       // 根据实际API响应格式处理数据
       customerBillList.value = response.data.list || []
       totalCount.value = response.data.total || 0
-    } else {
-      customerBillList.value = []
-      totalCount.value = 0
-    }
-
     // 数据加载完成后初始化图表
     await nextTick()
     initAllCharts()
