@@ -102,19 +102,63 @@
 
     <!-- 数据表格 -->
     <div class="tables-section">
-      <el-row :gutter="20">
-        <!-- 客户账单表格 -->
-        <el-col :span="12">
+      <!-- 用户账单表格 -->
+      <el-row :gutter="20" style="margin-bottom: 20px;">
+        <el-col :span="24">
           <el-card class="table-card">
             <template #header>
               <div class="table-header">
                 <el-icon>
                   <User/>
                 </el-icon>
-                <span>客户账单记录</span>
+                <span>用户账单记录</span>
               </div>
             </template>
-            <el-table :data="customerBillList" style="width: 100%" stripe size="small" height="400">
+            
+            <!-- 筛选表单 -->
+            <div class="filter-form">
+              <el-form :model="filterForm" inline size="small">
+                <el-form-item label="账单类型">
+                  <el-select 
+                    v-model="filterForm.billType" 
+                    placeholder="请选择账单类型" 
+                    clearable
+                    style="width: 120px"
+                  >
+                    <el-option label="充值" :value="1" />
+                    <el-option label="消费" :value="2" />
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="用户类型">
+                  <el-select 
+                    v-model="filterForm.isUserType" 
+                    placeholder="请选择用户类型" 
+                    clearable
+                    style="width: 120px"
+                  >
+                    <el-option label="客户" :value="0" />
+                    <el-option label="卡商" :value="1" />
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="时间">
+                  <el-date-picker
+                    v-model="filterForm.purchaseTime"
+                    type="month"
+                    placeholder="选择月份"
+                    format="YYYY-MM"
+                    value-format="YYYY-MM"
+                    clearable
+                    style="width: 150px"
+                  />
+                </el-form-item>
+                <el-form-item>
+                  <el-button type="primary" @click="handleSearch" :icon="Search">搜索</el-button>
+                  <el-button @click="handleReset" :icon="Refresh">重置</el-button>
+                </el-form-item>
+              </el-form>
+            </div>
+
+            <el-table :data="paginatedCustomerBillList" style="width: 100%" stripe size="small" height="400">
               <el-table-column prop="nickName" label="客户" width="120" show-overflow-tooltip>
                 <template #default="scope">
                   <div class="user-info">
@@ -123,10 +167,17 @@
                   </div>
                 </template>
               </el-table-column>
-              <el-table-column prop="billType" label="类型" width="80" align="center">
+              <el-table-column prop="billType" label="消费类型" width="80" align="center">
                 <template #default="scope">
                   <el-tag :type="getBillTypeTag(scope.row.billType)" size="small">
                     {{ getBillTypeName(scope.row.billType) }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="isUserType" label="用户类型" min-width="100" align="center">
+                <template #default="scope">
+                  <el-tag :type="scope.row.isUserType === 0? 'success' : 'warning'" size="small">
+                    {{ scope.row.isUserType === 0 ? '客户' : '卡商' }}
                   </el-tag>
                 </template>
               </el-table-column>
@@ -148,11 +199,26 @@
                 </template>
               </el-table-column>
             </el-table>
+            <!-- 分页栏 -->
+            <div class="pagination-container">
+              <el-pagination
+                v-model:current-page="currentPage"
+                v-model:page-size="pageSize"
+                :page-sizes="[10, 20, 50, 100]"
+                :total="totalCount"
+                layout="total, sizes, prev, pager, next, jumper"
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                background
+              />
+            </div>
           </el-card>
         </el-col>
+      </el-row>
 
-        <!-- 订单账单表格 -->
-        <el-col :span="12">
+      <!-- 订单账单表格 -->
+      <el-row :gutter="20">
+        <el-col :span="24">
           <el-card class="table-card">
             <template #header>
               <div class="table-header">
@@ -168,7 +234,7 @@
                   <el-tooltip
                       :content="scope.row.orderId"
                       placement="top">
-                    <span>{{ formatId(scope.row.orderId,8,4) }}</span>
+                    <span>{{ formatId(scope.row.orderId, 8, 4) }}</span>
                   </el-tooltip>
                 </template>
               </el-table-column>
@@ -187,7 +253,7 @@
                   <span class="money-text commission">¥{{ scope.row.commissionAmount }}</span>
                 </template>
               </el-table-column>
-              <el-table-column prop="startTime" label="时间"  align="center">
+              <el-table-column prop="startTime" label="时间" align="center">
                 <template #default="scope">
                   <div class="time-info-container">
                     <el-icon>
@@ -238,7 +304,7 @@
 </template>
 
 <script setup>
-import {ref, onMounted, nextTick, onUnmounted} from 'vue'
+import {ref, onMounted, nextTick, onUnmounted, computed} from 'vue'
 import {
   TrendCharts,
   Refresh,
@@ -250,7 +316,8 @@ import {
   List,
   Clock,
   Loading,
-  WalletFilled
+  WalletFilled,
+  Search
 } from '@element-plus/icons-vue'
 import {ElNotification} from 'element-plus'
 import {getBillList} from '../api/bill.js'
@@ -287,6 +354,20 @@ const customerBillList = ref([])
 const orderBill = ref(null)
 const chartsLoaded = ref(false)
 
+// 分页相关数据
+const currentPage = ref(1)
+const pageSize = ref(10)
+
+// 筛选条件
+const filterForm = ref({
+  billType: '', // 账单类型
+  isUserType: '', // 用户类型
+  purchaseTime: '' // 账单时间（年月）
+})
+
+// 总数据量（用于分页）
+const totalCount = ref(0)
+
 // 图表引用
 const profitPieChart = ref(null)
 const billTypePieChart = ref(null)
@@ -299,17 +380,33 @@ let customerBillBarChartInstance = null
 let orderTrendLineChartInstance = null
 let orderCompareBarChartInstance = null
 
-// 获取账单数据
+// 计算属性：分页后的用户账单数据
+const paginatedCustomerBillList = computed(() => {
+  // 使用服务端分页，直接返回当前页数据
+  return customerBillList.value
+})
+
+// 获取用户账单数据
 const fetchBillData = async () => {
   loading.value = true
   try {
-    const response = await getBillList()
+    const queryData = {
+      pageNum: currentPage.value,// 页码
+      pageSize: pageSize.value,// 每页数量
+      billType: filterForm.value.billType,// 账单类型
+      isUserType: filterForm.value.isUserType,// 用户类型
+      purchaseTime: filterForm.value.purchaseTime,//账单时间（年月）
+    }
+    const response = await getBillList(queryData)
 
-    // 根据实际响应结构适配数据
-    const data = response.data
-    customerBillList.value = data.customerBill || []
-    orderBill.value = data.orderBill || null
-
+    if (response && response.code === 200 && response.data) {
+      // 根据实际API响应格式处理数据
+      customerBillList.value = response.data.list || []
+      totalCount.value = response.data.total || 0
+    } else {
+      customerBillList.value = []
+      totalCount.value = 0
+    }
 
     // 数据加载完成后初始化图表
     await nextTick()
@@ -323,6 +420,14 @@ const fetchBillData = async () => {
     })
   } catch (error) {
     console.error('获取账单数据失败:', error)
+    ElNotification.error({
+      title: '错误',
+      message: '获取账单数据失败，请稍后重试',
+      showClose: false,
+      duration: 2000
+    })
+    customerBillList.value = []
+    totalCount.value = 0
   } finally {
     loading.value = false
   }
@@ -443,6 +548,18 @@ const getBillTypeTag = (billType) => {
   return tagMap[billType] || ''
 }
 
+// 分页事件处理
+const handleSizeChange = (val) => {
+  pageSize.value = val
+  currentPage.value = 1 // 重置到第一页
+  fetchBillData() // 重新获取数据
+}
+
+const handleCurrentChange = (val) => {
+  currentPage.value = val
+  fetchBillData() // 重新获取数据
+}
+
 // 窗口大小改变时重新调整图表
 const resizeCharts = () => {
   profitPieChartInstance?.resize()
@@ -483,6 +600,22 @@ onUnmounted(() => {
     orderTrendLineChartInstance = null
   }
 })
+
+// 新增的搜索和重置方法
+const handleSearch = () => {
+  currentPage.value = 1 // 重置到第一页
+  fetchBillData() // 重新获取数据
+}
+
+const handleReset = () => {
+  filterForm.value = {
+    billType: '',
+    isUserType: '',
+    purchaseTime: ''
+  }
+  currentPage.value = 1 // 重置到第一页
+  fetchBillData() // 重新获取数据
+}
 </script>
 
 <style scoped>
@@ -621,6 +754,25 @@ onUnmounted(() => {
 
 .tables-section {
   margin-bottom: 30px;
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  padding: 20px 0;
+}
+
+.filter-form {
+  margin-bottom: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.filter-form .el-form-item {
+  margin-bottom: 0;
 }
 
 .money-text {
