@@ -38,9 +38,9 @@
         </el-table-column>
         <el-table-column prop="isAvailable" label="状态" width="100" align="center">
           <template #default="scope">
-            <el-tag 
-              :type="scope.row.isAvailable ? 'success' : 'danger'" 
-              size="small"
+            <el-tag
+                :type="scope.row.isAvailable ? 'success' : 'danger'"
+                size="small"
             >
               {{ scope.row.isAvailable ? '在售' : '售完' }}
             </el-tag>
@@ -110,11 +110,11 @@
 
 <script setup>
 import {ref, reactive, onMounted} from 'vue'
-import { ElMessageBox} from 'element-plus'
+import {ElMessageBox} from 'element-plus'
 import {InfoFilled} from '@element-plus/icons-vue'
-import {getPhoneList, deletePhone} from '../api/phone.js'
+import {getPhoneList, deletePhone, batchOperatePhone} from '../api/phone.js'
 import DateFormatter from '../utils/DateFormatter.js'
-import Message from  '../utils/message.js'
+import Message from '../utils/message.js'
 // 搜索表单
 const searchForm = reactive({
   phoneNumber: ''
@@ -146,23 +146,23 @@ const loadData = async () => {
       phoneNumber: searchForm.phoneNumber
     }
     const res = await getPhoneList(query)
-    
-      // 处理数据映射
-      tableData.value = (res.data.list || []).map(item => {
-        return {
-          phoneId: item.phoneId,
-          phoneNum: item.phoneNumber,
-          country: item.regionName,
-          projects: item.projects || [],
-          usage: item.usageStatus,
-          money: item.money,
-          nickName: item.adminNickName,
-          avatar: item.adminAvatar,
-          createTime: DateFormatter.format(item.registrationTime),
-          isAvailable: item.isAvailable
-        }
-      })
-      total.value = res.data.total || 0
+
+    // 处理数据映射
+    tableData.value = (res.data.list || []).map(item => {
+      return {
+        phoneId: item.phoneId,
+        phoneNum: item.phoneNumber,
+        country: item.regionName,
+        projects: item.projects || [],
+        usage: item.usageStatus,
+        money: item.money,
+        nickName: item.adminNickName,
+        avatar: item.adminAvatar,
+        createTime: DateFormatter.format(item.registrationTime),
+        isAvailable: item.isAvailable
+      }
+    })
+    total.value = res.data.total || 0
   } catch (error) {
     console.error('加载数据出错:', error)
     tableData.value = []
@@ -189,9 +189,35 @@ const handleSelectionChange = (selection) => {
   selectedItems.value = selection
 }
 
-// 清除选择
+// 批量清除选择
 const clearSelection = () => {
-  tableRef.value.clearSelection()
+  if (selectedItems.value.length === 0) {
+    Message.warning('请先选择要删除的号码')
+    return
+  }
+  ElMessageBox.confirm(
+      `确定要删除选择的${selectedItems.value.length}个号码吗？`,
+      '提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+  ).then(async () => {
+    try {
+      const phoneIds = selectedItems.value.map(item => item.phoneId)
+      await batchOperatePhone(phoneIds)
+      Message.success('批量删除成功')
+      selectedItems.value = [] // 清空选择
+      await loadData() // 重新加载数据
+    } catch (error) {
+      console.error('批量删除出错:', error)
+      Message.error('批量删除失败')
+    }
+  }).catch(() => {
+    // 用户取消操作
+    Message.info('已取消删除操作')
+  })
 }
 
 // 编辑行

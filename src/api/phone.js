@@ -54,7 +54,7 @@ export const deletePhone = (phoneId) => {
 export const batchOperatePhone = (data) => {
   return request({
     url: "/phone/batch",
-    method: "post",
+    method: "delete",
     data
   });
 };
